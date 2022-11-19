@@ -13,6 +13,11 @@
 ///       Refactor to subroutine indirect threading.
 ///       Using 16-bit offsets for pointer arithmatics in order to speed up
 ///       while maintaining space consumption
+/// CC 20221118
+///       WASM function pointer is U32 (index).
+///       So, internally, it brough us back to token-indirect again.
+///       However, when enable LAMBDA_OK, the anonymous struct is created
+///       with 32-bit offset
 ///
 /// @benchmark: 10K*10K cycles on desktop (3.2GHz AMD)
 /// + 1200ms - orig/esp32forth8_1, token call threading
@@ -70,8 +75,8 @@ IU   IP      = 0;                  ///< current instruction pointer and cached b
 #define PFA(w)    (dict[w].pfa)             /**< parameter field pointer of a word       */
 #define HERE      (pmem.idx)                /**< current parameter memory index          */
 #define MEM(ip)   (MEM0 + (IU)(ip))         /**< pointer to IP address fetched from pmem */
-#define XTOFF(xp) ((IU)((UFP)(xp) - XT0))   /**< XT offset (index) in code space         */
-#define XT(xt)    (XT0 + ((UFP)(xt) & ~0x3))/**< convert XT offset to function pointer   */
+#define XTOFF(xp) ((IU)(((UFP)(xp) & UDW_MASK) - XT0))   /**< XT offset (index) in code space         */
+#define XT(xt)    (XT0 + ((UFP)(xt) & UDW_MASK))/**< convert XT offset to function pointer   */
 #define CELL(a)   (*(DU*)&pmem[a])          /**< fetch a cell from parameter memory      */
 #define SETJMP(a) (*(IU*)&pmem[a] = HERE)   /**< address offset for branching opcodes    */
 ///@}
@@ -79,16 +84,20 @@ typedef enum {
     EXIT = 0, DONEXT, DOVAR, DOLIT, DOSTR, DOTSTR, BRAN, ZBRAN, DOES, TOR
 } forth_opcode;
 
+#define UDW_MASK 0x3fff     /** user defined word */
+#define UDW_FLAG 0x8000     /** user defined word */
+#define IMM_FLAG 0x4000     /** immediate word    */
+
 ///==============================================================================
 ///
 /// dictionary search functions - can be adapted for ROM+RAM
 ///
 int pfa2word(IU ix) {
-    IU   def = ix & 1;
-    IU   pfa = ix & ~0x1;             ///> TODO: handle colon immediate words when > 64K
-    UFP  xt  = XT(ix);                ///> can xt be immediate? i.e. ix & ~0x3
+    IU   def = ix & UDW_FLAG;         ///> check user defined flag
+    UFP  xt  = XT(ix);                ///> get function pointer
     for (int i = dict.idx - 1; i >= 0; --i) {
         if (def) {
+            IU pfa = ix & UDW_MASK;                ///> get pfa of the word
             if (dict[i].pfa == pfa) return i;      ///> compare pfa in PMEM
         }
         else if ((UFP)dict[i].xt == xt) return i;  ///> compare xt (no immediate?)
@@ -155,9 +164,9 @@ void add_du(DU v)     { pmem.push((U8*)&v, sizeof(DU)); }                   /**<
 void add_str(const char *s) { int sz = STRLEN(s); pmem.push((U8*)s,  sz); } /**< add a string to pmem         */
 void add_w(IU w) {                                                          /**< add a word index into pmem   */
     Code &c = dict[w];
-    IU   ip = c.def ? (c.pfa | 1) : (w==EXIT ? 0 : XTOFF(c.xt));
+    IU   ip = c.def ? c.pfa : (w==EXIT ? 0 : XTOFF(c.xt));
     add_iu(ip);
-    // printf("add_w(%d) => %4x:%p %s\n", w, ip, c.xt, c.name);
+    printf("add_w(%d) => %4x:%p %s\n", w, ip, c.xt, c.name);
 }
 ///============================================================================
 ///
@@ -178,7 +187,7 @@ void nest() {
         IU ix = *(IU*)MEM(IP);                       ///> fetch opcode
         while (ix) {                                 ///> fetch till EXIT
             IP += sizeof(IU);                        /// * advance inst. ptr
-            if (ix & 1) {                            ///> is it a colon word?
+            if (ix & UDW_FLAG) {                     ///> is it a colon word?
                 rs.push(WP);                         ///> * setup callframe (ENTER)
                 rs.push(IP);
                 IP = ix & ~0x1;                      ///> word pfa (def masked)
@@ -205,7 +214,7 @@ void nest() {
 ///
 #define CALL(w)                                       \
     if (dict[w].def) { WP = w; IP = PFA(w); nest(); } \
-    else (*(FPTR)((UFP)dict[w].xt & ~0x3))()
+    else (*(FPTR)((UFP)dict[w].xt & UDW_MASK))()
 
 ///==============================================================================
 ///
@@ -562,7 +571,7 @@ const int PSZ = sizeof(prim)/sizeof(Code);
 void forth_init() {
     for (int i=0; i<PSZ; i++) {              ///> copy prim(ROM) into fast RAM dictionary,
         dict.push(prim[i]);                  ///> find() can be modified to support
-        if (((UFP)prim[i].xt - 4) < XT0) XT0 = ((UFP)prim[i].xt - 4);  ///> collect xt base
+        if ((UFP)prim[i].xt < XT0) XT0 = (UFP)prim[i].xt;  ///> collect xt base
         if ((UFP)prim[i].name < NM0) NM0 = (UFP)prim[i].name;
     }
     forth_load("/load.txt");                 ///> compile /data/load.txt
@@ -651,7 +660,7 @@ void ForthVM::mem_stat()  {
     LOGF(", stack=");        LOG(uxTaskGetStackHighWaterMark(NULL));
     LOGF("]\n");
     if (!heap_caps_check_integrity_all(true)) {
-//        heap_trace_dump();     // dump memory, if we have to
+        heap_trace_dump();     // dump memory, if we have to
         abort();                 // bail, on any memory error
     }
 }
@@ -673,14 +682,14 @@ void ForthVM::dict_dump() {
 }
 #else  // !(ARDUINO || ESP32)
 void ForthVM::mem_stat()  {
-    printf("Core: %x", xPortGetCoreID());
-    printf(" heap[maxblk=%x", heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
-    printf(", avail=%x", heap_caps_get_free_size(MALLOC_CAP_8BIT));
+//    printf("Core: %x", xPortGetCoreID());
+//    printf(" heap[maxblk=%x", heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
+//    printf(", avail=%x", heap_caps_get_free_size(MALLOC_CAP_8BIT));
     printf(", ss_max=%x", ss.max);
     printf(", rs_max=%x", rs.max);
     printf(", pmem=%x", HERE);
-    printf("], lowest[heap=%x", heap_caps_get_minimum_free_size(MALLOC_CAP_8BIT));
-    printf(", stack=%x", uxTaskGetStackHighWaterMark(NULL));
+//    printf("], lowest[heap=%x", heap_caps_get_minimum_free_size(MALLOC_CAP_8BIT));
+//    printf(", stack=%x", uxTaskGetStackHighWaterMark(NULL));
     printf("]\n");
 }
 void ForthVM::dict_dump() {
@@ -713,20 +722,23 @@ void ForthVM::dict_dump() {
 /// main program for testing on PC
 /// Arduino and ESP32 have their own main
 ///
-#include <iostream>               // cin, cout
+#include <iostream>                                 // cin, cout
+ForthVM vm;                                         // create FVM instance
+
 int main(int ac, char* av[]) {
-    static auto send_to_con = [](int len, const char *rst) { cout << rst; };
-    string cmd;
-    ForthVM vm;                                         // create FVM instance
-    vm.init();                                          // initialize dictionary
+    vm.init();                                      // initialize dictionary
     vm.dict_dump();
 
     cout << vm.version() << endl;
-    while (getline(cin, cmd)) {                         // fetch user input
-        // printf("cmd=<%s>\n", cmd.c_str());
-        vm.outer(cmd.c_str(), send_to_con);             // execute outer interpreter
-    }
-    cout << "Done!" << endl;
+    
     return 0;
+}
+
+extern "C" {
+void forth(int n, char *cmd) {
+    static auto send_to_con = [](int len, const char *rst) { cout << rst; };
+    printf("cmd=<%s>\n", cmd);
+    vm.outer(cmd, send_to_con);
+}
 }
 #endif // !(ARDUINO || ESP32)
