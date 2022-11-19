@@ -18,7 +18,7 @@
 ///@}
 #define LAMBDA_OK       0     /**< lambda support, set 1 for ForthVM.this */
 #define RANGE_CHECK     0     /**< vector range check                     */
-#define CC_DEBUG        0     /**< debug tracing flag                     */
+#define CC_DEBUG        1     /**< debug tracing flag                     */
 #define INLINE          __attribute__((always_inline))
 ///@}
 ///@name Memory block configuation
@@ -67,7 +67,7 @@ typedef uintptr_t       UFP;   ///< function pointer as integer
 typedef double          DU2;
 typedef float           DU;
 #define DVAL            0.0f
-#else // USE_FLOAT
+#else // !USE_FLOAT
 typedef int64_t         DU2;
 typedef int32_t         DU;
 #define DVAL            0
@@ -135,7 +135,6 @@ struct XT : fop {           ///< universal functor
 };
 typedef fop* FPTR;          ///< lambda function pointer
 struct Code {
-    const char *name = 0;   ///< name field
     union {                 ///< either a primitive or colon word
         FPTR xt = 0;        ///< lambda pointer
         struct {            ///< a colon word
@@ -145,6 +144,8 @@ struct Code {
             IU  pfa;        ///< offset to pmem space
         };
     };
+    const char *name = 0;   ///< name field
+    
     template<typename F>    ///< template function for lambda
     Code(const char *n, F f, bool im=false) : name(n), xt(new XT<F>(f)) {
         immd = im ? 1 : 0;
@@ -159,16 +160,17 @@ struct Code {
 ///
 typedef void (*FPTR)();     ///< function pointer
 struct Code {
-    const char *name = 0;   ///< name field
     union {                 ///< either a primitive or colon word
         FPTR xt = 0;        ///< lambda pointer
         struct {            ///< a colon word
-            U16 def:  1;    ///< colon defined word
-            U16 immd: 1;    ///< immediate flag
             U16 len:  14;   ///< reserved
+            U16 immd: 1;    ///< immediate flag
+            U16 def:  1;    ///< colon defined word
             IU  pfa;        ///< offset to pmem space (16-bit for 64K range)
         };
     };
+    const char *name = 0;   ///< name field
+    
     Code(const char *n, FPTR f, bool im=false) : name(n), xt(f) {
         immd = im ? 1 : 0;
     }
