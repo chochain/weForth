@@ -337,10 +337,16 @@ void outer() {
 void dict_setup() {
     dict.merge(prim);                                   /// * populate dictionary
     prim.clear(); }                                     /// * reduce memory footprint
+
 /// main program
 int main(int ac, char* av[]) {
     dict_setup();
     cout << "ceforth 4.03" << endl;
-    outer();
-    cout << "done!" << endl;
     return 0; }
+
+extern "C" {
+void forth(int n, char *cmd) {
+    cout << cmd << endl;
+    outer();
+}
+}
