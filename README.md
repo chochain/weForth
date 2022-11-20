@@ -25,6 +25,7 @@ http://localhost:8000/ceforth.html
 * compare to raw WASM loop
 * WASM.Memory for rs, ss, dict, pmem
   > https://stackoverflow.com/questions/46748572/how-to-access-webassembly-linear-memory-from-c-c
+* WebWorker for multi-VM (see GreenArray)
 * inner interpreter with indirect_call
 * use WASM stack as ss
 * macro-assembler
