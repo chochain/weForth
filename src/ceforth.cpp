@@ -2,32 +2,6 @@
 /// @file
 /// @brief eForth implemented in C/C++ for portability
 ///
-/// CC 20220512:
-///       Though the goal of eForth is to show how a Forth can be
-///       easily understood and cleanly constructed.
-///       However, the threading method used is very inefficient (slow)
-///       because each call needs 2 indirect lookups (token->dict, dict->xt)
-///       and a callframe needs to be setup/teardown. Plus, every call
-///       will miss the branch prediction stalling CPU pipeline. Bad stuffs!
-/// CC 20220514:
-///       Refactor to subroutine indirect threading.
-///       Using 16-bit offsets for pointer arithmatics in order to speed up
-///       while maintaining space consumption
-/// CC 20221118
-///       WASM function pointer is U32 (index).
-///       So, internally, it brough us back to token-indirect again.
-///       However, when enable LAMBDA_OK, the anonymous struct is created
-///       with 32-bit offset
-///
-/// @benchmark: 10K*10K cycles on desktop (3.2GHz AMD)
-/// + 1200ms - orig/esp32forth8_1, token call threading
-/// +  981ms - call threading, inline list methods
-///
-/// @benchmark: 1K*1K cycles on NodeMCU ESP32S
-/// + 1440ms - Dr. Ting's orig/esp32forth_82
-/// + 1045ms - orig/esp32forth8_1, token call threading
-/// +  839ms - call threading, inline list methods
-///
 #include <string.h>         // strcmp, strcasecmp
 #include "ceforth.h"
 ///
@@ -108,16 +82,6 @@ int streq(const char *s1, const char *s2) {
     return ucase ? strcasecmp(s1, s2)==0 : strcmp(s1, s2)==0;
 }
 #if CC_DEBUG
-int find(const char *s) {
-#if    (ARDUINO || ESP32)
-    LOGF("find("); LOG(s); LOGF(") => ");
-    for (int i = dict.idx - (compile ? 2 : 1); i >= 0; --i) {
-        if (streq(s, dict[i].name)) {
-            LOG(dict[i].name); LOG(" "); LOG(i); LOGF("\n");
-            return i;
-        }
-    }
-#else   // !(ARDUINO || ESP32)
     printf("find(%s) => ", s);
     for (int i = dict.idx - (compile ? 2 : 1); i >= 0; --i) {
         if (streq(s, dict[i].name)) {
@@ -125,7 +89,6 @@ int find(const char *s) {
             return i;
         }
     }
-#endif  // (ARDUINO || ESP32)
     return -1;
 }
 #else // !CC_DEBUG
@@ -136,7 +99,6 @@ int find(const char *s) {
     return -1;
 }
 #endif // CC_DEBUG    
-int find(string &s) { return find(s.c_str()); }
 ///==============================================================================
 ///
 /// colon word compiler
@@ -149,11 +111,8 @@ void  colon(const char *name) {
     char *nfa = (char*)&pmem[HERE];         ///> current pmem pointer
     int sz = STRLEN(name);                  ///> string length, aligned
     pmem.push((U8*)name,  sz);              ///> setup raw name field
-#if    LAMBDA_OK
-    Code c(nfa, [](){});                    ///> create a new word on dictionary
-#else  // !LAMBDA_OK
-    Code c(nfa, NULL);
-#endif // LAMBDA_OK
+    
+    Code c(nfa, NULL);                      ///> create a blank code object
     c.def = 1;                              ///> specify a colon word
     c.pfa = HERE;                           ///> capture code field index
     dict.push(c);                           ///> deep copy Code struct into dictionary
@@ -164,9 +123,9 @@ void add_du(DU v)     { pmem.push((U8*)&v, sizeof(DU)); }                   /**<
 void add_str(const char *s) { int sz = STRLEN(s); pmem.push((U8*)s,  sz); } /**< add a string to pmem         */
 void add_w(IU w) {                                                          /**< add a word index into pmem   */
     Code &c = dict[w];
-    IU   ip = c.def ? c.pfa : (w==EXIT ? 0 : XTOFF(c.xt));
+    IU   ip = c.def ? (c.pfa | UDW_FLAG) : (w==EXIT ? 0 : XTOFF(c.xt));
     add_iu(ip);
-    printf("add_w(%d) => %4x:%p %s\n", w, ip, c.xt, c.name);
+    // printf("add_w(%d) => %4x:%p %s\n", w, ip, c.xt, c.name);
 }
 ///============================================================================
 ///
@@ -190,15 +149,13 @@ void nest() {
             if (ix & UDW_FLAG) {                     ///> is it a colon word?
                 rs.push(WP);                         ///> * setup callframe (ENTER)
                 rs.push(IP);
-                IP = ix & ~0x1;                      ///> word pfa (def masked)
+                IP = ix & UDW_MASK;                  ///> word pfa (def masked)
                 dp++;                                ///> go one level deeper
             }
-#if  !(ARDUINO || ESP32)
             else if (ix == _NXT) {                          ///> cached DONEXT handler (save 600ms / 100M cycles on AMD)
                 if ((rs[-1] -= 1) >= 0) IP = *(IU*)MEM(IP); ///> but on ESP32, it slows down 100ms / 1M cycles
                 else { IP += sizeof(IU); rs.pop(); }        ///> most likely due to its shallow pipeline
             }
-#endif // !(ARDUINO || ESP32)
             else (*(FPTR)XT(ix))();                  ///> execute primitive word
             ix = *(IU*)MEM(IP);                      ///> fetch next opcode
         }
@@ -237,7 +194,11 @@ void (*fout_cb)(int, const char*);  ///< forth output callback function (see END
 ///
 inline void dot_r(int n, int v) { fout << setw(n) << setfill(' ') << v; }
 inline void to_s(IU w) {
+#if CC_DEBUG
     fout << dict[w].name << " " << w << (dict[w].immd ? "* " : " ");
+#else  // !CC_DEBUG
+    fout << dict[w].name << " ";
+#endif // CC_DEBUG
 }
 ///
 /// recursively disassemble colon word
@@ -318,38 +279,6 @@ inline DU   POP()         { DU n=top; top=ss.pop(); return n; }
 /// eForth core implementation
 ///
 void forth_outer(const char *cmd, void(*callback)(int, const char*)); // forward declaration
-
-#if  (ARDUINO || ESP32)
-#include <SPIFFS.h>
-///
-/// eForth bootstrap loader (from Flash memory)
-///
-int forth_load(const char *fname) {
-    auto dummy = [](int, const char *) { /* do nothing */ };
-    if (!SPIFFS.begin()) {
-        LOGF("Error mounting SPIFFS"); return 1; }
-    File file = SPIFFS.open(fname, "r");
-    if (!file) {
-        LOGF("Error opening file:"); LOG(fname); return 1; }
-    LOGF("Loading file: "); LOG(fname); LOGF("...");
-    while (file.available()) {
-        char cmd[256], *p = cmd, c;
-        while ((c = file.read())!='\n') *p++ = c;   // one line a time
-        *p = '\0';
-        LOGF("\n<< "); LOG(cmd);                    // show bootstrap command
-        forth_outer(cmd, dummy);
-    }
-    LOGF("Done loading.\n");
-    file.close();
-    SPIFFS.end();
-    return 0;
-}
-#else  // !(ARDUINO || ESP32)
-int forth_load(const char *fname) {
-    printf("TODO: load resident applications from %s...\n", fname);
-    return 0;
-}
-#endif // (ARDUINO || ESP32)
 ///
 /// eForth - dictionary initializer
 ///
@@ -376,7 +305,7 @@ static Code prim[] = {
     CODE("does",                                   // CREATE...DOES... meta-program
          IU *ip = (IU*)MEM(PFA(WP));
          while (*ip != DOES) ip++;                 // find DOES
-         while (*ip) add_iu(*ip);),                // copy&paste code
+         while (*++ip) add_iu(*ip)),               // copy&paste code
     CODE(">r",   rs.push(POP())),
     CODE("r>",   PUSH(rs.pop())),
     CODE("r@",   PUSH(rs[-1])),
@@ -524,8 +453,9 @@ static Code prim[] = {
         IU w = find(next_idiom());                               // to save the extra @ of a variable
         *(DU*)(PFA(w) + sizeof(IU)) = POP()),
     CODE("is",              // ' y is x                          // alias a word
-        IU w = find(next_idiom());                               // can serve as a function pointer
-        dict[POP()].pfa = dict[w].pfa),                          // but might leave a dangled block
+        IU w = find(next_idiom());                               // copy entire union struct
+        dict[POP()].xt = dict[w].xt),
+    
     CODE("[to]",            // : xx 3 [to] y ;                   // alter constant in compile mode
         IU w = *(IU*)MEM(IP); IP += sizeof(IU);                  // fetch constant pfa from 'here'
         *(DU*)MEM(PFA(w) + sizeof(IU)) = POP()),
@@ -549,7 +479,9 @@ static Code prim[] = {
     CODE("words", words()),
     CODE("see",
         IU w = find(next_idiom());
-        fout << "[ "; to_s(w); if (dict[w].def) see(PFA(w)); fout << "]" << ENDL),
+        fout << "[ "; to_s(w);
+        if (dict[w].def) see(PFA(w));                            // recursive call
+        fout << "]" << ENDL),
     CODE("dump",  DU n = POP(); IU a = POP(); mem_dump(a, n)),
     CODE("peek",  DU a = POP(); PUSH(PEEK(a))),
     CODE("poke",  DU a = POP(); POKE(a, POP())),
@@ -574,7 +506,6 @@ void forth_init() {
         if ((UFP)prim[i].xt < XT0) XT0 = (UFP)prim[i].xt;  ///> collect xt base
         if ((UFP)prim[i].name < NM0) NM0 = (UFP)prim[i].name;
     }
-    forth_load("/load.txt");                 ///> compile /data/load.txt
 }
 ///==========================================================================
 ///
@@ -592,11 +523,7 @@ DU parse_number(const char *idiom, int *err) {
 #endif
     if (errno || *p != '\0') *err = 1;
 #if CC_DEBUG
-#if     (ARDUINO || ESP32)
-    LOG(n); LOGF("\n");
-#else  // !(ARDUINO || ESP32)
     printf("%d\n", n);
-#endif // (ARDUINO || ESP32)
 #endif // CC_DEBUG
     return n;
 }
@@ -648,49 +575,13 @@ const char *ForthVM::version(){
 /// memory statistics - for heap and stack debugging
 ///
 #if CC_DEBUG
-#if    (ARDUINO || ESP32)
 void ForthVM::mem_stat()  {
-    LOGF("Core:");           LOG(xPortGetCoreID());
-    LOGF(" heap[maxblk=");   LOG(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
-    LOGF(", avail=");        LOG(heap_caps_get_free_size(MALLOC_CAP_8BIT));
-    LOGF(", ss_max=");       LOG(ss.max);
-    LOGF(", rs_max=");       LOG(rs.max);
-    LOGF(", pmem=");         LOG(HERE);
-    LOGF("], lowest[heap="); LOG(heap_caps_get_minimum_free_size(MALLOC_CAP_8BIT));
-    LOGF(", stack=");        LOG(uxTaskGetStackHighWaterMark(NULL));
-    LOGF("]\n");
-    if (!heap_caps_check_integrity_all(true)) {
-        heap_trace_dump();     // dump memory, if we have to
-        abort();                 // bail, on any memory error
-    }
-}
-void ForthVM::dict_dump() {
-    LOGF("XT0=");        LOGX(XT0);
-    LOGF("NM0=");        LOGX(NM0);
-    LOGF(", sizeof(Code)="); LOG(sizeof(Code));
-    LOGF("\n");
-    for (int i=0; i<dict.idx; i++) {
-        Code &c = dict[i];
-        LOG(i);
-        LOGF("> xt=");   LOGX((UFP)c.xt - XT0);
-        LOGF(":");       LOGX((UFP)c.xt);
-        LOGF(", name="); LOGX((UFP)c.name - NM0);
-        LOGF(":");       LOGX((UFP)c.name);
-        LOG(" ");        LOG(c.name);
-        LOGF("\n");
-    }
-}
-#else  // !(ARDUINO || ESP32)
-void ForthVM::mem_stat()  {
-//    printf("Core: %x", xPortGetCoreID());
-//    printf(" heap[maxblk=%x", heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
-//    printf(", avail=%x", heap_caps_get_free_size(MALLOC_CAP_8BIT));
+    printf("heap[maxblk=%x", E4_PMEM_SZ);
+    printf(", avail=%x", E4_PMEM_SZ - HERE);
     printf(", ss_max=%x", ss.max);
     printf(", rs_max=%x", rs.max);
     printf(", pmem=%x", HERE);
-//    printf("], lowest[heap=%x", heap_caps_get_minimum_free_size(MALLOC_CAP_8BIT));
-//    printf(", stack=%x", uxTaskGetStackHighWaterMark(NULL));
-    printf("]\n");
+    printf("], stack_sz=%x\n", E4_SS_SZ);
 }
 void ForthVM::dict_dump() {
     printf("XT0=%lx, NM0=%lx, sizeof(Code)=%ld byes\n", XT0, NM0, sizeof(Code));
@@ -702,22 +593,10 @@ void ForthVM::dict_dump() {
             c.name, c.name);
     }
 }
-#endif // (ARDUINO || ESP32)
 #else  // !CC_DEBUG
 void ForthVM::mem_stat()  {}
-void ForthVM::dict_dump() {
-    printf("XT0=%lx, NM0=%lx, sizeof(Code)=%ld byes\n", XT0, NM0, sizeof(Code));
-    for (int i=0; i<dict.idx; i++) {
-        Code &c = dict[i];
-        printf("%3d> xt=%4x:%p name=%4x:%p %s\n",
-            i, XTOFF(c.xt), c.xt,
-            (U16)((UFP)c.name - NM0),
-            c.name, c.name);
-    }
-}
+void ForthVM::dict_dump() {}
 #endif // CC_DEBUG
-
-#if !(ARDUINO || ESP32)
 ///
 /// main program for testing on PC
 /// Arduino and ESP32 have their own main
@@ -728,6 +607,7 @@ ForthVM vm;                                         // create FVM instance
 int main(int ac, char* av[]) {
     vm.init();                                      // initialize dictionary
     vm.dict_dump();
+    vm.mem_stat();
 
     cout << vm.version() << endl;
     
@@ -737,8 +617,7 @@ int main(int ac, char* av[]) {
 extern "C" {
 void forth(int n, char *cmd) {
     static auto send_to_con = [](int len, const char *rst) { cout << rst; };
-    printf("cmd=<%s>\n", cmd);
+    // printf("cmd=<%s>\n", cmd);
     vm.outer(cmd, send_to_con);
 }
 }
-#endif // !(ARDUINO || ESP32)
