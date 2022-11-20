@@ -58,10 +58,6 @@ typedef enum {
     EXIT = 0, DONEXT, DOVAR, DOLIT, DOSTR, DOTSTR, BRAN, ZBRAN, DOES, TOR
 } forth_opcode;
 
-#define UDW_MASK 0x3fff     /** user defined word */
-#define UDW_FLAG 0x8000     /** user defined word */
-#define IMM_FLAG 0x4000     /** immediate word    */
-
 ///==============================================================================
 ///
 /// dictionary search functions - can be adapted for ROM+RAM
@@ -152,9 +148,9 @@ void nest() {
                 IP = ix & UDW_MASK;                  ///> word pfa (def masked)
                 dp++;                                ///> go one level deeper
             }
-            else if (ix == _NXT) {                          ///> cached DONEXT handler (save 600ms / 100M cycles on AMD)
-                if ((rs[-1] -= 1) >= 0) IP = *(IU*)MEM(IP); ///> but on ESP32, it slows down 100ms / 1M cycles
-                else { IP += sizeof(IU); rs.pop(); }        ///> most likely due to its shallow pipeline
+            else if (ix == _NXT) {                   ///> cached DONEXT handler (save 1250ms / 100M cycles on X230)
+                if ((rs[-1] -= 1) >= 0) IP = *(IU*)MEM(IP);
+                else { IP += sizeof(IU); rs.pop(); }
             }
             else (*(FPTR)XT(ix))();                  ///> execute primitive word
             ix = *(IU*)MEM(IP);                      ///> fetch next opcode

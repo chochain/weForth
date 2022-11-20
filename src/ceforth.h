@@ -65,7 +65,7 @@ typedef uint16_t        IU;    ///< instruction pointer unit
 ///@{
 #define ALIGN2(sz)      ((sz) + (-(sz) & 0x1))
 #define ALIGN16(sz)     ((sz) + (-(sz) & 0xf))
-#define STRLEN(s)       (ALIGN2(strlen(s)+1))  /** calculate string size with alignment */
+#define STRLEN(s)       (ALIGN2(strlen(s)+1))    /** calculate string size with alignment */
 ///@}
 /// array class template (so we don't have dependency on C++ STL)
 /// Note:
@@ -128,6 +128,10 @@ struct Code {
     }
     Code() {}               ///< create a blank struct (for initilization)
 };
+#define UDW_MASK 0x3fff     /** user defined word */
+#define UDW_FLAG 0x8000     /** user defined word */
+#define IMM_FLAG 0x4000     /** immediate word    */
+
 #define CODE(s, g) { s, []{ g; }}
 #define IMMD(s, g) { s, []{ g; }, true }
 ///
