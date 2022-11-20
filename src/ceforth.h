@@ -16,8 +16,7 @@
 ///
 ///@name Conditional compililation options
 ///@}
-#define RANGE_CHECK     0     /**< vector range check                     */
-#define CC_DEBUG        0     /**< debug tracing flag                     */
+#define CC_DEBUG        0     /**< debug tracing flag */
 #define INLINE          __attribute__((always_inline))
 ///@}
 ///@name Memory block configuation
@@ -87,19 +86,9 @@ struct List {
     List &operator=(T *a)   INLINE { v = a; return *this; }
     T    &operator[](int i) INLINE { return i < 0 ? v[idx + i] : v[i]; }
 
-#if RANGE_CHECK
-    T pop()     INLINE {
-        if (idx>0) return v[--idx];
-        throw "ERR: List empty";
-    }
-    T push(T t) INLINE {
-        if (idx<N) return v[max=idx++] = t;
-        throw "ERR: List full";
-    }
-#else  // !RANGE_CHECK
     T pop()     INLINE { return v[--idx]; }
     T push(T t) INLINE { return v[max=idx++] = t; }
-#endif // RANGE_CHECK
+
     void push(T *a, int n) INLINE { for (int i=0; i<n; i++) push(*(a+i)); }
     void merge(List& a)    INLINE { for (int i=0; i<a.idx; i++) push(a[i]);}
     void clear(int i=0)    INLINE { idx=i; }
