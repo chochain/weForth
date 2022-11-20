@@ -11,9 +11,11 @@
       }
       WebAssembly.instantiateStreaming(
           fetch("simple.wasm"), importObj
-      ).then(obj=>console.log(obj.instance.exports.exported_func))  //.exported_func())
+      ).then(obj=>console.log(obj.instance.exports))  //.exported_func())
       /*
-      // Ruby's thin does not support MIME:wasm
+      //
+      // do this when server (i.g.Ruby's thin) does not support MIME:application/wasm yet
+      //
       fetch("simple.wasm")
         .then((response) => response.arrayBuffer())
         .then((bytes) => WebAssembly.instantiate(bytes, importObj))
