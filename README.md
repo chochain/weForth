@@ -14,5 +14,6 @@ python3 tests/serv.py
 ### Benchmark
 |||Platform|10K*10K cycles (in ms)|
 |---|---|---|---|
+|eforth.js v8|JS|FireFox v107.0(64-bit)|15500|
 |ceforth v8|C on CPU|raw|2101|
-|ceforth v8|WASM C |FireFox v107.0(64-bit)|8104|
+|ceforth v8|WASM C |FireFox v107.0(64-bit)|7814|
