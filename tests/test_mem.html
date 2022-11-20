@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>test_mem</title>
+  </head>
+  <body>
+    <script>
+      const importObj = {
+          imports: { imported_func: (arg)=>console.log(arg) },
+      }
+      WebAssembly.instantiateStreaming(
+          fetch('test_mem.wasm'), importObj
+      ).then(obj=>{
+          let ex = obj.instance.exports
+          console.log(obj)
+          let sharedArray = new Int32Array(
+              ex.memory.buffer,
+              ex.myArray.value,
+              100
+          )
+          ex.main()
+          console.log(sharedArray)
+          let ss = {
+              base: ex.emscripten_stack_get_base(),
+              end:  ex.emscripten_stack_get_end(),
+              free: ex.emscripten_stack_get_free()
+          }
+          console.log(ss)
+      })
+    </script>
+  </body>
+</html>
