@@ -16,9 +16,8 @@
 ///
 ///@name Conditional compililation options
 ///@}
-#define LAMBDA_OK       0     /**< lambda support, set 1 for ForthVM.this */
 #define RANGE_CHECK     0     /**< vector range check                     */
-#define CC_DEBUG        1     /**< debug tracing flag                     */
+#define CC_DEBUG        0     /**< debug tracing flag                     */
 #define INLINE          __attribute__((always_inline))
 ///@}
 ///@name Memory block configuation
@@ -35,17 +34,6 @@
 #else  // !(_WIN32 || _WIN64)
 #define ENDL endl; fout_cb(fout.str().length(), fout.str().c_str()); fout.str("")
 #endif // _WIN32 || _WIN64
-
-#if    ARDUINO
-#include <Arduino.h>
-#define to_string(i)    string(String(i).c_str())
-#define LOGF(s)         Serial.print(F(s))
-#define LOG(v)          Serial.print(v)
-#define LOGX(v)         Serial.print(v, HEX)
-#if    ESP32
-#define analogWrite(c,v,mx) ledcWrite((c),(8191/mx)*min((int)(v),mx))
-#endif // ESP32
-#else  // !ARDUINO
 #include <chrono>
 #include <thread>
 #define millis()        chrono::duration_cast<chrono::milliseconds>( \
@@ -53,8 +41,7 @@
 #define delay(ms)       this_thread::sleep_for(chrono::milliseconds(ms))
 #define yield()         this_thread::yield()
 #define PROGMEM
-#endif // ARDUINO
-///@}
+
 using namespace std;
 ///
 ///@name Logical units (instead of physical) for type check and portability
@@ -77,11 +64,8 @@ typedef uint16_t        IU;    ///< instruction pointer unit
 ///@name Alignment macros
 ///@{
 #define ALIGN2(sz)      ((sz) + (-(sz) & 0x1))
-#define ALIGN4(sz)      ((sz) + (-(sz) & 0x3))
 #define ALIGN16(sz)     ((sz) + (-(sz) & 0xf))
-#define ALIGN32(sz)     ((sz) + (-(sz) & 0x1f))
-#define ALIGN(sz)       ALIGN2(sz)
-#define STRLEN(s)       (ALIGN(strlen(s)+1))  /** calculate string size with alignment */
+#define STRLEN(s)       (ALIGN2(strlen(s)+1))  /** calculate string size with alignment */
 ///@}
 /// array class template (so we don't have dependency on C++ STL)
 /// Note:
@@ -124,39 +108,7 @@ struct List {
 /// universal functor (no STL) and Code class
 /// Note:
 ///   * 8-byte on 32-bit machine, 16-byte on 64-bit machine
-///
-#if LAMBDA_OK
-struct fop { virtual void operator()() = 0; };
-template<typename F>
-struct XT : fop {           ///< universal functor
-    F fp;
-    XT(F &f) : fp(f) {}
-    void operator()() INLINE { fp(); }
-};
-typedef fop* FPTR;          ///< lambda function pointer
-struct Code {
-    union {                 ///< either a primitive or colon word
-        FPTR xt = 0;        ///< lambda pointer
-        struct {            ///< a colon word
-            U16 def:  1;    ///< colon defined word
-            U16 immd: 1;    ///< immediate flag
-            U16 len:  14;   ///< len of pfa
-            IU  pfa;        ///< offset to pmem space
-        };
-    };
-    const char *name = 0;   ///< name field
-    
-    template<typename F>    ///< template function for lambda
-    Code(const char *n, F f, bool im=false) : name(n), xt(new XT<F>(f)) {
-        immd = im ? 1 : 0;
-    }
-    Code() {}               ///< create a blank struct (for initilization)
-};
-#define CODE(s, g) { s, []() { g; }}
-#define IMMD(s, g) { s, []() { g; }, true }
-#else  // !LAMBDA_OK
-///
-/// a lambda without capture can degenerate into a function pointer
+///   * a lambda without capture can degenerate into a function pointer
 ///
 typedef void (*FPTR)();     ///< function pointer
 struct Code {
@@ -178,7 +130,6 @@ struct Code {
 };
 #define CODE(s, g) { s, []{ g; }}
 #define IMMD(s, g) { s, []{ g; }, true }
-#endif // LAMBDA_OK
 ///
 /// Forth Virtual Machine (front-end proxy) class
 ///
