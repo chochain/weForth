@@ -1,15 +1,15 @@
 ///
 /// @file
-/// @brief eForth implemented in C/C++ for portability
+/// @brief weForth C/C++, to be compiled into WASM
 ///
 #include <string.h>         // strcmp, strcasecmp
 #include "ceforth.h"
 ///
 /// version info
 ///
-#define APP_NAME         "eForth"
-#define MAJOR_VERSION    "8"
-#define MINOR_VERSION    "1"
+#define APP_NAME         "weForth"
+#define MAJOR_VERSION    "1"
+#define MINOR_VERSION    "0"
 ///==============================================================================
 ///
 /// global memory blocks
