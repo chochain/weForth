@@ -16,6 +16,7 @@
 ///
 ///@name Conditional compililation options
 ///@}
+#define DO_WASM         1     /**< for WASM output    */
 #define CC_DEBUG        0     /**< debug tracing flag */
 #define INLINE          __attribute__((always_inline))
 ///@}
@@ -104,9 +105,15 @@ struct Code {
     union {                 ///< either a primitive or colon word
         FPTR xt = 0;        ///< lambda pointer
         struct {            ///< a colon word
+#if DO_WASM
             U16 len:  14;   ///< reserved
             U16 immd: 1;    ///< immediate flag
             U16 def:  1;    ///< colon defined word
+#else  // !DO_WASM
+            U16 def:  1;    ///< colon defined word
+            U16 immd: 1;    ///< immediate flag
+            U16 len:  14;   ///< reserved
+#endif // DO_WASM
             IU  pfa;        ///< offset to pmem space (16-bit for 64K range)
         };
     };
@@ -117,23 +124,18 @@ struct Code {
     }
     Code() {}               ///< create a blank struct (for initilization)
 };
-#define UDW_MASK 0x3fff     /** user defined word */
-#define UDW_FLAG 0x8000     /** user defined word */
-#define IMM_FLAG 0x4000     /** immediate word    */
+
+#if DO_WASM
+#define UDW_MASK   0x3fff   /** user defined word */
+#define UDW_FLAG   0x8000   /** user defined word */
+#define IMM_FLAG   0x4000   /** immediate word    */
+#else // !DO_WASM
+#define UDW_MASK   ~0x3
+#define UDW_FLAG    0x1
+#define IMM_FLAG    0x2
+#endif // DO_WASM
 
 #define CODE(s, g) { s, []{ g; }}
 #define IMMD(s, g) { s, []{ g; }, true }
-///
-/// Forth Virtual Machine (front-end proxy) class
-///
-class ForthVM {
-public:
-    void init();
-    void outer(const char *cmd, void(*callback)(int, const char*));
 
-    const char *version();
-
-    void mem_stat();
-    void dict_dump();
-};
 #endif // __EFORTH_SRC_CEFORTH_H
