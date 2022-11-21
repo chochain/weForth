@@ -80,11 +80,25 @@
     ///
     /// TextArea handler functions
     ///
-    function show_data() {
-        [ 'ss', 'dc' ].forEach(x=>{
-            let v = vm.data(x)
-            document.getElementById(x).innerHTML = v.reverse().join('<br/>')
-        })
+    function show_ss() {
+        let ex  = Module.asm
+        let len = ex.vm_ss_idx()
+        let ss  = new Int32Array(Module.asm.memory.buffer, ex.vm_ss(), len)
+        let div = document.getElementById('ss')
+        div.innerHTML = ex.vm_top() + '<br/>'
+        for (let i = len - 1; i >= 0; --i) {
+            div.innerHTML += ss[i] + '<br/>'
+        }
+    }
+    function show_dict() {
+        let ex  = Module.asm          
+        let len = ex.vm_dict_idx()
+        let dict= Module.cwrap('vm_dict', 'string', ['number'])
+        let div = document.getElementById('dc')
+        div.innerHTML = ''
+        for (let i = len - 1; i >= 0; --i) {
+            div.innerHTML += dict(i) + '<br/>'
+        }
     }
     function to_txt(t, br=true) {
         txt.innerHTML += br ? t + '<br/>' : t
@@ -108,7 +122,8 @@
         try {
             var forth = Module.cwrap('forth', null, ['number', 'string'])
             forth(0, tib.value)                  /// * call Forth in C/C++
-//            show_data()
+            show_ss()
+            show_dict()
         }
         catch(e) { console.log(e.toString()+'\n') }
         finally  {                               /// * clear input buffer
