@@ -601,7 +601,7 @@ void forth(int n, char *cmd) {
     forth_outer(cmd, send_to_con);
 }}
 
-int main(int ac, char* av[]) {
+int main() {
     forth_init();                                   // initialize dictionary
     dict_dump();
     mem_stat();
