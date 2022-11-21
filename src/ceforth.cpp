@@ -49,8 +49,13 @@ IU   IP      = 0;                  ///< current instruction pointer and cached b
 #define PFA(w)    (dict[w].pfa)             /**< parameter field pointer of a word       */
 #define HERE      (pmem.idx)                /**< current parameter memory index          */
 #define MEM(ip)   (MEM0 + (IU)(ip))         /**< pointer to IP address fetched from pmem */
+#if DO_WASM
 #define XTOFF(xp) ((IU)(((UFP)(xp) & UDW_MASK) - XT0))   /**< XT offset (index) in code space         */
 #define XT(xt)    (XT0 + ((UFP)(xt) & UDW_MASK))/**< convert XT offset to function pointer   */
+#else // !DO_WASM
+#define XTOFF(xp) ((IU)((UFP)(xp) - XT0))   /**< XT offset (index) in code space         */
+#define XT(xt)    (XT0 + ((UFP)(xt) & ~0x3))/**< convert XT offset to function pointer   */
+#endif // DO_WASM
 #define CELL(a)   (*(DU*)&pmem[a])          /**< fetch a cell from parameter memory      */
 #define SETJMP(a) (*(IU*)&pmem[a] = HERE)   /**< address offset for branching opcodes    */
 ///@}
@@ -78,6 +83,7 @@ int streq(const char *s1, const char *s2) {
     return ucase ? strcasecmp(s1, s2)==0 : strcmp(s1, s2)==0;
 }
 #if CC_DEBUG
+int find(const char *s) {
     printf("find(%s) => ", s);
     for (int i = dict.idx - (compile ? 2 : 1); i >= 0; --i) {
         if (streq(s, dict[i].name)) {
@@ -145,7 +151,7 @@ void nest() {
             if (ix & UDW_FLAG) {                     ///> is it a colon word?
                 rs.push(WP);                         ///> * setup callframe (ENTER)
                 rs.push(IP);
-                IP = ix & UDW_MASK;                  ///> word pfa (def masked)
+                IP = ix & ~UDW_FLAG;                 ///> word pfa (def masked)
                 dp++;                                ///> go one level deeper
             }
             else if (ix == _NXT) {                   ///> cached DONEXT handler (save 1250ms / 100M cycles on X230)
@@ -556,14 +562,7 @@ void forth_outer(const char *cmd, void(*callback)(int, const char*)) {
     if (!compile) ss_dump();   /// * dump stack and display ok prompt
 }
 ///===================================================================================================
-///
-/// ForthVM - front-end proxy class
-///
-void ForthVM::init()      { forth_init(); }
-void ForthVM::outer(const char *cmd, void(*callback)(int, const char*)) {
-    forth_outer(cmd, callback);
-}
-const char *ForthVM::version(){
+const char *version(){
     static string ver = string(APP_NAME) + " " + MAJOR_VERSION + "." + MINOR_VERSION;
     return ver.c_str();
 }
@@ -571,7 +570,7 @@ const char *ForthVM::version(){
 /// memory statistics - for heap and stack debugging
 ///
 #if CC_DEBUG
-void ForthVM::mem_stat()  {
+void mem_stat()  {
     printf("heap[maxblk=%x", E4_PMEM_SZ);
     printf(", avail=%x", E4_PMEM_SZ - HERE);
     printf(", ss_max=%x", ss.max);
@@ -579,7 +578,7 @@ void ForthVM::mem_stat()  {
     printf(", pmem=%x", HERE);
     printf("], stack_sz=%x\n", E4_SS_SZ);
 }
-void ForthVM::dict_dump() {
+void dict_dump() {
     printf("XT0=%lx, NM0=%lx, sizeof(Code)=%ld byes\n", XT0, NM0, sizeof(Code));
     for (int i=0; i<dict.idx; i++) {
         Code &c = dict[i];
@@ -590,30 +589,34 @@ void ForthVM::dict_dump() {
     }
 }
 #else  // !CC_DEBUG
-void ForthVM::mem_stat()  {}
-void ForthVM::dict_dump() {}
+void mem_stat()  {}
+void dict_dump() {}
 #endif // CC_DEBUG
-///
-/// main program for testing on PC
-/// Arduino and ESP32 have their own main
-///
+
 #include <iostream>                                 // cin, cout
-ForthVM vm;                                         // create FVM instance
-
-int main(int ac, char* av[]) {
-    vm.init();                                      // initialize dictionary
-    vm.dict_dump();
-    vm.mem_stat();
-
-    cout << vm.version() << endl;
-    
-    return 0;
-}
 
 extern "C" {
 void forth(int n, char *cmd) {
     static auto send_to_con = [](int len, const char *rst) { cout << rst; };
-    // printf("cmd=<%s>\n", cmd);
-    vm.outer(cmd, send_to_con);
+    forth_outer(cmd, send_to_con);
+}}
+
+int main(int ac, char* av[]) {
+    forth_init();                                   // initialize dictionary
+    dict_dump();
+    mem_stat();
+
+    cout << version() << endl;
+    
+#if !DO_WASM
+    /// for testsing
+    static auto send_to_con = [](int len, const char *rst) { cout << rst; };
+    string cmd;
+    while (getline(cin, cmd)) {
+        forth_outer((char*)cmd.c_str(), send_to_con);
+    }
+    cout << "Done!" << endl;
+#endif // !DO_WASM
+    return 0;
 }
-}
+
