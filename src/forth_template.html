@@ -83,9 +83,10 @@
     function show_ss() {
         let ex  = Module.asm
         let len = ex.vm_ss_idx()
-        let ss  = new Int32Array(Module.asm.memory.buffer, ex.vm_ss(), len)
+        let ss  = new Int32Array(ex.memory.buffer, ex.vm_ss(), len)
+        let top = new Int32Array(ex.memory.buffer, ex.top, 1)
         let div = document.getElementById('ss')
-        div.innerHTML = ex.vm_top() + '<br/>'
+        div.innerHTML = top + '<br/>'
         for (let i = len - 1; i >= 0; --i) {
             div.innerHTML += ss[i] + '<br/>'
         }
