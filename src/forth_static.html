@@ -107,7 +107,7 @@
       }
       drag(txt, document.getElementById("sep"), edt)
       
-      var forth_vm = new Worker('ceforth.js')        ///< create the Forth worker thread
+      var forth_vm = new Worker('ceforth_worker.js') ///< create the Forth worker thread
       
       forth_vm.onmessage = (e)=>to_txt(e.data)       /// * wait for worker's response
       ///
@@ -127,6 +127,5 @@
           }
       }
       </script>
-    {{{ SCRIPT }}}
   </body>
 </html>
