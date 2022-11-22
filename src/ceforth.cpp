@@ -598,7 +598,6 @@ void forth(int n, char *cmd) {
     static auto send_to_con = [](int len, const char *rst) { cout << rst; };
     forth_outer(cmd, send_to_con);
 }
-DU   vm_top()        { return top;    }
 int  vm_ss_idx()     { return ss.idx; }
 DU   *vm_ss()        { return &ss[0]; }
 int  vm_dict_idx()   { return dict.idx; }
