@@ -18,16 +18,8 @@ Regardless, it's fun to see eForth run in a browser straight from C/C++ code. Ho
 * em++ -o tests/ceForth_403.html src/ceForth_403.cpp --shell-file src/forth_template.html -sEXPORTED_FUNCTIONS=_main,_forth -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
 ### To Compile to Web Worker
-* cp src/forth_static.html tests/ceforth.html
+* cp src/forth_static.html tests/ceforth.html; cp src/ceforth_worker.js tests
 * em++ -o tests/ceforth.js src/ceforth.cpp -sEXPORTED_FUNCTIONS=_main,_forth,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
-* add messaging import/export to tests/ceforth.js (after the first line, i.e. var Module = ...)
-  <pre>
-    Module['print'] = postMessage                   /// * link worker output port
-    onmessage = function(e) {                       /// * link worker input port
-      let forth = Module.cwrap('forth', null, ['number', 'string'])
-      forth(0, e.data[0])                           /// * call Forth in C/C++
-    }
-  </pre>
 
 ### To Debug (dump all functions)
 * em++ -o tests/ceforth.html src/ceforth.cpp --shell-file src/forth_template.html -sEXPORTED_ALL=1 -sLINKABLE=1 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
