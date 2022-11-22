@@ -49,13 +49,8 @@ IU   IP      = 0;                  ///< current instruction pointer and cached b
 #define PFA(w)    (dict[w].pfa)             /**< parameter field pointer of a word       */
 #define HERE      (pmem.idx)                /**< current parameter memory index          */
 #define MEM(ip)   (MEM0 + (IU)(ip))         /**< pointer to IP address fetched from pmem */
-#if DO_WASM
-#define XTOFF(xp) ((IU)(((UFP)(xp) & UDW_MASK) - XT0))   /**< XT offset (index) in code space         */
-#define XT(xt)    (XT0 + ((UFP)(xt) & UDW_MASK))/**< convert XT offset to function pointer   */
-#else // !DO_WASM
-#define XTOFF(xp) ((IU)((UFP)(xp) - XT0))   /**< XT offset (index) in code space         */
-#define XT(xt)    (XT0 + ((UFP)(xt) & ~0x3))/**< convert XT offset to function pointer   */
-#endif // DO_WASM
+#define XTOFF(xp) ((IU)(((UFP)(xp) & UDW_MASK) - XT0)) /**< offset (index) in code space */
+#define XT(xt)    (XT0 + ((UFP)(xt) & UDW_MASK))       /**< convert XT offset to ptr     */
 #define CELL(a)   (*(DU*)&pmem[a])          /**< fetch a cell from parameter memory      */
 #define SETJMP(a) (*(IU*)&pmem[a] = HERE)   /**< address offset for branching opcodes    */
 ///@}
