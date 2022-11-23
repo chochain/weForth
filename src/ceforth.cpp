@@ -62,18 +62,6 @@ typedef enum {
 ///
 /// dictionary search functions - can be adapted for ROM+RAM
 ///
-int pfa2word(IU ix) {
-    IU   def = ix & UDW_FLAG;         ///> check user defined flag
-    UFP  xt  = XT(ix);                ///> get function pointer
-    for (int i = dict.idx - 1; i >= 0; --i) {
-        if (def) {
-            IU pfa = ix & UDW_MASK;                ///> get pfa of the word
-            if (dict[i].pfa == pfa) return i;      ///> compare pfa in PMEM
-        }
-        else if ((UFP)dict[i].xt == xt) return i;  ///> compare xt (no immediate?)
-    }
-    return -1;
-}
 int streq(const char *s1, const char *s2) {
     return ucase ? strcasecmp(s1, s2)==0 : strcmp(s1, s2)==0;
 }
@@ -141,6 +129,7 @@ void nest() {
     int dp = 0;                                      ///> iterator depth control
     while (dp >= 0) {
         IU ix = *(IU*)MEM(IP);                       ///> fetch opcode
+//        printf("MEM(%d)=>ix=%d\n", IP, ix);
         while (ix) {                                 ///> fetch till EXIT
             IP += sizeof(IU);                        /// * advance inst. ptr
             if (ix & UDW_FLAG) {                     ///> is it a colon word?
@@ -149,8 +138,10 @@ void nest() {
                 IP = ix & ~UDW_FLAG;                 ///> word pfa (def masked)
                 dp++;                                ///> go one level deeper
             }
-            else if (ix == _NXT) {                   ///> cached DONEXT handler (save 1250ms / 100M cycles on X230)
-                if ((rs[-1] -= 1) >= 0) IP = *(IU*)MEM(IP);
+            else if (ix == _NXT) {                   ///> cached DONEXT handler (5% faster)
+                if ((rs[-1] -= 1) >= 0) {
+                    IP = *(IU*)MEM(IP);              /// * TODO: add branch prediction
+                }
                 else { IP += sizeof(IU); rs.pop(); }
             }
             else (*(FPTR)XT(ix))();                  ///> execute primitive word
@@ -200,6 +191,18 @@ inline void to_s(IU w) {
 ///
 /// recursively disassemble colon word
 ///
+int pfa2word(IU ix) {
+    IU   def = ix & UDW_FLAG;         ///> check user defined flag
+    UFP  xt  = XT(ix);                ///> get function pointer
+    for (int i = dict.idx - 1; i >= 0; --i) {
+        if (def) {
+            IU pfa = ix & UDW_MASK;                ///> get pfa of the word
+            if (dict[i].pfa == pfa) return i;      ///> compare pfa in PMEM
+        }
+        else if ((UFP)dict[i].xt == xt) return i;  ///> compare xt (no immediate?)
+    }
+    return -1;
+}
 void see(IU pfa, int dp=1) {
     U8 *ip = MEM(pfa);
     while (*(IU*)ip) {

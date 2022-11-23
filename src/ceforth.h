@@ -25,7 +25,7 @@
 #define E4_RS_SZ        64
 #define E4_SS_SZ        64
 #define E4_DICT_SZ      2048
-#define E4_PMEM_SZ      (64*1024)
+#define E4_PMEM_SZ      (48*1024)
 ///@}
 ///@name Multi-platform support
 ///@{
