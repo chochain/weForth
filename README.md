@@ -2,14 +2,15 @@
 
 WebAssembly enpowered eForth on web browsers, is it faster? is portable?
 
-Well, so far. It's not that fast. About 20% slower than pure Javascript implementation and 10~20x slower than running on CPU natively. On the portability end, it's not exactly plug-and-play either! Though mostly minor but some alteration and care are required to make it web-eabled.
+Well, so far. It's not that fast. About 20% slower than pure Javascript implementation and 10~20x slower than running on CPU natively. On the portability end, it's not exactly plug-and-play either! Though mostly minor but some alteration and care are required to make it web-eabled not to mention updating DOM.
 
-Regardless, it's fun to see eForth run in a browser straight from C/C++ code. Hopefully, with stright WASM implementation, it can speed up a bit to become a worthy alternative.
+Regardless, it's fun to see eForth run in a browser straight from C/C++ code. Other popular scripting languages such as Python, Ruby are trending toward WASM/WASI, as well. However, they will not likely to speed up much (i.e. stuck at 10~20x slower) since there's no built-in compiler utility as Forth does.
+
+It's exciting to see that interops between different languages become a thing of the near future. So, hopefully, with stright WASM implementation plus the compiler, eForth can speed up a bit to become a worthy alternative.
 
 ### Features
-* Access to ss, dict (via WebAssembly.Memory)
-  > ref https://stackoverflow.com/questions/46748572/how-to-access-webassembly-linear-memory-from-c-c
-* Forth in Web Worker thread
+* Javascript access to ss, dict (via WebAssembly.Memory)
+* Forth in Web Worker thread (can support multi-VMs)
 
 ### To Compile (make sure emscripten is installed)
 * em++ -o tests/ceforth.html src/ceforth.cpp --shell-file src/forth_template.html -sEXPORTED_FUNCTIONS=_main,_forth,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
@@ -17,7 +18,7 @@ Regardless, it's fun to see eForth run in a browser straight from C/C++ code. Ho
   
 * em++ -o tests/ceForth_403.html src/ceForth_403.cpp --shell-file src/forth_template.html -sEXPORTED_FUNCTIONS=_main,_forth -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
-### To Compile to Web Worker
+### To Compile to Web Worker (run almost at the same speed as main thread)
 * cp src/forth_static.html tests/ceforth.html; cp src/ceforth_worker.js tests
 * em++ -o tests/ceforth.js src/ceforth.cpp -sEXPORTED_FUNCTIONS=_main,_forth,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
@@ -44,11 +45,18 @@ Regardless, it's fun to see eForth run in a browser straight from C/C++ code. Ho
 |weforth v1|WASM / C|--|FireFox v107 1-Worker|7496|237|
 |weforth v1|WASM / C|-O2|FireFox v107 1-Worker|1922|157|
 |weforth v1|WASM / C|-O3|FireFox v107 1-Worker|1847|174|
+|weforth+switch|WASM / C|--|FireFox v107 1-Worker|7676|256|
+|weforth+switch|WASM / C|-O2|FireFox v107 1-Worker|3780|168|
+|weforth+switch|WASM / C|-O3|FireFox v107 1-Worker|3755|185|
 
+* Note1: uEforth v7 uses switch(op), instead of 'computed goto' (asm.js/WASM has no goto)
+* Note2: weforth v1 uses subroutine indirected-threaded, which is 2x slower than switch
+* Note3: but, weforth+switch(op), is 2x slower than just function pointers?
+       
 ### TODO
 * refactor
-  > inner interpreter in WASM (with indirect_call, i.e. WebAssembly.Table)
+  > inner interpreter in WASM (with indirect_call, i.e. WebAssembly.Table)<br/>
   > outer interpreter and IO in C
 * use WASM stack as ss
 * macro-assembler
-* multi-VM
+* inter-VM communication
