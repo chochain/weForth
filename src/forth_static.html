@@ -4,8 +4,9 @@
   <style>
     h2    { color: #c44; margin: 0; }
     h3    { color: #fc4; margin: 0; }
-    .tic  { width:100%; text-align:center; background-color:#eee; margin:2px; padding: 5px 0 5px 0; }
-    .tac  { width:90%; text-align:right; color:#484; margin:4px; }
+    .hdr  { width:100%; text-align:center; background-color:#eee; margin:2px; padding: 5px 0 5px 0; }
+    .ss   { width:90%; text-align:right; color:#484; margin:4px; }
+    .dc   { width:90%; color:#484; margin:4px; word-wrap:break-word; }
     .txt  { width:50%; height:100%; margin:4px; display:flex; flex-direction:column; overflow-x:scroll; display:block }
     .sep  { width:4px; height:100%; border:1px solid gray; cursor:col-resize; }
     .cmd  { color:#48f; margin: 2px; }
@@ -17,13 +18,13 @@
   </head>
   <body>
     <div style='display:flex; font-size:18px; font-family:monospace; width:100%; height:100%'>
-      <div style='display:flex; flex-direction:column; width:15%; height:100%'>
-        <pre class='tic'>ss</pre>
-        <pre id='ss' class='tac'></pre>
-        <pre class='tic'>dict</pre>
-        <pre id='dc' class='tac'></pre>
+      <div style='display:flex; flex-direction:column; width:10%; height:100%'>
+        <pre class='hdr'>ss</pre>
+        <pre id='ss' class='ss'></pre>
+        <pre class='hdr'>dict</pre>
+        <div id='dc' class='dc'></div>
       </div>
-      <div style='display:flex; flex-direction:row; width:85%; height:100%'>
+      <div style='display:flex; flex-direction:row; width:90%; height:100%'>
         <pre id='txt' class='txt'></pre>
         <div id='sep' class='sep'></div>
         <div id='edt' class='txt'>
@@ -32,7 +33,7 @@
             <input id='tib' style='width:90%' value=''
                onkeydown='if (13===event.keyCode) forth_eval()'/>
           </div>
-          <textarea id='cm'>copy and paste lesson402.txt here...</textarea>
+          <textarea id='cm'>\ copy and paste lesson402.txt here...</textarea>
         </div>
       </div>
     </div>
@@ -92,7 +93,7 @@
           switch (e.data[0]) {
           case 'cmd': to_txt(e.data[1]); break
           case 'ss' : document.getElementById('ss').innerHTML = e.data[1].join('<br/>'); break
-          case 'dc' : document.getElementById('dc').innerHTML = e.data[1].join('<br/>'); break
+          case 'dc' : document.getElementById('dc').innerHTML = e.data[1].join(' ');     break
           default: console.log(e.data[0])
           }
       }
