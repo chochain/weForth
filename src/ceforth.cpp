@@ -102,7 +102,6 @@ void  colon(const char *name) {
     c.pfa = HERE;                           ///> capture code field index
     dict.push(c);                           ///> deep copy Code struct into dictionary
 }
-void colon(string &s) { colon(s.c_str()); }
 void add_iu(IU i)     { pmem.push((U8*)&i, sizeof(IU)); }                   /**< add an instruction into pmem */
 void add_du(DU v)     { pmem.push((U8*)&v, sizeof(DU)); }                   /**< add a cell into pmem         */
 void add_str(const char *s) { int sz = STRLEN(s); pmem.push((U8*)s,  sz); } /**< add a string to pmem         */
