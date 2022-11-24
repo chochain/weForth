@@ -5,7 +5,9 @@
 Module = {
     print: (e)=>postMessage([ 'cmd', e ])
 }
-function send_ss() {
+var vm_dict_len = 0
+
+function show_ss() {
     let ex  = Module.asm
     let len = ex.vm_ss_idx()
     let ss  = new Int32Array(Module.asm.memory.buffer, ex.vm_ss(), len)
@@ -16,13 +18,18 @@ function send_ss() {
     }
     postMessage([ 'ss', div ])
 }
-function send_dict() {
+function show_dict() {
     let ex  = Module.asm          
     let len = ex.vm_dict_idx()
+    if (vm_dict_len == len) return
+    
+    vm_dict_len = len
     let dict= Module.cwrap('vm_dict', 'string', ['number'])
     let div = []
     for (let i = len - 1; i >= 0; --i) {
-        div.push(dict(i))
+        let nm = dict(i)
+        if (nm=="boot") div.push("<br/>")
+        if (nm[0]!='_') div.push(dict(i))
     }
     postMessage([ 'dc', div ])
 }
@@ -30,8 +37,8 @@ self.onmessage = function(e) {                    /// * link worker input port
     let forth = Module.cwrap('forth', null, ['number', 'string'])
     switch (e.data[0]) {
     case 'cmd': forth(0, e.data[1]); break        /// * call Forth in C/C++
-    case 'ss' : send_ss();           break
-    case 'dc' : send_dict();         break
+    case 'ss' : show_ss();           break
+    case 'dc' : show_dict();         break
     default: postMessage('unknown type');
     }
 }
