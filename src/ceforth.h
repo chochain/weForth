@@ -34,12 +34,20 @@
 #else  // !(_WIN32 || _WIN64)
 #define ENDL endl; fout_cb(fout.str().length(), fout.str().c_str()); fout.str("")
 #endif // _WIN32 || _WIN64
+
+#if    __EMSCRIPTEN__
+#include <emscripten.h>
+#define millis()        EM_ASM_INT({ return Date.now(); })
+#define delay(ms)       EM_ASM({ let t = Date.now() + $0; while (Date.now() < t); }, ms)
+#define yield()
+#else  // !__EMSCRIPTEN__
 #include <chrono>
 #include <thread>
 #define millis()        chrono::duration_cast<chrono::milliseconds>( \
                             chrono::steady_clock::now().time_since_epoch()).count()
 #define delay(ms)       this_thread::sleep_for(chrono::milliseconds(ms))
 #define yield()         this_thread::yield()
+#endif // __EMSCRIPTEN__
 #define PROGMEM
 
 using namespace std;
