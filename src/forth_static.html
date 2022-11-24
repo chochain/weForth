@@ -84,32 +84,18 @@
       ///
       /// TextArea handler functions
       ///
-      function show_ss() {
-          let ex  = Module.asm
-          let len = ex.vm_ss_idx()
-          let ss  = new Int32Array(Module.asm.memory.buffer, ex.vm_ss(), len)
-          let top = new Int32Array(Module.asm.memory.buffer, ex.top, 1)
-          let div = document.getElementById('ss')
-          div.innerHTML = top[0] + '<br/>'
-          for (let i = len - 1; i >= 0; --i) {
-              div.innerHTML += ss[i] + '<br/>'
-          }
-      }
-      function show_dict() {
-          let ex  = Module.asm          
-          let len = ex.vm_dict_idx()
-          let dict= Module.cwrap('vm_dict', 'string', ['number'])
-          let div = document.getElementById('dc')
-          div.innerHTML = ''
-          for (let i = len - 1; i >= 0; --i) {
-              div.innerHTML += dict(i) + '<br/>'
-          }
-      }
       drag(txt, document.getElementById("sep"), edt)
       
-      var forth_vm = new Worker('ceforth_worker.js') ///< create the Forth worker thread
+      let forth_vm = new Worker('ceforth_worker.js') ///< create the Forth worker thread
       
-      forth_vm.onmessage = (e)=>to_txt(e.data)       /// * wait for worker's response
+      forth_vm.onmessage = (e)=>{                    /// * wait for worker's response
+          switch (e.data[0]) {
+          case 'cmd': to_txt(e.data[1]); break
+          case 'ss' : document.getElementById('ss').innerHTML = e.data[1].join('<br/>'); break
+          case 'dc' : document.getElementById('dc').innerHTML = e.data[1].join('<br/>'); break
+          default: console.log(e.data[0])
+          }
+      }
       ///
       /// Forth outer interpreter
       ///
@@ -119,10 +105,12 @@
           to_txt('<pre class="cmd"><em>'+cmd+'</em></pre>', false)
     
           try {
-              forth_vm.postMessage([tib.value])      /// * send command to Forth worker
+              forth_vm.postMessage(['cmd', tib.value])      /// * send command to Forth worker
+              forth_vm.postMessage(['ss'])                  /// * send command to Forth worker
+              forth_vm.postMessage(['dc'])
           }
           catch(e) { console.log(e.toString()+'\n') }
-          finally  {                                 /// * clear input buffer
+          finally  {                                        /// * clear input buffer
               tib.value=''; tib.style.backgroundColor='white'
           }
       }
