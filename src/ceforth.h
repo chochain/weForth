@@ -108,31 +108,6 @@ struct List {
 ///   * 8-byte on 32-bit machine, 16-byte on 64-bit machine
 ///   * a lambda without capture can degenerate into a function pointer
 ///
-typedef void (*FPTR)();     ///< function pointer
-struct Code {
-    union {                 ///< either a primitive or colon word
-        FPTR xt = 0;        ///< lambda pointer
-        struct {            ///< a colon word
-#if DO_WASM
-            U16 len:  14;   ///< reserved
-            U16 immd: 1;    ///< immediate flag
-            U16 def:  1;    ///< colon defined word
-#else  // !DO_WASM
-            U16 def:  1;    ///< colon defined word
-            U16 immd: 1;    ///< immediate flag
-            U16 len:  14;   ///< reserved
-#endif // DO_WASM
-            IU  pfa;        ///< offset to pmem space (16-bit for 64K range)
-        };
-    };
-    const char *name = 0;   ///< name field
-    
-    Code(const char *n, FPTR f, bool im=false) : name(n), xt(f) {
-        immd = im ? 1 : 0;
-    }
-    Code() {}               ///< create a blank struct (for initilization)
-};
-
 #if DO_WASM
 #define UDW_MASK   0x3fff   /** user defined word */
 #define UDW_FLAG   0x8000   /** user defined word */
@@ -142,6 +117,24 @@ struct Code {
 #define UDW_FLAG    0x1
 #define IMM_FLAG    0x2
 #endif // DO_WASM
+#define IS_IMMD(w) (dict[w].flag & IMM_FLAG)
+#define IS_UDEF(w) (dict[w].flag & UDW_FLAG)
+
+typedef void (*FPTR)();     ///< function pointer
+struct Code {
+    const char *name = 0;   ///< name field
+    union {                 ///< either a primitive or colon word
+        FPTR xt = 0;        ///< lambda pointer
+        struct {            ///< a colon word
+            U16 flag;       ///< smudge flags
+            IU  pfa;        ///< offset to pmem space (16-bit for 64K range)
+        };
+    };
+    Code(const char *n, FPTR f, bool im=false) : name(n), xt(f) {
+        flag |= im ? IMM_FLAG : 0;
+    }
+    Code() : xt(0) {}       ///< create a blank struct (for initilization)
+};
 
 #define CODE(s, g) { s, []{ g; }}
 #define IMMD(s, g) { s, []{ g; }, true }
