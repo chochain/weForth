@@ -32,28 +32,32 @@ With WASM, the interoperability between different languages become a thing of th
   > http://localhost:8000/ceforth.html
 
 ### Benchmark (on IBM X230)
-|||optimization|Platform|1K*10K cycles (in ms)|code size (KB)|
+|implementation|source code|optimization|Platform|1K*10K cycles (in ms)|code size (KB)|
 |---|---|---|---|---|---|
 |ceforth v8|C|--|CPU|214|91|
 |ceforth v8|C|-O2|CPU|104|70|
 |ceforth v8|C|-O3|CPU|105|74|
 |eforth.js v6|JavaScript||FireFox v107|1550|20|
 |uEforth v7|asm.js / C|--|FireFox v107|959|?|
+|||||||
 |weforth v1|WASM / C|--|FireFox v107|7433|237|
 |weforth v1|WASM / C|-O2|FireFox v107|1901|157|
 |weforth v1|WASM / C|-O3|FireFox v107|failed(unknown function)|174|
+|||||||
 |weforth v1|WASM / C|--|FireFox v107 1-Worker|7496|237|
 |weforth v1|WASM / C|-O2|FireFox v107 1-Worker|1922|157|
 |weforth v1|WASM / C|-O3|FireFox v107 1-Worker|1847|174|
+|||||||
 |weforth+switch|WASM / C|--|FireFox v107 1-Worker|7676|256|
 |weforth+switch|WASM / C|-O2|FireFox v107 1-Worker|3780|168|
 |weforth+switch|WASM / C|-O3|FireFox v107 1-Worker|3755|185|
-|weforth v1|WASM / C, no yield|--|FireFox v107 1-Worker|988|232|
-|weforth v1|WASM / C, no yield|-O2|FireFox v107 1-Worker|528|156|
-|weforth v1|WASM / C, no yield|-O3|FireFox v107 1-Worker|553|173|
+|||||||
+|weforth v1.2|WASM / C, no yield|--|FireFox v107 1-Worker|988|232|
+|weforth v1.2|WASM / C, no yield|-O2|FireFox v107 1-Worker|528|156|
+|weforth v1.2|WASM / C, no yield|-O3|FireFox v107 1-Worker|553|173|
 
 * Note1: uEforth v7 uses switch(op), instead of 'computed goto' (asm.js/WASM has no goto)
-* Note2: weforth v1 uses subroutine indirected-threaded, which is 2x slower than switch
+* Note2: weforth v1 uses subroutine indirected-threaded
 * Note3: but, weforth+switch(op), is 2x slower than just function pointers. Why?
 * Note4: Web Worker without yield in nest() speed up 3x
        
