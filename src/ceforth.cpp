@@ -267,12 +267,8 @@ inline DU   POP()         { DU n=top; top=ss.pop(); return n; }
 ///
 /// global memory access macros
 ///
-/// macros for ESP memory space access (be very careful of these)
-/// note: 4000_0000 is instruction bus, access needs to be 32-bit aligned
-///       3fff_ffff and below is data bus, no alignment requirement
-///
-#define     PEEK(a)    (DU)(*(DU*)((UFP)(a)))
-#define     POKE(a, c) (*(DU*)((UFP)(a))=(DU)(c))
+#define     PEEK(a)    (DU)(*(DU*)((UFP)MEM(a)))
+#define     POKE(a, c) (*(DU*)((UFP)MEM(a))=(DU)(c))
 ///==========================================================================
 ///
 /// eForth - dictionary initializer
@@ -478,8 +474,8 @@ static Code prim[] = {
         if (dict[w].def) see(PFA(w));                            // recursive call
         fout << "]" << ENDL),
     CODE("dump",  DU n = POP(); IU a = POP(); mem_dump(a, n)),
-    CODE("peek",  DU a = POP(); PUSH(PEEK(a))),
-    CODE("poke",  DU a = POP(); POKE(a, POP())),
+    CODE("peek",  DU a = POP(); PUSH(PEEK(a))),                  // (a -- n)
+    CODE("poke",  DU a = POP(); POKE(a, POP())),                 // (n a -- )
     CODE("forget",
         IU w = find(next_idiom());
         if (w<0) return;
