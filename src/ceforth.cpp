@@ -124,31 +124,22 @@ void add_w(IU w) {                                                          /**<
 ///   3. co-routine
 ///
 void nest() {
-    static IU _NXT = XTOFF(dict[find("donext")].xt); ///> cache offset to subroutine address
-    int dp = 0;                                      ///> iterator depth control
+    int dp  = 0;                                     ///> iterator depth control
     while (dp >= 0) {
         IU ix = *(IU*)MEM(IP);                       ///> fetch opcode
 //        printf("MEM(%d)=>ix=%d\n", IP, ix);
         while (ix) {                                 ///> fetch till EXIT
             IP += sizeof(IU);                        /// * advance inst. ptr
             if (ix & UDW_FLAG) {                     ///> is it a colon word?
-                rs.push(WP);                         ///> * setup callframe (ENTER)
                 rs.push(IP);
                 IP = ix & ~UDW_FLAG;                 ///> word pfa (def masked)
                 dp++;                                ///> go one level deeper
-            }
-            else if (ix == _NXT) {                   ///> cached DONEXT handler (5% faster)
-                if ((rs[-1] -= 1) >= 0) {
-                    IP = *(IU*)MEM(IP);              /// * TODO: add branch prediction
-                }
-                else { IP += sizeof(IU); rs.pop(); }
             }
             else (*(FPTR)XT(ix))();                  ///> execute primitive word
             ix = *(IU*)MEM(IP);                      ///> fetch next opcode
         }
         if (dp-- > 0) {                              ///> pop off a level
             IP = rs.pop();                           ///> * restore call frame (EXIT)
-            WP = rs.pop();
         }
         yield();                                     ///> give other tasks some time
     }
@@ -289,8 +280,8 @@ static Code prim[] = {
     /// @defgroup Execution flow ops
     /// @brief - DO NOT change the sequence here (see forth_opcode enum)
     /// @{
-    CODE("_exit",    IP = rs.pop(); WP = rs.pop()),      // handled in nest()
-    CODE("_donext",                                      // handled in nest()
+    CODE("_exit",    IP = rs.pop()),                    // handled in nest()
+    CODE("_donext",                                     // handled in nest()
          if ((rs[-1] -= 1) >= 0) IP = *(IU*)MEM(IP);    // rs[-1]-=1 saved 200ms/1M cycles
          else { IP += sizeof(IU); rs.pop(); }),
     CODE("_dovar",   PUSH(IP);            IP += sizeof(DU)),
