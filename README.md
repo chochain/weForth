@@ -2,11 +2,11 @@
 
 WebAssembly enpowered eForth on web browsers, is it faster? is portable?
 
-Well, so far. It's not that fast. About 20% slower than pure Javascript implementation and 10~20x slower than running on CPU natively. On the portability end, it's not exactly plug-and-play either! Though mostly minor but some alteration and care are required to make it web-eabled not to mention updating DOM.
+Well, the result is pretty exciting! It's about 3x faster than pure Javascript implementation and 5x slower than running on CPU natively. On the portability end, though not exactly plug-and-play but with some minor alteration can make it web-eabled. Of course, updating DOM is a different feat.
 
-Regardless, it's fun to see eForth run in a browser straight from C/C++ code. Other popular scripting languages such as Python, Ruby are trending toward WASM/WASI, as well. However, they will not likely to speed up much (i.e. stuck at 10~20x slower) since there's no built-in compiler utility as Forth does.
+It's fun to see eForth run in a browser straight from C/C++ code. Other popular scripting languages such as Python, Ruby are trending toward WASM/WASI as well. However, they will not likely to speed up much (i.e. stuck at 10~20x slower so far) since there's no built-in compiler utility as Forth does.
 
-It's exciting to see that interops between different languages become a thing of the near future. So, hopefully, with stright WASM implementation plus the compiler, eForth can speed up a bit to become a worthy alternative.
+With WASM, the interoperability between different languages become a thing of the near future. Hopefully, with a bit creativitie to compile word directly into WASM opcodes, eForth can become a worthy scripting alternative for Web.
 
 ### Features
 * Javascript access to ss, dict (via WebAssembly.Memory)
