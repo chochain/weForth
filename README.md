@@ -62,9 +62,15 @@ With WASM, the interoperability between different languages become a thing of th
 * Note4: v1.2 Web Worker without yield in nest() speed up 3x
        
 ### TODO
-* inter-VM communication
-* add file system (FS/IndexedDB)
-* add graphic (WebGL, SDL)
+* compare features to uEforth
+* GraFORTH spec.
+  * File system (FS/IndexedDB)
+  * Editor
+  * 2D graphic (SDL)
+  * Character graphic (HTML5)
+  * 3D graphic (WebGL)
+  * Music (SDL)
 * add network system (wget/WebSocket)
+* inter-VM communication
 * use WASM stack as ss
 * macro-assembler
