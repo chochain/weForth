@@ -38,7 +38,7 @@
 #if    __EMSCRIPTEN__
 #include <emscripten.h>
 #define millis()        EM_ASM_INT({ return Date.now(); })
-#define delay(ms)       EM_ASM({ let t = Date.now() + $0; while (Date.now() < t); }, ms)
+#define delay(ms)       EM_ASM({ let t = setTimeout(()=>clearTimeout(t), $0); }, ms)
 #define yield()
 #else  // !__EMSCRIPTEN__
 #include <chrono>
