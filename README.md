@@ -63,7 +63,8 @@ With WASM, the interoperability between different languages become a thing of th
        
 ### TODO
 * inter-VM communication
-* add file system
-* add network system
+* add file system (FS/IndexedDB)
+* add graphic (WebGL, SDL)
+* add network system (wget/WebSocket)
 * use WASM stack as ss
 * macro-assembler
