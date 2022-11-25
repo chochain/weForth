@@ -98,8 +98,8 @@ void  colon(const char *name) {
     pmem.push((U8*)name,  sz);              ///> setup raw name field
     
     Code c(nfa, NULL);                      ///> create a blank code object
-    c.def = 1;                              ///> specify a colon word
-    c.pfa = HERE;                           ///> capture code field index
+    c.flag |= UDW_FLAG;                     ///> specify a colon word
+    c.pfa  = HERE;                          ///> capture code field index
     dict.push(c);                           ///> deep copy Code struct into dictionary
 }
 void add_iu(IU i)     { pmem.push((U8*)&i, sizeof(IU)); }                   /**< add an instruction into pmem */
@@ -107,7 +107,7 @@ void add_du(DU v)     { pmem.push((U8*)&v, sizeof(DU)); }                   /**<
 void add_str(const char *s) { int sz = STRLEN(s); pmem.push((U8*)s,  sz); } /**< add a string to pmem         */
 void add_w(IU w) {                                                          /**< add a word index into pmem   */
     Code &c = dict[w];
-    IU   ip = c.def ? (c.pfa | UDW_FLAG) : (w==EXIT ? 0 : XTOFF(c.xt));
+    IU   ip = IS_UDEF(w) ? (c.pfa | UDW_FLAG) : (w==EXIT ? 0 : XTOFF(c.xt));
     add_iu(ip);
     // printf("add_w(%d) => %4x:%p %s\n", w, ip, c.xt, c.name);
 }
@@ -127,7 +127,6 @@ void nest() {
     int dp  = 0;                                     ///> iterator depth control
     while (dp >= 0) {
         IU ix = *(IU*)MEM(IP);                       ///> fetch opcode
-//        printf("MEM(%d)=>ix=%d\n", IP, ix);
         while (ix) {                                 ///> fetch till EXIT
             IP += sizeof(IU);                        /// * advance inst. ptr
             if (ix & UDW_FLAG) {                     ///> is it a colon word?
@@ -147,8 +146,8 @@ void nest() {
 ///
 /// CALL macro (inline to speed-up)
 ///
-#define CALL(w)                                       \
-    if (dict[w].def) { WP = w; IP = PFA(w); nest(); } \
+#define CALL(w)                                      \
+    if (IS_UDEF(w)) { WP = w; IP = PFA(w); nest(); } \
     else (*(FPTR)((UFP)dict[w].xt & UDW_MASK))()
 
 ///==============================================================================
@@ -200,7 +199,7 @@ void see(IU pfa, int dp=1) {
         fout << setw(4) << (ip - MEM0) << "[ " << setw(-1);         ///> display word offset
         IU c = pfa2word(*(IU*)ip);                                  ///> fetch word index by pfa
         to_s(c);                                                    ///> display name
-        if (dict[c].def && dp < 2) {                                ///> is a colon word
+        if (IS_UDEF(c) && dp < 2) {                                 ///> is a colon word
             see(PFA(c), dp+1);                                      ///> recursive into child PFA
         }
         ip += sizeof(IU);
@@ -437,7 +436,7 @@ static Code prim[] = {
     /// @defgroup metacompiler
     /// @brief - dict is directly used, instead of shield by macros
     /// @{
-    CODE("exec",  CALL(POP())),                                  // execute word
+    CODE("exec",  DU xt = POP(); CALL(xt)),                      // execute word
     CODE("create",
         colon(next_idiom());                                     // create a new word on dictionary
         add_w(DOVAR)),                                           // dovar (+ parameter field)
@@ -472,7 +471,7 @@ static Code prim[] = {
     CODE("see",
         IU w = find(next_idiom());
         fout << "[ "; to_s(w);
-        if (dict[w].def) see(PFA(w));                            // recursive call
+         if (IS_UDEF(w)) see(PFA(w));                            // recursive call
         fout << "]" << ENDL),
     CODE("dump",  DU n = POP(); IU a = POP(); mem_dump(a, n)),
     CODE("peek",  DU a = POP(); PUSH(PEEK(a))),                  // (a -- n)
@@ -529,7 +528,7 @@ void forth_outer(const char *cmd, void(*callback)(int, const char*)) {
         const char *idiom = strbuf.c_str();
         int w = find(idiom);                 ///> * search through dictionary
         if (w >= 0) {                        ///> * word found?
-            if (compile && !dict[w].immd)    /// * in compile mode?
+            if (compile && !IS_IMMD(w))      /// * in compile mode?
                 add_w(w);                    /// * add to colon word
             else CALL(w);                    /// * execute forth word
             continue;
