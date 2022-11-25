@@ -226,10 +226,20 @@ void see(IU pfa, int dp=1) {
     }
 }
 void words() {
+    const int WIDTH = 60;
+    int sz = 0;
     fout << setbase(10);
-    for (int i = 0, n = 1; i < dict.idx; i++) {
-        if ((n%10)==0) { fout << ENDL; yield(); }
-        if (dict[i].name[0] != '_') (n++, to_s(i));
+    for (int i = 0; i < dict.idx; i++) {
+        const char *nm = dict[i].name;
+        if (nm[0] != '_') {
+            sz += strlen(nm) + 1;
+            to_s(i);
+        }
+        if (sz > WIDTH) {
+            sz = 0;
+            fout << ENDL;
+            yield();
+        }
     }
     fout << setbase(base);
 }
@@ -286,12 +296,12 @@ static Code prim[] = {
     CODE("_dovar",   PUSH(IP);            IP += sizeof(DU)),
     CODE("_dolit",   PUSH(*(DU*)MEM(IP)); IP += sizeof(DU)),
     CODE("_dostr",
-        const char *s = (const char*)MEM(IP);      // get string pointer
+        const char *s = (const char*)MEM(IP);      // put string address on TOS
         PUSH(IP); IP += STRLEN(s)),
     CODE("_dotstr",
         const char *s = (const char*)MEM(IP);      // get string pointer
-        fout << s;  IP += STRLEN(s)),              // send to output console
-    CODE("_branch" , IP = *(IU*)MEM(IP)),           // unconditional branch
+        fout << s;  IP += STRLEN(s)),              // print string to output console
+    CODE("_branch" , IP = *(IU*)MEM(IP)),          // unconditional branch
     CODE("_0branch", IP = POP() ? IP + sizeof(IU) : *(IU*)MEM(IP)), // conditional branch
     CODE("does",                                   // CREATE...DOES... meta-program
          IU *ip = (IU*)MEM(PFA(WP));
@@ -380,8 +390,8 @@ static Code prim[] = {
     CODE("]",       compile = true),
     IMMD("(",       scan(')')),
     IMMD(".(",      fout << scan(')')),
-    CODE("\\",      scan('\n')),
-    CODE("$\"",
+    IMMD("\\",      scan('\n')),
+    IMMD("s\"",
         const char *s = scan('"')+1;        // string skip first blank
         add_w(DOSTR);                       // dostr, (+parameter field)
         add_str(s)),                        // byte0, byte1, byte2, ..., byteN
@@ -466,7 +476,7 @@ static Code prim[] = {
     CODE("here",  PUSH(HERE)),
     CODE("ucase", ucase = POP()),
     CODE("'",     IU w = find(next_idiom()); PUSH(w)),
-    CODE(".s",    ss_dump()),
+    CODE(".s",    fout << (char*)MEM(POP())),                    // a --
     CODE("words", words()),
     CODE("see",
         IU w = find(next_idiom());
