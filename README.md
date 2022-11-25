@@ -4,9 +4,9 @@ WebAssembly enpowered eForth on web browsers, is it faster? is portable?
 
 Well, the result is pretty exciting! It's about 3x faster than pure Javascript implementation and 5x slower than running on CPU natively. On the portability end, though not exactly plug-and-play but with some minor alteration can make it web-eabled. Of course, updating DOM is a different feat.
 
-It's fun to see eForth run in a browser straight from C/C++ code. Other popular scripting languages such as Python, Ruby are trending toward WASM/WASI as well. However, they will not likely to speed up much (i.e. stuck at 10~20x slower so far) since there's no built-in compiler utility as Forth does.
+It brought me warm smiles to see eForth run in a browser. Better yet, straight from C/C++ code. Other popular scripting languages such as Python, Ruby are trending toward WASM/WASI implementation as well. However, without built-in compiler as Forth does, they will not likely to speed up much (i.e. stuck at 10~20x slower so far).
 
-With WASM, the interoperability between different languages become a thing of the near future. Hopefully, with a bit creativitie to compile word directly into WASM opcodes, eForth can become a worthy scripting alternative for Web.
+With WASM, the interoperability between different languages become a thing of the near future. Hopefully, a little bit more effort to compile word directly into WASM opcodes, to engage with WASI, to hookup the graphic front-end (i.g. SDL or WebGL), weForth can become a worthy scripting alternative for Web.
 
 ### Features
 * Javascript access to ss, dict (via WebAssembly.Memory)
@@ -40,31 +40,30 @@ With WASM, the interoperability between different languages become a thing of th
 |eforth.js v6|JavaScript||FireFox v107|1550|20|
 |uEforth v7|asm.js / C|--|FireFox v107|959|?|
 |||||||
-|weforth v1|WASM / C|--|FireFox v107|7433|237|
-|weforth v1|WASM / C|-O2|FireFox v107|1901|157|
-|weforth v1|WASM / C|-O3|FireFox v107|failed(unknown function)|174|
+|weForth v1|WASM / C|--|FireFox v107|7433|237|
+|weForth v1|WASM / C|-O2|FireFox v107|1901|157|
+|weForth v1|WASM / C|-O3|FireFox v107|failed(unknown function)|174|
 |||||||
-|weforth v1|WASM / C|--|FireFox v107 1-Worker|7496|237|
-|weforth v1|WASM / C|-O2|FireFox v107 1-Worker|1922|157|
-|weforth v1|WASM / C|-O3|FireFox v107 1-Worker|1847|174|
+|weForth v1|WASM / C|--|FireFox v107 1-Worker|7496|237|
+|weForth v1|WASM / C|-O2|FireFox v107 1-Worker|1922|157|
+|weForth v1|WASM / C|-O3|FireFox v107 1-Worker|1847|174|
 |||||||
-|weforth+switch|WASM / C|--|FireFox v107 1-Worker|7676|256|
-|weforth+switch|WASM / C|-O2|FireFox v107 1-Worker|3780|168|
-|weforth+switch|WASM / C|-O3|FireFox v107 1-Worker|3755|185|
+|weForth+switch|WASM / C|--|FireFox v107 1-Worker|7676|256|
+|weForth+switch|WASM / C|-O2|FireFox v107 1-Worker|3780|168|
+|weForth+switch|WASM / C|-O3|FireFox v107 1-Worker|3755|185|
 |||||||
-|weforth v1.2|WASM / C, no yield|--|FireFox v107 1-Worker|988|232|
-|weforth v1.2|WASM / C, no yield|-O2|FireFox v107 1-Worker|528|156|
-|weforth v1.2|WASM / C, no yield|-O3|FireFox v107 1-Worker|553|173|
+|weForth v1.2|WASM / C, no yield|--|FireFox v107 1-Worker|988|232|
+|weForth v1.2|WASM / C, no yield|-O2|FireFox v107 1-Worker|528|156|
+|weForth v1.2|WASM / C, no yield|-O3|FireFox v107 1-Worker|553|173|
 
 * Note1: uEforth v7 uses switch(op), instead of 'computed goto' (asm.js/WASM has no goto)
-* Note2: weforth v1 uses subroutine indirected-threaded
-* Note3: but, weforth+switch(op), is 2x slower than just function pointers. Why?
-* Note4: Web Worker without yield in nest() speed up 3x
+* Note2: weForth v1 uses subroutine indirected-threaded
+* Note3: weForth+switch(op), is 2x slower than just function pointers. Why?
+* Note4: v1.2 Web Worker without yield in nest() speed up 3x
        
 ### TODO
-* refactor
-  > inner interpreter in WASM (with indirect_call, i.e. WebAssembly.Table)<br/>
-  > outer interpreter and IO in C
+* inter-VM communication
+* add file system
+* add network system
 * use WASM stack as ss
 * macro-assembler
-* inter-VM communication
