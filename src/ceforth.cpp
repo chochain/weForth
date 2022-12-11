@@ -356,11 +356,10 @@ static Code prim[] = {
     CODE(">",    top = BOOL(ss.pop() >  top)),
     CODE("<",    top = BOOL(ss.pop() <  top)),
     CODE("<>",   top = BOOL(ss.pop() != top)),
-    CODE(">=",   top = BOOL(ss.pop() >= top)),
-    CODE("<=",   top = BOOL(ss.pop() <= top)),
     /// @}
     /// @defgroup IO ops
     /// @{
+    CODE("ucase!",  ucase = POP()),
     CODE("base@",   PUSH(base)),
     CODE("base!",   fout << setbase(base = POP())),
     CODE("hex",     fout << setbase(base = 16)),
@@ -376,8 +375,6 @@ static Code prim[] = {
     /// @}
     /// @defgroup Literal ops
     /// @{
-    CODE("[",       compile = false),
-    CODE("]",       compile = true),
     IMMD("(",       scan(')')),
     IMMD(".(",      fout << scan(')')),
     IMMD("\\",      scan('\n')),
@@ -418,10 +415,23 @@ static Code prim[] = {
         POP(); add_w(BRAN);
         IU h=HERE; add_iu(0); PUSH(HERE); PUSH(h)),
     /// @}
-    /// @defgrouop Compiler ops
+    /// @defgroup memory access
+    /// @brief be careful with these, especially BYTE because
+    ///    it could make access misaligned which slows the access speed by 2x
     /// @{
-    CODE(":", colon(next_idiom()); compile=true),
-    IMMD(";", add_w(EXIT); compile = false),
+    CODE("?",    IU w = POP(); fout << CELL(w) << " "),          // w --
+    CODE("@",    IU w = POP(); PUSH(CELL(w))),                   // w -- n
+    CODE("!",    IU w = POP(); CELL(w) = POP();),                // n w --
+    CODE("+!",   IU w = POP(); CELL(w) += POP()),                // n w --
+    /// @}
+    /// @defgrouop Word defining ops
+    /// @{
+    CODE("[",    compile = false),
+    CODE("]",    compile = true),
+    CODE("'",    IU w = find(next_idiom()); PUSH(w)),
+    CODE("exec", DU xt = POP(); CALL(xt)),                       // execute word
+    CODE(":",    colon(next_idiom()); compile=true),
+    IMMD(";",    add_w(EXIT); compile = false),
     CODE("variable",                                             // create a variable
         colon(next_idiom());                                     // create a new word on dictionary
         add_w(DOVAR);                                            // dovar (+parameter field)
@@ -432,48 +442,29 @@ static Code prim[] = {
         add_w(DOLIT);                                            // dovar (+parameter field)
         add_du(POP());                                           // data storage (32-bit integer now)
         add_w(EXIT)),
-    /// @}
-    /// @defgroup metacompiler
-    /// @brief - dict is directly used, instead of shield by macros
-    /// @{
-    CODE("exec",  DU xt = POP(); CALL(xt)),                      // execute word
     CODE("create",
         colon(next_idiom());                                     // create a new word on dictionary
         add_w(DOVAR)),                                           // dovar (+ parameter field)
+    CODE(",",     DU n = POP(); add_du(n)),
+    CODE("allot", DU v = 0; for (IU n = POP(), i = 0; i < n; i++) add_du(v)), // n --
     CODE("to",              // 3 to x                            // alter the value of a constant
         IU w = find(next_idiom());                               // to save the extra @ of a variable
         *(DU*)(PFA(w) + sizeof(IU)) = POP()),
     CODE("is",              // ' y is x                          // alias a word
         IU w = find(next_idiom());                               // copy entire union struct
         dict[POP()].xt = dict[w].xt),
-    
-    CODE("[to]",            // : xx 3 [to] y ;                   // alter constant in compile mode
-        IU w = *(IU*)MEM(IP); IP += sizeof(IU);                  // fetch constant pfa from 'here'
-        *(DU*)MEM(PFA(w) + sizeof(IU)) = POP()),
-    ///
-    /// be careful with memory access, especially BYTE because
-    /// it could make access misaligned which slows the access speed by 2x
-    ///
-    CODE("@",     IU w = POP(); PUSH(CELL(w))),                  // w -- n
-    CODE("!",     IU w = POP(); CELL(w) = POP();),               // n w --
-    CODE(",",     DU n = POP(); add_du(n)),
-    CODE("allot", DU v = 0; for (IU n = POP(), i = 0; i < n; i++) add_du(v)), // n --
-    CODE("+!",    IU w = POP(); CELL(w) += POP()),               // n w --
-    CODE("?",     IU w = POP(); fout << CELL(w) << " "),         // w --
     /// @}
     /// @defgroup Debug ops
     /// @{
     CODE("here",  PUSH(HERE)),
-    CODE("ucase", ucase = POP()),
-    CODE("'",     IU w = find(next_idiom()); PUSH(w)),
-    CODE(".s",    fout << (char*)MEM(POP())),                    // a --
     CODE("words", words()),
+    CODE("dump",  DU n = POP(); IU a = POP(); mem_dump(a, n)),
     CODE("see",
         IU w = find(next_idiom());
         fout << "[ "; to_s(w);
          if (IS_UDEF(w)) see(PFA(w));                            // recursive call
         fout << "]" << ENDL),
-    CODE("dump",  DU n = POP(); IU a = POP(); mem_dump(a, n)),
+    CODE(".s",    fout << (char*)MEM(POP())),                    // a --
     CODE("peek",  DU a = POP(); PUSH(PEEK(a))),                  // (a -- n)
     CODE("poke",  DU a = POP(); POKE(a, POP())),                 // (n a -- )
     CODE("forget",
