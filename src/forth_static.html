@@ -7,7 +7,7 @@
     .col  { display:flex; flex-direction:column; font-size:20px; border:1px solid #ccc }
     .row  { display:flex; width:100%; }
     .hdr  { text-align:center; background-color:#eee; margin:8px; padding:6px }
-    .dic  { text-align:left; color:#484; margin:4px; font-family:monospace; overflow-wrap:auto; }
+    .dict { text-align:left; color:#484; margin:4px; font-family:monospace; overflow-wrap:auto; }
     .code { height:36px; width:90%; font-size:24px; margin:0 2px 0 2px; }
     .cmd  { color:#48f; margin: 2px; }
     .txt  { display:block; padding:8px; width:100%; overflow-x:scroll; }
@@ -21,7 +21,7 @@
   <body>
     <div class='row'>
       <div class='col' style='width:15%'>
-        <pre class='hdr'>dictionary</pre><div id='dic' class='dic'></div>
+        <pre class='hdr'>dictionary</pre><div id='dc' class='dict'></div>
       </div>
       <div class='col' style='width:84%; padding:8px'>
         <div class='row'>
@@ -72,7 +72,8 @@
     /// Forth section
     ///
     let forth_vm = new Worker('ceforth_worker.js') ///< create the Forth worker thread
-      
+
+    clear_txt()             
     forth_vm.onmessage = (e)=>{                    /// * wait for worker's response
         switch (e.data[0]) {
         case 'cmd': to_txt(e.data[1]); break
