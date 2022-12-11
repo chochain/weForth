@@ -10,7 +10,7 @@
     .dict { text-align:left; color:#484; margin:4px; font-family:monospace; overflow-wrap:auto; }
     .code { height:36px; width:90%; font-size:24px; margin:0 2px 0 2px; }
     .cmd  { color:#48f; margin: 2px; }
-    .txt  { display:block; padding:8px; width:100%; overflow-x:scroll; }
+    .txt  { display:block; padding:8px; width:100%; font-family:monospace; overflow-x:scroll; }
     .ss   { padding:8px; color:#484; background-color:#eee; font-family:monospace; }
     .CodeMirror { width:100%; border:1px solid #444; resize: vertical; overflow:auto; }
   </style>
@@ -27,14 +27,13 @@
         <div class='row'>
           <button style='width:10%'
   		     onclick='edt.style.display=(edt.style.display=="none") ? "block" : "none"'>editor</button>
-          <input id='tib' class='code' value=''
-             onkeydown='if (13===event.keyCode) forth_eval()'/>
+          <input id='tib' class='code' value='' />
           <button style='width:10%' onclick='clear_txt()'>clear</button>
         </div>
         <div id='edt'>
           <textarea id='cm'>\ type command into the input buffer above, or&#013;\ write your code here&#013;\ highlight the code you want to execute&#013;\ Ctrl-C to copy into the input buffer above&#013;\ then hit <return> to execute</textarea>
         </div>
-        <pre id='txt' class='txt'></pre>
+        <div id='txt' class='txt'></div>
         <div id='ss'  class='ss'>-1</div>
       </div>
     </div>
@@ -56,7 +55,15 @@
         document.activeElement.blur()
         tib.focus()
     })
-    let rz = new ResizeObserver(e=>{            ///< adjust console height
+    tib.onkeydown = (e)=>{
+        if (13==e.keyCode) {
+            forth_eval(tib.value)
+            tib.value = ''
+            tib.style.backgroundColor='white'
+            tib.focus()
+        }
+    }
+    const rz = new ResizeObserver(e=>{               ///< adjust console height
         txt.style.height = window.innerHeight - txt.offsetTop - 100
         txt.scrollTop    = txt.scrollHeight
     }).observe(document.getElementById('edt'))
@@ -66,15 +73,21 @@
             return s.replace(/\n/g,'<br/>').replace(/\s/g, '&nbsp;')
         }
         txt.innerHTML += esc && typeof(s)=='string' ? escape(t) : t
+        txt.scrollTop = txt.scrollHeight
     }
     function clear_txt() { txt.innerHTML=''; to_txt('<h2>weForth 1.2</h2>') }
+    function show_cmd(cmd) {
+        let htm = cmd.replace(/:/g,'<br/>:')                     /// * show on a new line
+        if (htm.indexOf('<br/>')==0) htm.replace('<br/>','')     /// * remove blank lines
+        to_txt('<pre class="cmd"><em>'+htm+'</em></pre>', false)
+    }
     ///
     /// Forth section
     ///
-    let forth_vm = new Worker('ceforth_worker.js') ///< create the Forth worker thread
+    const forth_vm = new Worker('ceforth_worker.js') ///< create the Forth worker thread
 
     clear_txt()             
-    forth_vm.onmessage = (e)=>{                    /// * wait for worker's response
+    forth_vm.onmessage = (e)=>{                      /// * wait for worker's response
         switch (e.data[0]) {
         case 'cmd': to_txt(e.data[1]); break
         case 'dc' : dc.innerHTML = e.data[1].join(' '); break
@@ -85,23 +98,13 @@
     ///
     /// Forth outer interpreter
     ///
-    function forth_eval() {                                   ///< evaludate Forth command
-        let cmd = tib.value.replace(/:/g,'<br/>:')            /// * show on a new line
-        if (cmd.indexOf('<br/>')==0) cmd.replace('<br/>','')  /// * remove blank lines
-        to_txt('<pre class="cmd"><em>'+cmd+'</em></pre>', false)
-        try {
-            if (tib.value=='clear') clear_txt()
-            else {
-                forth_vm.postMessage(['cmd', tib.value])      /// * send command to Forth worker
-                forth_vm.postMessage(['ss'])                  /// * send command to Forth worker
-                forth_vm.postMessage(['dc'])
-            }
-        }
-        catch(e) { console.log(e.toString()+'\n') }
-        finally  {                                            /// * clear input buffer
-            tib.value=''
-            tib.style.backgroundColor='white'
-            txt.scrollTop = txt.scrollHeight
+    function forth_eval(cmd) {                       ///< evaludate Forth command
+        show_cmd(cmd)
+        if (cmd=='clear') clear_txt()
+        else {
+            forth_vm.postMessage(['cmd', cmd])       /// * send command to Forth worker
+            forth_vm.postMessage(['ss'])             /// * send command to Forth worker
+            forth_vm.postMessage(['dc'])
         }
     }
     </script>
