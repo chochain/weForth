@@ -590,12 +590,12 @@ char *vm_dict(int i) { return (char*)dict[i].name; }
 
 int main() {
     forth_init();                                   // initialize dictionary
+
+#if !DO_WASM
     dict_dump();
     mem_stat();
-
     cout << version() << endl;
     
-#if !DO_WASM
     /// for testsing
     static auto send_to_con = [](int len, const char *rst) { cout << rst; };
     string cmd;
