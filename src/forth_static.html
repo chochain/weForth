@@ -4,7 +4,8 @@
   <style>
     h2    { color: #c44; margin: 0; }
     h3    { color: #fc4; margin: 0; }
-    .col  { display:flex; flex-direction:column; font-size:20px; border:1px solid #ccc }
+    pre   { color: #444; margin: 0; }
+    .col  { display:flex; flex-direction:column; height:100%; font-size:20px; border:1px solid #ccc }
     .row  { display:flex; width:100%; }
     .hdr  { text-align:center; background-color:#eee; margin:8px; padding:6px }
     .dict { text-align:left; color:#484; margin:4px; font-family:monospace; overflow-wrap:auto; }
@@ -19,7 +20,7 @@
   <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/mode/forth/forth.min.js'></script>
   </head>
   <body>
-    <div class='row'>
+    <div class='row' style='height:100%'>
       <div class='col' style='width:15%'>
         <pre class='hdr'>dictionary</pre><div id='dc' class='dict'></div>
       </div>
@@ -47,7 +48,6 @@
         styleActiveLine: true,
         mode: 'forth'
     })
-    cm.setSize('100%','100%')
     cm.on('copy', (doc)=>{
         let cmd=doc.getSelection()
         tib.value = cmd.replace(/[\t|\n]/g,' ')
@@ -64,15 +64,15 @@
         }
     }
     const rz = new ResizeObserver(e=>{               ///< adjust console height
-        txt.style.height = window.innerHeight - txt.offsetTop - 100
+        edt.style.height = cm.innerHeight
         txt.scrollTop    = txt.scrollHeight
-    }).observe(document.getElementById('edt'))
+    }).observe(document.getElementById('cm'))
 
     function to_txt(t, esc=true) {
         const escape = (s)=>{
             return s.replace(/\n/g,'<br/>').replace(/\s/g, '&nbsp;')
         }
-        txt.innerHTML += esc && typeof(s)=='string' ? escape(t) : t
+        txt.innerHTML += esc && typeof(s)=='string' ? escape(t) : '<pre>'+t+'</pre>'
         txt.scrollTop = txt.scrollHeight
     }
     function clear_txt() { txt.innerHTML=''; to_txt('<h2>weForth 1.2</h2>') }
@@ -90,8 +90,8 @@
     forth_vm.onmessage = (e)=>{                      /// * wait for worker's response
         switch (e.data[0]) {
         case 'cmd': to_txt(e.data[1]); break
-        case 'dc' : dc.innerHTML = e.data[1].join(' '); break
-        case 'ss' : ss.innerHTML = e.data[1].reverse().join(' '); break
+        case 'dc' : dc.innerHTML = e.data[1].reverse().join(' '); break
+        case 'ss' : ss.innerHTML = e.data[1].join(' '); break
         default: console.log(e.data[0])
         }
     }
