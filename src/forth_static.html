@@ -69,7 +69,7 @@
 
     function to_txt(t, esc=true) {
         const escape = (s)=>{
-            return s.replace(/\n/g,'<br/>').replace(/\s/g, '&nbsp;')
+            return s.replace(/\n/g,'<br/>').replace(/\s/g, '&nbsp;')+'<br/>'
         }
         txt.innerHTML += esc && typeof(t)=='string' ? escape(t) : t
         txt.scrollTop = txt.scrollHeight
