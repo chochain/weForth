@@ -62,10 +62,12 @@ typedef uintptr_t       UFP;   ///< function pointer as integer
 typedef double          DU2;
 typedef float           DU;
 #define DVAL            0.0f
+#define UINT(v)         (fabs(v))
 #else // !USE_FLOAT
 typedef int64_t         DU2;
 typedef int32_t         DU;
 #define DVAL            0
+#define UINT(v)         ((U32)(v))
 #endif // USE_FLOAT
 typedef uint16_t        IU;    ///< instruction pointer unit
 ///@}
