@@ -13,14 +13,14 @@ With WASM, the interoperability between different languages become a thing of th
 * Forth in Web Worker thread (can support multi-VMs)
 
 ### To Compile (make sure emscripten is installed)
-* em++ -o tests/ceforth.html src/ceforth.cpp --shell-file src/forth_template.html -sEXPORTED_FUNCTIONS=_main,_forth,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+* em++ -o tests/ceforth.html src/ceforth.cpp --shell-file src/forth_template.html -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
   > Note: -O2 works OK, -O3 emscripten spits wrong code
   
 * em++ -o tests/ceForth_403.html src/ceForth_403.cpp --shell-file src/forth_template.html -sEXPORTED_FUNCTIONS=_main,_forth -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
 ### To Compile to Web Worker (run almost at the same speed as main thread)
 * cp src/forth_static.html tests/ceforth.html; cp src/ceforth_worker.js tests
-* em++ -o tests/ceforth.js src/ceforth.cpp -sEXPORTED_FUNCTIONS=_main,_forth,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+* em++ -o tests/ceforth.js src/ceforth.cpp -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
 ### To Debug (dump all functions)
 * em++ -o tests/ceforth.html src/ceforth.cpp --shell-file src/forth_template.html -sEXPORTED_ALL=1 -sLINKABLE=1 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
@@ -62,28 +62,7 @@ With WASM, the interoperability between different languages become a thing of th
 * Note4: v1.2 Web Worker without yield in nest() speed up 3x
        
 ### TODO
-* compare features to uEforth
-  + Forth-83
-  <pre>
-  Nucleus layer 
-    !  *  */  */MOD  +  +!  -  /  /MOD  0<  0=  0>  1+  1-  2+ 2-  2/
-    <  =  >  >R  ?DUP  @  ABS  AND  C!  C@  CMOVE CMOVE>  COUNT
-    D+  D<  DEPTH  DNEGATE  DROP  DUP  EXECUTE EXIT  FILL
-    I  J  MAX  MIN  MOD  NEGATE  NOT  OR  OVER  PICK
-    R>  R@  ROLL  ROT  SWAP  U<  UM*  UM/MOD  XOR
-  Device layer 
-    BLOCK  BUFFER  CR  EMIT  EXPECT  FLUSH  KEY  SAVE-BUFFERS SPACE  SPACES  TYPE  UPDATE
-  Interpreter layer 
-    #  #>  #S  #TIB  '  (  -TRAILING  .  .(  <#  >BODY  >IN
-    ABORT  BASE  BLK  CONVERT  DECIMAL  DEFINITIONS  FIND
-    FORGET  FORTH  FORTH-83  HERE  HOLD  LOAD  PAD  QUIT  SIGN
-    SPAN  TIB  U.  WORD
-  Compiler layer 
-    +LOOP  ,  ."  :  ;  ABORT"  ALLOT  BEGIN  COMPILE  CONSTANT
-    CREATE  DO  DOES>  ELSE  IF  IMMEDIATE  LEAVE  LITERAL  LOOP
-    REPEAT  STATE  THEN  UNTIL  VARIABLE  VOCABULARY  WHILE   
-    [']  [COMPILE]  ]
-  </pre>
+* Sync UI with eForth.js
 * GraFORTH spec.
   * File system (FS/IndexedDB)
   * Editor
