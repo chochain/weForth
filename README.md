@@ -19,8 +19,8 @@ With WASM, the interoperability between different languages become a thing of th
 * em++ -o tests/ceForth_403.html src/ceForth_403.cpp --shell-file src/forth_template.html -sEXPORTED_FUNCTIONS=_main,_forth -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
 ### To Compile to Web Worker (run almost at the same speed as main thread)
-* cp src/forth_static.html tests/ceforth.html; cp src/ceforth_worker.js tests
-* em++ -o tests/ceforth.js src/ceforth.cpp -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+* cp src/weforth_static.html tests/weforth.html; cp src/weforth.css src/file_io.js src/weforth_helper.js src/weforth_worker.js tests
+* em++ -o tests/weforth.js src/ceforth.cpp -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
 ### To Debug (dump all functions)
 * em++ -o tests/ceforth.html src/ceforth.cpp --shell-file src/forth_template.html -sEXPORTED_ALL=1 -sLINKABLE=1 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
