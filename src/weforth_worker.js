@@ -7,6 +7,8 @@ Module = {
 }
 var vm_dict_len = 0
 
+importScripts('weforth_helper.js')             /// * vocabulary handler
+
 function show_ss() {
     let ex  = Module.asm
     let base= ex.vm_base()
@@ -24,13 +26,13 @@ function show_dict() {
     if (vm_dict_len == len) return
     
     vm_dict_len = len
-    let dict= Module.cwrap('vm_dict', 'string', ['number'])
-    let div = []
+    let dict = Module.cwrap('vm_dict', 'string', ['number'])
+    let nlst = []
     for (let i = 0; i < len; ++i) {
         let nm = dict(i)
-        if (nm[0]!='_') div.push(nm)
+        if (nm[0]!='_') nlst.push(nm)
     }
-    postMessage([ 'dc', div ])
+    postMessage([ 'dc', _voc_tree(nlst) ])
 }
 self.onmessage = function(e) {                    /// * link worker input port
     let forth = Module.cwrap('forth', null, ['number', 'string'])
@@ -41,4 +43,4 @@ self.onmessage = function(e) {                    /// * link worker input port
     default: postMessage('unknown type');
     }
 }
-importScripts('ceforth.js')                       /// * load js emscripten created
+importScripts('weforth.js')                       /// * load js emscripten created
