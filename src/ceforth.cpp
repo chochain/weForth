@@ -167,6 +167,21 @@ string          strbuf;             ///< input string buffer
 void (*fout_cb)(int, const char*);  ///< forth output callback function (see ENDL macro)
 ///================================================================================
 ///
+/// macros to reduce verbosity
+///
+inline char *next_idiom() { fin >> strbuf; return (char*)strbuf.c_str(); } ///< get next idiom
+inline char *scan(char c) { getline(fin, strbuf, c); return (char*)strbuf.c_str(); }
+inline void PUSH(DU v)    { ss.push(top); top = v; }
+inline DU   POP()         { DU n=top; top=ss.pop(); return n; }
+///
+//#define     PUSH(v)       { ss.push(top); top = (v); }
+///
+/// global memory access macros
+///
+#define     PEEK(a)    (DU)(*(DU*)((UFP)MEM(a)))
+#define     POKE(a, c) (*(DU*)((UFP)MEM(a))=(DU)(c))
+///================================================================================
+///
 /// IO & debug functions
 ///
 inline void dot_r(int n, int v) { fout << setw(n) << setfill(' ') << v; }
@@ -176,6 +191,12 @@ inline void to_s(IU w) {
 #else  // !CC_DEBUG
     fout << dict[w].name << " ";
 #endif // CC_DEBUG
+}
+void spaces(int n) { for (int i = 0; i < n; i++) fout << " "; }
+void s_quote() {
+    const char *s = scan('"')+1;        // string skip first blank
+    add_w(DOSTR);                       // dostr, (+parameter field)
+    add_str(s);                         // byte0, byte1, byte2, ..., byteN
 }
 ///
 /// recursively disassemble colon word
@@ -254,21 +275,6 @@ void mem_dump(IU p0, DU sz) {
     }
     fout << setbase(base);
 }
-///================================================================================
-///
-/// macros to reduce verbosity
-///
-inline char *next_idiom() { fin >> strbuf; return (char*)strbuf.c_str(); } ///< get next idiom
-inline char *scan(char c) { getline(fin, strbuf, c); return (char*)strbuf.c_str(); }
-inline void PUSH(DU v)    { ss.push(top); top = v; }
-inline DU   POP()         { DU n=top; top=ss.pop(); return n; }
-///
-//#define     PUSH(v)       { ss.push(top); top = (v); }
-///
-/// global memory access macros
-///
-#define     PEEK(a)    (DU)(*(DU*)((UFP)MEM(a)))
-#define     POKE(a, c) (*(DU*)((UFP)MEM(a))=(DU)(c))
 ///==========================================================================
 ///
 /// eForth - dictionary initializer
@@ -293,13 +299,14 @@ static Code prim[] = {
         fout << s;  IP += STRLEN(s)),              // print string to output console
     CODE("_branch" , IP = *(IU*)MEM(IP)),          // unconditional branch
     CODE("_0branch", IP = POP() ? IP + sizeof(IU) : *(IU*)MEM(IP)), // conditional branch
-    CODE("does",                                   // CREATE...DOES... meta-program
+    CODE("does>",                                  // CREATE...DOES>... meta-program
          IU *ip = (IU*)MEM(PFA(WP));
-         while (*ip != DOES) ip++;                 // find DOES
+         while (*ip != DOES) ip++;                 // find DOES>
          while (*++ip) add_iu(*ip)),               // copy&paste code
     CODE(">r",   rs.push(POP())),
     CODE("r>",   PUSH(rs.pop())),
     CODE("r@",   PUSH(rs[-1])),
+    CODE("i",    PUSH(rs[-1])),                    // alias r@
     /// @}
     /// @defgroup Stack ops
     /// @brief - opcode sequence can be changed below this line
@@ -335,17 +342,23 @@ static Code prim[] = {
         DU2 n = (DU2)ss.pop() * ss.pop();
         DU2 t = top;
         ss.push((DU)(n % t)); top = (DU)(n / t)),
-    CODE("and",  top = ss.pop() & top),
-    CODE("or",   top = ss.pop() | top),
-    CODE("xor",  top = ss.pop() ^ top),
-    CODE("abs",  top = abs(top)),
-    CODE("negate", top = -top),
     CODE("max",  DU n=ss.pop(); top = (top>n)?top:n),
     CODE("min",  DU n=ss.pop(); top = (top<n)?top:n),
     CODE("2*",   top *= 2),
     CODE("2/",   top /= 2),
     CODE("1+",   top += 1),
     CODE("1-",   top -= 1),
+    /// @}
+    /// @defgroup bit-wise ops
+    /// @{
+    CODE("and",  top = ss.pop() & top),
+    CODE("or",   top = ss.pop() | top),
+    CODE("xor",  top = ss.pop() ^ top),
+    CODE("negate", top = -top),
+    CODE("invert", top ^= -1),
+    CODE("abs",  top = abs(top)),
+    CODE("rshift", top = ss.pop() >> top),
+    CODE("lshift", top = ss.pop() << top),
     /// @}
     /// @defgroup Logic ops
     /// @{
@@ -356,36 +369,41 @@ static Code prim[] = {
     CODE(">",    top = BOOL(ss.pop() >  top)),
     CODE("<",    top = BOOL(ss.pop() <  top)),
     CODE("<>",   top = BOOL(ss.pop() != top)),
+    CODE("u<",   top = BOOL(UINT(ss.pop()) < UINT(top))),
+    CODE("u>",   top = BOOL(UINT(ss.pop()) > UINT(top))),
     /// @}
     /// @defgroup IO ops
     /// @{
     CODE("ucase!",  ucase = POP()),
     CODE("base@",   PUSH(base)),
     CODE("base!",   fout << setbase(base = POP())),
-    CODE("hex",     fout << setbase(base = 16)),
     CODE("decimal", fout << setbase(base = 10)),
+    CODE("hex",     fout << setbase(base = 16)),
+    CODE("bl",      fout << " "),
     CODE("cr",      fout << ENDL),
     CODE(".",       fout << POP() << " "),
+    CODE("u.",      fout << UINT(POP()) << " "),
     CODE(".r",      DU n = POP(); dot_r(n, POP())),
-    CODE("u.r",     DU n = POP(); dot_r(n, abs(POP()))),
+    CODE("u.r",     DU n = POP(); dot_r(n, UINT(POP()))),
     CODE("key",     PUSH(next_idiom()[0])),
     CODE("emit",    char b = (char)POP(); fout << b),
-    CODE("space",   fout << " "),
-    CODE("spaces",  for (int n = POP(), i = 0; i < n; i++) fout << " "),
+    CODE("space",   spaces(1)),
+    CODE("spaces",  spaces(POP())),
     /// @}
     /// @defgroup Literal ops
     /// @{
+    IMMD("s\"",     s_quote()),
+    IMMD("\"",      s_quote()),                                 // non-Forth standard
+    CODE(".\"",
+         const char *s = scan('"')+1;
+         if (!compile) fout << s;
+         else {
+             add_w(DOTSTR);
+             add_str(s);
+         }),
     IMMD("(",       scan(')')),
     IMMD(".(",      fout << scan(')')),
     IMMD("\\",      scan('\n')),
-    IMMD("s\"",
-        const char *s = scan('"')+1;        // string skip first blank
-        add_w(DOSTR);                       // dostr, (+parameter field)
-        add_str(s)),                        // byte0, byte1, byte2, ..., byteN
-    IMMD(".\"",
-        const char *s = scan('"')+1;        // string skip first blank
-        add_w(DOTSTR);                      // dostr, (+parameter field)
-        add_str(s)),                        // byte0, byte1, byte2, ..., byteN
     /// @}
     /// @defgroup Branching ops
     /// @brief - if...then, if...else...then
@@ -423,6 +441,8 @@ static Code prim[] = {
     CODE("@",    IU w = POP(); PUSH(CELL(w))),                   // w -- n
     CODE("!",    IU w = POP(); CELL(w) = POP();),                // n w --
     CODE("+!",   IU w = POP(); CELL(w) += POP()),                // n w --
+    CODE("n@",   { /* todo */ }),                                // a i -- n
+    CODE("n!",   { /* todo */ }),                                // a i w -- 
     /// @}
     /// @defgrouop Word defining ops
     /// @{
@@ -457,6 +477,7 @@ static Code prim[] = {
     /// @defgroup Debug ops
     /// @{
     CODE("here",  PUSH(HERE)),
+    CODE(".s",    fout << (char*)MEM(POP())),                    // a --
     CODE("words", words()),
     CODE("dump",  DU n = POP(); IU a = POP(); mem_dump(a, n)),
     CODE("see",
@@ -464,7 +485,6 @@ static Code prim[] = {
         fout << "[ "; to_s(w);
          if (IS_UDEF(w)) see(PFA(w));                            // recursive call
         fout << "]" << ENDL),
-    CODE(".s",    fout << (char*)MEM(POP())),                    // a --
     CODE("peek",  DU a = POP(); PUSH(PEEK(a))),                  // (a -- n)
     CODE("poke",  DU a = POP(); POKE(a, POP())),                 // (n a -- )
     CODE("forget",
@@ -472,11 +492,19 @@ static Code prim[] = {
         if (w<0) return;
         IU b = find("boot")+1;
         dict.clear(w > b ? w : b)),
-    CODE("clock", PUSH(millis())),
+    CODE("abort", rs.clear(); ss.clear()),
+    CODE("ms",    PUSH(millis())),
     CODE("delay", delay(POP())),
+    CODE("date",  { /* to do */ }),
+    CODE("time",  { /* to do */ }),
+    CODE("eval",  { /* to do */ }),
     /// @}
     CODE("bye",   exit(0)),
-    CODE("boot",  dict.clear(find("boot") + 1); pmem.clear())
+    CODE("boot",
+        dict.clear(find("boot") + 1);
+        pmem.clear();
+        rs.clear();
+        ss.clear())
 };
 const int PSZ = sizeof(prim)/sizeof(Code);
 ///
@@ -582,8 +610,9 @@ void forth(int n, char *cmd) {
     static auto send_to_con = [](int len, const char *rst) { cout << rst; };
     forth_outer(cmd, send_to_con);
 }
-int  vm_ss_idx()     { return ss.idx; }
-DU   *vm_ss()        { return &ss[0]; }
+int  vm_base()       { return base;     }
+int  vm_ss_idx()     { return ss.idx;   }
+DU   *vm_ss()        { return &ss[0];   }
 int  vm_dict_idx()   { return dict.idx; }
 char *vm_dict(int i) { return (char*)dict[i].name; }
 }
