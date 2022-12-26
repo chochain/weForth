@@ -9,12 +9,13 @@ var vm_dict_len = 0
 
 function show_ss() {
     let ex  = Module.asm
+    let base= ex.vm_base()
     let len = ex.vm_ss_idx()
     let ss  = new Int32Array(Module.asm.memory.buffer, ex.vm_ss(), len)
     let top = new Int32Array(Module.asm.memory.buffer, ex.top, 1)
     let div = []
-    ss.forEach(v=>div.push(v))
-    div.push(top[0])
+    ss.forEach(v=>div.push(v.toString(base)))
+    div.push(top[0].toString(base))
     postMessage([ 'ss', div ])
 }
 function show_dict() {
