@@ -111,6 +111,8 @@ var _forth_voc = {
     'or'      : [ 'au', '( a b -- c )', 'Bitwise OR of two tos items' ],
     'over'    : [ 'ss', '( a b -- a b a )', 'Duplicate 2nd tos item' ],
     'parse'   : [ 'cm', '( -- )',       'Prase out next token in input buffer' ],
+    'peek'    : [ 'mm', '( a -- n )',   'Fetch content in memory address a' ],
+    'poke'    : [ 'mm', '( a n -- )',   'Store value n into memory address a' ],
     'pick'    : [ 'ss', '( i -- a )',   'Copy ith tos item to top' ],
     'quit'    : [ 'os', '( -- )',       'Outer interpreter' ],
     'r>'      : [ 'br', '( -- a )',     'Pop return stack to tos' ],
@@ -185,18 +187,18 @@ function _tooltip(name) {
         `${name.toUpperCase()} ${_esc(voc[1])} ${_esc(voc[2])}` +
         '</i></div></a></li>'
 }
-function _voc_tree(dict) {
-    const voc = dict.reduce((r,v)=>{
-        const c = _category(v.name)               ///< get category
+function _voc_tree(nlst) {
+    const voc = nlst.reduce((r,n)=>{
+        const c = _category(n)               ///< get category
         if (c) {
-            if (r[c]) r[c].push(v); else r[c] = [ v ]
+            if (r[c]) r[c].push(n); else r[c] = [ n ]
         }
         return r
     }, {})
     let div = ''
     Object.keys(voc).sort().forEach(k=>{
         div += `<ul class="tree"><li><a href="#">${_esc(k)}</a><ul>`
-        voc[k].forEach(v=>{ div += _tooltip(v.name) })
+        voc[k].forEach(n=>{ div += _tooltip(n) })
         div += '</ul></li></ul>'
     })
     return div
@@ -218,67 +220,14 @@ function _see(w, n=0) {
     _show_pf(w.pf2)                            /// * aft.{pf2}.next
     return div
 }
-function _colon_words(dict) {
+function _colon_words(nlst) {
     let div = '<ul class="tree"><li class="open"><a href="#">User</a><ul>'
-    for (let i = dict.length - 1;
-         i >= 0 && dict[i].name != 'boot'; --i) {
-        let xt = _see(dict[i])
+    for (let i = nlst.length - 1;
+         i >= 0 && nlst[i] != 'boot'; --i) {
+        let xt = _see(nlst[i])
         div += '<li><a href="#"><div class="tip">' +
             `${_esc(dict[i].name)}<i>${xt}</i>` +
             '</div></a></li>'
     }
     return div+'</li></ul>'
-}
-///
-/// Forth Vocabulary
-///
-var _dict_len = 0
-function show_voc(dict, dc, usr) {
-    if (_dict_len == dict.length) return  /* cached */
-    
-    _dict_len = dict.length
-    dc.innerHTML  = _voc_tree(dict)
-    usr.innerHTML = _colon_words(dict)
-    
-    let tree = document.querySelectorAll('ul.tree a:not(:last-child)')
-    tree.forEach(ul=>{
-        ul.onclick = e=>{
-            var pa = e.target.parentElement
-            var cl = pa.classList
-            if(cl.contains("open")) {
-                cl.remove('open')
-                pa.querySelectorAll(':scope .open').forEach(c=>{
-                    c.classList.remove('open')
-                })
-            }
-            else cl.add('open')
-            e.preventDefault()
-        }
-    })
-}
-///
-/// File IO functions
-///
-function file_new(fname) {
-    let fn = prompt('Create new file', 'untitled.f')
-    if (fn) $(fname).innerHTML = fn
-}
-function file_load(flst, fname) {
-    if (flst.length != 1) return
-    let fn = flst[0]
-    $('#fname').innerHTML = fn.name
-    let rdr = new FileReader()
-    rdr.onload = (e)=>cm.setValue(e.target.result)
-    rdr.readAsText(fn);
-}
-function file_save(fsave, content, fn_default) {
-    let blob = new Blob([ content ], { type: 'text/plain' })
-    let lnk  = $(fsave)
-    let fn   = prompt('Save to file name', $(fn_default).innerHTML)
-    if (!fn) return
-    lnk.download = fn
-    lnk.href = window.webkitURL ?
-        window.webkitURL.createObjectURL(blob) :
-        window.URL.createObjectURL(blob)
-    lnk.click()
 }
