@@ -17,9 +17,9 @@
       </div>
       <div class='col' style='z-index:0; width:100%; padding:8px'>
         <cite>
-          <i class='material-icons' style='float:left' onclick='toggle("dir")'>menu_open</i>
+          <i class='material-icons' style='float:left' onclick='(toggle("dir"),forth(""))'>menu_open</i>
           <span style='float:left; position:fixed'>
-            <b>weForth</b> - Forth with WebASM -<span id='fname'></span>
+            <b>weForth</b> - Forth by WebAssembly -<span id='fname'></span>
           </span>
           <i class='material-icons' style='float:right' onclick='toggle("gra")'>perm_media</i>
           <i class='material-icons' style='float:right' onclick='(toggle("edt"),cm_refresh())'>edit_square</i>
@@ -73,9 +73,6 @@
     function toggle(id) {
         let sty = $('#'+id).style
         sty.display = sty.display=='none' ? 'flex' : 'none'
-        if (id=='dir' && sty.display != 'none') {
-            vm.postMessage(['dc'])
-        }
     }
     function cm_refresh() {                       /// * fix line number issue
         $('#edt > .CodeMirror').forEach(e=>e.CodeMirror.refresh())
@@ -87,7 +84,7 @@
         txt.innerHTML += esc && typeof(t)=='string' ? escape(t) : t
         txt.scrollTop = txt.scrollHeight
     }
-    function clear_txt() { txt.innerHTML=''; to_txt('<h2>weForth 1.2</h2>') }
+    function clear_txt() { txt.innerHTML='' }
     function show_cmd(cmd) {
         let htm = cmd.replace(/:/g,'<br/>:')                  /// * show on a new line
         if (htm.indexOf('<br/>')==0) htm.replace('<br/>','')  /// * remove blank lines
@@ -102,8 +99,10 @@
     vm.onmessage = (e)=>{                            /// * wait for worker's response
         switch (e.data[0]) {
         case 'cmd': to_txt(e.data[1]); break
-        case 'dc' : show_voc(e.data[1]); break
-        case 'ss' : ss.innerHTML = e.data[1].join(' '); break
+        case 'dc' : show_dict(e.data[1]); break
+        case 'us' : usr.innerHTML = e.data[1]; break
+        case 'ss' :
+            ss.innerHTML = '[ '+e.data[1].join(' ') + ' ]'; break
         default: console.log(e.data[0])
         }
     }
@@ -111,14 +110,17 @@
     /// Forth outer interpreter
     ///
     function forth(cmd) {                            ///< evaludate Forth command
-        show_cmd(cmd)
-        if (cmd=='clear') clear_txt()
-        else {
+        if (cmd=='clear') clear_txt()           /// * clear output console
+        else if (cmd) {
+            show_cmd(cmd)
             vm.postMessage(['cmd', cmd])             /// * send command to Forth worker
             vm.postMessage(['ss'])                   /// * send command to Forth worker
         }
+        if (dc.style.display!='none') {              /// * query dictionary
+            vm.postMessage(['dc'])
+        }
     }
-    function show_voc(div) {
+    function show_dict(div) {
         dc.innerHTML = div
         let tree = document.querySelectorAll('ul.tree a:not(:last-child)')
         tree.forEach(ul=>{
@@ -137,11 +139,5 @@
         })
     }          
     </script>
-    <script type='application/forth'>
-      cr .( <h3>\ this demo shows embedded Forth here</h3> ) cr
-      .( <b>\ list dictionary</b> ) cr
-      words
-    </script>
-    <!--script type='application/forth' src='../tests/embed.f'/-->
   </body>
 </html>
