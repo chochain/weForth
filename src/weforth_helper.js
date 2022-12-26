@@ -224,9 +224,9 @@ function _colon_words(nlst) {
     let div = '<ul class="tree"><li class="open"><a href="#">User</a><ul>'
     for (let i = nlst.length - 1;
          i >= 0 && nlst[i] != 'boot'; --i) {
-        let xt = _see(nlst[i])
+        let xt = 'todo' //_see(nlst[i])
         div += '<li><a href="#"><div class="tip">' +
-            `${_esc(dict[i].name)}<i>${xt}</i>` +
+            `${_esc(nlst[i])}<i>${xt}</i>` +
             '</div></a></li>'
     }
     return div+'</li></ul>'
