@@ -255,8 +255,12 @@ void words() {
     fout << setbase(base);
 }
 void ss_dump() {
+#if   DO_WASM
+    fout << "ok" << ENDL;
+#else  // DO_WASM
     fout << " <"; for (int i=0; i<ss.idx; i++) { fout << ss[i] << " "; }
     fout << top << "> ok" << ENDL;
+#endif // DO_WASM
 }
 void mem_dump(IU p0, DU sz) {
     fout << setbase(16) << setfill('0') << ENDL;
