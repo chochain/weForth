@@ -1,3 +1,10 @@
+///
+/// @file
+/// @brief - weForth Javascript helper
+///
+///===============================================================================================
+/// Forth vocabulary lookup table
+///
 var _forth_voc = {
     '!'       : [ 'mm', '( n a -- )',   'Store n in variable at a' ],
     "'"       : [ 'cm', '( " name" -- xt )', 'Return token of next idiom' ],
@@ -149,6 +156,9 @@ var _forth_voc = {
     'sqrt'    : [ 'ex', '( a -- b )',   'Return square root of tos' ],
     'tan'     : [ 'ex', '( a -- b )',   'Return tangent of tos' ],
 }
+///
+/// Vocabulary helpers
+///
 function _esc(e) {
     return e && e
         .replace(/&/g, "&amp;")
@@ -219,6 +229,9 @@ function _colon_words(dict) {
     }
     return div+'</li></ul>'
 }
+///
+/// Forth Vocabulary
+///
 var _dict_len = 0
 function show_voc(dict, dc, usr) {
     if (_dict_len == dict.length) return  /* cached */
@@ -243,47 +256,29 @@ function show_voc(dict, dc, usr) {
         }
     })
 }
-function _tooltip2(name) {
-    const voc = _voc(name)
-    return `<div class="tip">${_esc(name)}` +
-        `<span>${_esc(voc[1])} ${_esc(voc[2])}</span></div>`
+///
+/// File IO functions
+///
+function file_new(fname) {
+    let fn = prompt('Create new file', 'untitled.f')
+    if (fn) $(fname).innerHTML = fn
 }
-function _voc_tree2(dict) {
-    const voc = dict.reduce((r,v)=>{
-        const c = _category(v.name)               ///< get category
-        if (r[c]) r[c].push(v); else r[c] = [ v ]
-        return r
-    }, {})
-    let keys= Object.keys(voc).sort()
-    let div = '<div id="menu" class="menu_pac"><div class="menu" id="root">'
-    keys.forEach(k=>{
-        div += '<div class="menu_icon icon_hover" onclick="menu_next(event)">' + k
-        div += '<i class="material-icons">arrow_right</i></div>'
-    })
-    div += '</div>'
-    keys.forEach(k=>{
-        div += `<div class="menu" id='${k}'>`
-        div += `<div class="menu_bottom menu_bold">${k}</div>`
-        voc[k].forEach(v=>{ div += _tooltip2(v.name) })
-        div += '<div class="menu_top menu_icon no_space" onclick="menu_prev(event)">'
-        div += '<i class="material-icons">arrow_back</i>Back</div></div>'
-    })
-    return div+'</div>'
+function file_load(flst, fname) {
+    if (flst.length != 1) return
+    let fn = flst[0]
+    $('#fname').innerHTML = fn.name
+    let rdr = new FileReader()
+    rdr.onload = (e)=>cm.setValue(e.target.result)
+    rdr.readAsText(fn);
 }
-function _colon_words2(dict) {
-    let div =
-        '<div class="menu_pac"><div class="menu">' +
-        '<div class="menu_bottom menu_bold">User</div>'
-    for (let i = dict.length - 1;
-         i >= 0 && dict[i].name != 'boot'; --i) {
-        let xt = JSON.stringify(dict[i].pf)
-        div += `<div class="tip">${_esc(name)}` +
-        `<span>${xt}</span></div>`
-    }
-    return div+'</div></div>'
-}
-function show_voc2(dict, dc, usr) {
-    dc.innerHTML  = _voc_tree2(dict)
-    usr.innerHTML = _colon_words2(dict)
-    menu_open(div.firstChild.id)
+function file_save(fsave, content, fn_default) {
+    let blob = new Blob([ content ], { type: 'text/plain' })
+    let lnk  = $(fsave)
+    let fn   = prompt('Save to file name', $(fn_default).innerHTML)
+    if (!fn) return
+    lnk.download = fn
+    lnk.href = window.webkitURL ?
+        window.webkitURL.createObjectURL(blob) :
+        window.URL.createObjectURL(blob)
+    lnk.click()
 }
