@@ -5,9 +5,8 @@
   <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/codemirror.min.js'></script>
   <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/mode/forth/forth.min.js'></script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-  <link rel='stylesheet' href='../src/weforth.css'></link>
-  <script type='text/javascript' src='../src/forth_voc.js'></script>
-  <script type='text/javascript' src='../src/file_io.js'></script>
+  <link rel='stylesheet' href='weforth.css'></link>
+  <script type='text/javascript' src='file_io.js'></script>
   </head>
   <body>
     <div class='row' style='height:100%'>
@@ -18,7 +17,7 @@
       </div>
       <div class='col' style='z-index:0; width:100%; padding:8px'>
         <cite>
-          <i class='material-icons' style='float:left' onclick='(toggle("dir"),show_voc(vm.dict,dc,usr))'>menu_open</i>
+          <i class='material-icons' style='float:left' onclick='toggle("dir")'>menu_open</i>
           <span style='float:left; position:fixed'>
             <b>weForth</b> - Forth with WebASM -<span id='fname'></span>
           </span>
@@ -48,7 +47,7 @@
       <div id='gra' class='col' style='display:none; width:100%'>
         <canvas id='can'></div>
       </div>
-    <script src='./ceforth.js'></script>
+    <script src='weforth.js'></script>
     <script>
     const $ = (s)=>s[0]=='#' && !s.includes(' ') ?      /* ala jQuery */
         document.querySelector(s) : document.querySelectorAll(s)
@@ -74,6 +73,9 @@
     function toggle(id) {
         let sty = $('#'+id).style
         sty.display = sty.display=='none' ? 'flex' : 'none'
+        if (id=='dir' && sty.display != 'none') {
+            vm.postMessage(['dc'])
+        }
     }
     function cm_refresh() {                       /// * fix line number issue
         $('#edt > .CodeMirror').forEach(e=>e.CodeMirror.refresh())
@@ -94,13 +96,13 @@
     ///
     /// Forth section
     ///
-    const vm = new Worker('ceforth_worker.js')       ///< create the Forth worker thread
+    const vm = new Worker('weforth_worker.js')       ///< create the Forth worker thread
     clear_txt()
       
     vm.onmessage = (e)=>{                            /// * wait for worker's response
         switch (e.data[0]) {
         case 'cmd': to_txt(e.data[1]); break
-        case 'dc' : dc.innerHTML = e.data[1].reverse().join(' '); break
+        case 'dc' : show_voc(e.data[1]); break
         case 'ss' : ss.innerHTML = e.data[1].join(' '); break
         default: console.log(e.data[0])
         }
@@ -114,10 +116,26 @@
         else {
             vm.postMessage(['cmd', cmd])             /// * send command to Forth worker
             vm.postMessage(['ss'])                   /// * send command to Forth worker
-            vm.postMessage(['dc'])
-            show_voc(vm.dict, dc, usr)
         }
     }
+    function show_voc(div) {
+        dc.innerHTML = div
+        let tree = document.querySelectorAll('ul.tree a:not(:last-child)')
+        tree.forEach(ul=>{
+            ul.onclick = e=>{
+                var pa = e.target.parentElement
+                var cl = pa.classList
+                if(cl.contains("open")) {
+                    cl.remove('open')
+                    pa.querySelectorAll(':scope .open').forEach(c=>{
+                        c.classList.remove('open')
+                    })
+                }
+                else cl.add('open')
+                e.preventDefault()
+            }
+        })
+    }          
     </script>
     <script type='application/forth'>
       cr .( <h3>\ this demo shows embedded Forth here</h3> ) cr
