@@ -187,22 +187,6 @@ function _tooltip(name) {
         `${name.toUpperCase()} ${_esc(voc[1])} ${_esc(voc[2])}` +
         '</i></div></a></li>'
 }
-function _voc_tree(nlst) {
-    const voc = nlst.reduce((r,n)=>{
-        const c = _category(n)               ///< get category
-        if (c) {
-            if (r[c]) r[c].push(n); else r[c] = [ n ]
-        }
-        return r
-    }, {})
-    let div = ''
-    Object.keys(voc).sort().forEach(k=>{
-        div += `<ul class="tree"><li><a href="#">${_esc(k)}</a><ul>`
-        voc[k].forEach(n=>{ div += _tooltip(n) })
-        div += '</ul></li></ul>'
-    })
-    return div
-}
 function _see(w, n=0) {
     let div = ''
     const _show_pf = (pf)=>{
@@ -220,11 +204,27 @@ function _see(w, n=0) {
     _show_pf(w.pf2)                            /// * aft.{pf2}.next
     return div
 }
-function _colon_words(nlst) {
+function voc_tree(nlst) {
+    const voc = nlst.reduce((r,n)=>{
+        const c = _category(n)                 ///< get category
+        if (c) {
+            if (r[c]) r[c].push(n); else r[c] = [ n ]
+        }
+        return r
+    }, {})
+    let div = ''
+    Object.keys(voc).sort().forEach(k=>{
+        div += `<ul class="tree"><li><a href="#">${_esc(k)}</a><ul>`
+        voc[k].forEach(n=>{ div += _tooltip(n) })
+        div += '</ul></li></ul>'
+    })
+    return div
+}
+function colon_words(nlst) {
     let div = '<ul class="tree"><li class="open"><a href="#">User</a><ul>'
     for (let i = nlst.length - 1;
          i >= 0 && nlst[i] != 'boot'; --i) {
-        let xt = 'todo' //_see(nlst[i])
+        let xt = nlst[i] // todo: _see(nlst[i])
         div += '<li><a href="#"><div class="tip">' +
             `${_esc(nlst[i])}<i>${xt}</i>` +
             '</div></a></li>'
