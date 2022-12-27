@@ -619,6 +619,7 @@ int  vm_ss_idx()     { return ss.idx;   }
 DU   *vm_ss()        { return &ss[0];   }
 int  vm_dict_idx()   { return dict.idx; }
 char *vm_dict(int i) { return (char*)dict[i].name; }
+char *vm_mem()       { return (char*)&pmem[0]; }
 }
 
 int main() {
