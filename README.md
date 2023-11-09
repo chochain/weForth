@@ -13,24 +13,30 @@ With WASM, the interoperability between different languages become a thing of th
 * Forth in Web Worker threads (multi-VMs possible)
 * IDE-style interactive front-end (cloud possible, i.g. JupyterLab)
 
-### To Compile (make sure emscripten is installed)
-* em++ -o tests/ceforth.html src/ceforth.cpp --shell-file src/forth_template.html -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+### To Compile and Run (make sure python3 and Emscripten is installed)
+* em++ -o tests/ceforth.html src/ceforth.cpp --shell-file template/ceforth.html -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
   > Note: -O2 works OK, -O3 emscripten spits wrong code
-  
-* em++ -o tests/ceForth_403.html src/ceForth_403.cpp --shell-file src/forth_template.html -sEXPORTED_FUNCTIONS=_main,_forth -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+* Server-side
+  > python3 tests/serv.py
+* Client-side Browser
+  > http://localhost:8000/tests/ceforth.html
+
+* em++ -o tests/ceForth_403.html src/ceForth_403.cpp --shell-file src/ceforth.html -sEXPORTED_FUNCTIONS=_main,_forth -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+* Server-side
+  > python3 tests/serv.py
+* Client-side Browser
+  > http://localhost:8000/tests/ceForth_403.html
 
 ### To Compile to Web Worker (run almost at the same speed as main thread)
-* cp src/weforth_static.html tests/weforth.html; cp src/weforth.css src/file_io.js src/weforth_helper.js src/weforth_worker.js tests
+* cp template/weforth.html template/weforth.css template/file_io.js template/weforth_helper.js template/weforth_worker.js tests
 * em++ -o tests/weforth.js src/ceforth.cpp -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
-
-### To Debug (dump all functions)
-* em++ -o tests/ceforth.html src/ceforth.cpp --shell-file src/forth_template.html -sEXPORT_ALL=1 -sLINKABLE=1 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
-
-### To Run
 * Server-side
   > python3 tests/serv.py
 * Client-side Browser
   > http://localhost:8000/tests/weforth.html
+
+### To Debug (dump all functions)
+* em++ -o tests/ceforth.html src/ceforth.cpp --shell-file src/forth_template.html -sEXPORT_ALL=1 -sLINKABLE=1 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
 ### Benchmark (on IBM X230)
 |implementation|source code|optimization|Platform|1K*10K cycles (in ms)|code size (KB)|
@@ -63,6 +69,7 @@ With WASM, the interoperability between different languages become a thing of th
 * Note4: v1.2 Web Worker without yield in nest() speed up 3x
        
 ### TODO
+* review wasmtime (CLI), perf+hotspot (profiling)
 * Sync UI with eForth.js
 * GraFORTH spec.
   * File system (FS/IndexedDB)
