@@ -41,25 +41,25 @@ With WASM, the interoperability between different languages become a thing of th
 ### Benchmark (on IBM X230)
 |implementation|source code|optimization|Platform|1K*10K cycles (in ms)|code size (KB)|
 |---|---|---|---|---|---|
-|ceforth v8|C|--|CPU|214|91|
-|ceforth v8|C|-O2|CPU|104|70|
-|ceforth v8|C|-O3|CPU|105|74|
+|ceforth v8|C|-O0|CPU|266|117|
+|ceforth v8|C|-O2|CPU|139|82|
+|ceforth v8|C|-O3|CPU|155|90|
 |eforth.js v6|JavaScript||FireFox v107|1550|20|
 |uEforth v7|asm.js / C|--|FireFox v107|959|?|
 |||||||
-|weForth v1|WASM / C|--|FireFox v107|7433|237|
-|weForth v1|WASM / C|-O2|FireFox v107|1901|157|
-|weForth v1|WASM / C|-O3|FireFox v107|failed(unknown function)|174|
+|weForth v1|WASM / C|-O0|FireFox v107|7433?|285|
+|weForth v1|WASM / C|-O2|FireFox v107|1901?|166|
+|weForth v1|WASM / C|-O3|FireFox v107|failed(unknown function)|182|
 |||||||
-|weForth v1|WASM / C|--|FireFox v107 1-Worker|7496|237|
+|weForth v1|WASM / C|-O0|FireFox v107 1-Worker|7496|237|
 |weForth v1|WASM / C|-O2|FireFox v107 1-Worker|1922|157|
 |weForth v1|WASM / C|-O3|FireFox v107 1-Worker|1847|174|
 |||||||
-|weForth+switch|WASM / C|--|FireFox v107 1-Worker|7676|256|
+|weForth+switch|WASM / C|-O0|FireFox v107 1-Worker|7676|256|
 |weForth+switch|WASM / C|-O2|FireFox v107 1-Worker|3780|168|
 |weForth+switch|WASM / C|-O3|FireFox v107 1-Worker|3755|185|
 |||||||
-|weForth v1.2|WASM / C, no yield|--|FireFox v107 1-Worker|988|232|
+|weForth v1.2|WASM / C, no yield|-O0|FireFox v107 1-Worker|988|232|
 |weForth v1.2|WASM / C, no yield|-O2|FireFox v107 1-Worker|528|156|
 |weForth v1.2|WASM / C, no yield|-O3|FireFox v107 1-Worker|553|173|
 
