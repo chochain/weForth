@@ -21,7 +21,7 @@ With WASM, the interoperability between different languages become a thing of th
 * Client-side Browser
   > http://localhost:8000/tests/ceforth.html
 
-* em++ -o tests/ceForth_403.html src/ceForth_403.cpp --shell-file src/ceforth.html -sEXPORTED_FUNCTIONS=_main,_forth -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+* em++ -o tests/ceForth_403.html src/ceForth_403.cpp --shell-file template/ceforth.html -sEXPORTED_FUNCTIONS=_main,_forth -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 * Server-side
   > python3 tests/serv.py
 * Client-side Browser
