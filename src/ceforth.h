@@ -45,9 +45,6 @@
     #define LOG(v)          Serial.print(v)
     #define LOGX(v)         Serial.print(v, HEX)
     #define LOGN(v)         Serial.println(v)
-    #define NM_HDR(f, s)    LOGS(f); LOGS("("); LOGS(s); LOGS(") => ")
-    #define NM_IDX(n, i)    LOG(n); LOGS(" "); LOGN(i);
-
     #if    ESP32
         #define analogWrite(c,v,mx) ledcWrite((c),(8191/mx)*min((int)(v),mx))
     #endif // ESP32
@@ -57,8 +54,6 @@
     #define millis()        EM_ASM_INT({ return Date.now(); })
     #define delay(ms)       EM_ASM({ let t = setTimeout(()=>clearTimeout(t), $0); }, ms)
     #define yield()
-    #define NM_HDR(f, s)    printf("%s(%s) => ", f, s)
-    #define NM_IDX(n, i)    printf("%s %d\n", n, i)
 
 #else  // !ARDUINO && !__EMSCRIPTEN__
     #include <chrono>
@@ -69,10 +64,36 @@
     #define yield()         this_thread::yield()
     #define PROGMEM
     #define LOGN(v)         printf("%d\n", v)
-    #define NM_HDR(f, s)    printf("%s(%s) => ", f, s)
-    #define NM_IDX(n, i)    printf("%s %d\n", n, i)
 
 #endif // ARDUINO && __EMSCRIPTEN__
+
+#if CC_DEBUG
+#if ARDUINO
+    #define LOG_KV(k, v)    LOGS(k); LOG(v)
+    #define LOG_KX(k, x)    LOGS(k); LOGX(v)
+    #define LOG_HDR(f, s)   LOGS(f); LOGS("("); LOGS(s); LOGS(") => ")
+    #define LOG_DIC(i)      LOGS("dict["); LOG(i); LOGS("] "); \
+                            LOG(dict[i].name); LOGS(" attr="); LOGX(dict[i].attr); \
+                            LOGS("\n")
+    #define LOG_NA()        LOGS("not found\n")
+
+#else  // ARDUINO
+    #define LOG_KV(k, v)    printf("%s%d", k, v)
+    #define LOG_KX(k, x)    printf("%s%x", k, x)
+    #define LOG_HDR(f, s)   printf("%s(%s) => ", f, s)
+    #define LOG_DIC(i)      printf("dict[%d] %s attr=%x\n", i, dict[i].name, dict[i].attr)
+    #define LOG_NA()        printf("not found\n")
+
+#endif // ARDUINO
+
+#else  // CC_DEBUG
+    #define LOG_KV(k, v)
+    #define LOG_KX(k, x)
+    #define LOG_HDR(f, s)
+    #define LOG_DIC(i)
+    #define LOG_NA()
+
+#endif // CC_DEBUG
 ///@}
 using namespace std;
 ///
@@ -195,7 +216,7 @@ struct Code {
     Code(const char *n, F f, bool im) : name(n), xt(new FP<F>(f)) {
         if (((UFP)xt - 4) < XT0) XT0 = ((UFP)xt - 4);  ///> collect xt base (4 prevent dXT==0)
         if ((UFP)n  < NM0) NM0 = (UFP)n;               ///> collect name string base
-        if (im) attr |= IMM_FLAG;
+        attr = im ? IMM_FLAG : 0;
 #if CC_DEBUG > 1
         printf("XT0=%lx xt=%lx %s\n", XT0, (UFP)xt, n);
 #endif // CC_DEBUG
@@ -228,7 +249,7 @@ struct Code {
     Code(const char *n, FPTR fp, bool im) : name(n), xt(fp) {
         if (((UFP)xt - 4) < XT0) XT0 = ((UFP)xt - 4);    ///> collect xt base (4 prevent dXT==0)
         if ((UFP)n  < NM0) NM0 = (UFP)n;                 ///> collect name string base
-        if (im) attr |= IMM_FLAG;
+        attr = im ? IMM_FLAG : 0;
 #if CC_DEBUG > 1
         printf("XT0=%lx xt=%lx %s\n", XT0, (UFP)xt, n);
 #endif // CC_DEBUG
