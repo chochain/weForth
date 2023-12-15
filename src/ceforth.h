@@ -10,17 +10,17 @@
 ///    RANGE_CHECK     0 cut 100ms
 ///    INLINE            cut 545ms
 ///
-/// Note: use LAMBDA_OK=1 for full ForthVM class
+/// Note: use LAMBDA_OK=1 for full ForthVM class implementation
 ///    if lambda needs to capture [this] for Code
 ///    * it slow down nest() by 2x (1200ms -> 2500ms) on AMD
 ///    * with one parameter, it slows 160ms extra
 ///
 ///@name Conditional compililation options
 ///@}
-#define DO_WASM         1     /**< for WASM output                        */
-#define LAMBDA_OK       0     /**< lambda support, set 1 for ForthVM.this */
-#define RANGE_CHECK     0     /**< vector range check                     */
-#define CC_DEBUG        0     /**< debug tracing flag                     */
+#define DO_WASM         1     /**< for WASM output     */
+#define LAMBDA_OK       0     /**< lambda support      */
+#define RANGE_CHECK     0     /**< vector range check  */
+#define CC_DEBUG        0     /**< debug tracing flag  */
 #define INLINE          __attribute__((always_inline))
 ///@}
 ///@name Memory block configuation
@@ -44,7 +44,6 @@
     #define LOGS(s)         Serial.print(F(s))
     #define LOG(v)          Serial.print(v)
     #define LOGX(v)         Serial.print(v, HEX)
-    #define LOGN(v)         Serial.println(v)
     #if    ESP32
         #define analogWrite(c,v,mx) ledcWrite((c),(8191/mx)*min((int)(v),mx))
     #endif // ESP32
@@ -63,7 +62,6 @@
     #define delay(ms)       this_thread::sleep_for(chrono::milliseconds(ms))
     #define yield()         this_thread::yield()
     #define PROGMEM
-    #define LOGN(v)         printf("%d\n", v)
 
 #endif // ARDUINO && __EMSCRIPTEN__
 
@@ -77,7 +75,7 @@
                             LOGS("\n")
     #define LOG_NA()        LOGS("not found\n")
 
-#else  // ARDUINO
+#else  // !ARDUINO
     #define LOG_KV(k, v)    printf("%s%d", k, v)
     #define LOG_KX(k, x)    printf("%s%x", k, x)
     #define LOG_HDR(f, s)   printf("%s(%s) => ", f, s)
@@ -86,7 +84,7 @@
 
 #endif // ARDUINO
 
-#else  // CC_DEBUG
+#else  // !CC_DEBUG
     #define LOG_KV(k, v)
     #define LOG_KX(k, x)
     #define LOG_HDR(f, s)
@@ -134,17 +132,17 @@ typedef uint16_t        IU;    ///< instruction pointer unit
 ///   * using decorator pattern
 ///   * this is similar to vector class but much simplified
 ///
-template<class T, int N=0>
-struct List {
+template<class T, int N>
+struct alignas(4) List {
     T   *v;             ///< fixed-size array storage
     int idx = 0;        ///< current index of array
     int max = 0;        ///< high watermark for debugging
 
     List()  {
-        v = N ? new T[N] : 0;                         ///< dynamically allocate array storage
+        v = N ? new T[N] : 0;                     ///< dynamically allocate array storage
         if (!v) throw "ERR: List allot failed";
     }
-    ~List() { if (v) delete[] v;   }                  ///< free memory
+    ~List() { if (v) delete v;   }                ///< free memory
 
     List &operator=(T *a)   INLINE { v = a; return *this; }
     T    &operator[](int i) INLINE { return i < 0 ? v[idx + i] : v[i]; }
@@ -172,20 +170,18 @@ struct List {
 /// Code flag masking options
 ///
 #define WORD_NA    -1
-#define UDF_FLAG   0x0001        /** user defined word  */
-#define IMM_FLAG   0x0002        /** immediate word     */
-#define UDF_MASK   ~0x3          /** user defined word  */
+#define UDF_ATTR   0x0001        /** user defined word  */
+#define IMM_ATTR   0x0002        /** immediate word     */
+#define MSK_ATTR   ~0x3          /** user defined word  */
 
-#define IS_UDF(w) (dict[w].attr & UDF_FLAG)
-#define IS_IMM(w) (dict[w].attr & IMM_FLAG)
-
-#if DO_WASM                     /** WASM function ptr is not aligned */
-    #define UDF_PARM   0x8000   /** param field flag   */
+#if DO_WASM                      /** WASM function ptr is not aligned */
+    #define UDF_FLAG   0x8000    /** colon word flag    */
 #else // !DO_WASM
-    #define UDF_PARM   0x0001
+    #define UDF_FLAG   0x0001
 #endif // DO_WASM
 
-
+#define IS_UDF(w) (dict[w].attr & UDF_ATTR)
+#define IS_IMM(w) (dict[w].attr & IMM_ATTR)
 ///
 /// universal functor (no STL) and Code class
 /// Note:
@@ -195,13 +191,13 @@ struct List {
 
 struct fop { virtual void operator()() = 0; };
 template<typename F>
-struct FP : fop {           ///< universal functor
+struct alignas(4) FP : fop {           ///< universal functor
     F fp;
     FP(F &f) INLINE : fp(f) {}
     void operator()() INLINE { fp(); }
 };
 typedef fop* FPTR;          ///< lambda function pointer
-struct Code {
+struct alignas(4) Code {
     static UFP XT0, NM0;
     const char *name = 0;   ///< name field
     union {                 ///< either a primitive or colon word
@@ -210,8 +206,8 @@ struct Code {
     };
     IU attr;                ///< word attribute
     
-    static FPTR XT(IU ix)   INLINE { return (FPTR)(XT0 + ((UFP)ix & ~UDF_PARM)); }
-    static void exec(IU ix) INLINE { (*(FPTR)XT(ix))(); }
+    static FPTR XT(IU ix)   INLINE { return (FPTR)(XT0 + (UFP)ix); }
+    static void exec(IU ix) INLINE { (*XT(ix))(); }
     template<typename F>    ///< template function for lambda
     Code(const char *n, F f, bool im) : name(n), xt(new FP<F>(f)) {
         if (((UFP)xt - 4) < XT0) XT0 = ((UFP)xt - 4);  ///> collect xt base (4 prevent dXT==0)
@@ -235,7 +231,7 @@ struct Code {
 /// a lambda without capture can degenerate into a function pointer
 ///
 typedef void (*FPTR)();     ///< function pointer
-struct Code {
+struct alignas(4) Code {
     static UFP XT0, NM0;
     const char *name = 0;   ///< name field
     union {                 ///< either a primitive or colon word
@@ -244,12 +240,12 @@ struct Code {
     };
     U16 attr;               ///< attributes (def, imm, xx=reserved)
 
-    static FPTR XT(IU ix)   INLINE { return (FPTR)(XT0 + ((UFP)ix & ~UDF_PARM)); }
-    static void exec(IU ix) INLINE { (*(FPTR)XT(ix))(); }
+    static FPTR XT(IU ix)   INLINE { return (FPTR)(XT0 + (UFP)ix); }
+    static void exec(IU ix) INLINE { (*XT(ix))(); }
     Code(const char *n, FPTR fp, bool im) : name(n), xt(fp) {
         if (((UFP)xt - 4) < XT0) XT0 = ((UFP)xt - 4);    ///> collect xt base (4 prevent dXT==0)
         if ((UFP)n  < NM0) NM0 = (UFP)n;                 ///> collect name string base
-        attr = im ? IMM_FLAG : 0;
+        attr = im ? IMM_ATTR : 0;
 #if CC_DEBUG > 1
         printf("XT0=%lx xt=%lx %s\n", XT0, (UFP)xt, n);
 #endif // CC_DEBUG
