@@ -182,8 +182,6 @@ struct List {
 ///@}
 ///
 ///> Universal functor (no STL) and Code class
-/// Note:
-///    a lambda without capture can degenerate into a function pointer
 ///
 typedef void (*FPTR)();     ///< function pointer
 struct Code {
@@ -210,7 +208,7 @@ struct Code {
     Code(const char *n, FPTR fp, bool im) : name(n), xt(fp) {
         if (((UFP)xt - 4) < XT0) XT0 = ((UFP)xt - 4);    ///> collect xt base (4 prevent dXT==0)
         if ((UFP)n  < NM0) NM0 = (UFP)n;                 ///> collect name string base
-        attr = im ? IMM_ATTR : 0;
+        if (im) attr |= IMM_ATTR;
 #if CC_DEBUG > 1
         printf("XT0=%lx xt=%lx %s\n", XT0, (UFP)xt, n);
 #endif // CC_DEBUG
@@ -219,6 +217,10 @@ struct Code {
     IU   xtoff() INLINE { return (IU)((UFP)xt - XT0); }  ///< xt offset in code space
     void call()  INLINE { (*(FPTR)((UFP)xt & MSK_ATTR))(); }
 };
+///
+///> Add a Word to dictionary
+/// Note:
+///    a lambda without capture can degenerate into a function pointer
 #define ADD_CODE(n, g, im) {    \
     Code c(n, []{ g; }, im);	\
     dict.push(c);               \
