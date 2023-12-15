@@ -657,7 +657,7 @@ void dict_dump() {
     for (int i=0; i<dict.idx; i++) {
         Code &c = dict[i];
         LOG(i);
-        LOG_KX("> xt=",   (UFP)c.xt - Code::XT0);
+        LOG_KX("> xt=",   c.xtoff());
         LOG_KX(":",       (UFP)c.xt);
         LOG_KX(", name=", (UFP)c.name - Code::NM0);
         LOG_KX(":"),      (UFP)c.name);
