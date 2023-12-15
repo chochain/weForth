@@ -6,22 +6,14 @@
 #pragma GCC optimize("align-functions=4")    // we need fn alignment
 ///
 /// Benchmark: 10K*10K cycles on desktop (3.2G AMD)
-///    LAMBDA_OK       0 cut 80ms
 ///    RANGE_CHECK     0 cut 100ms
 ///    INLINE            cut 545ms
 ///
-/// Note: use LAMBDA_OK=1 for full ForthVM class implementation
-///    if lambda needs to capture [this] for Code
-///    * it slow down nest() by 2x (1200ms -> 2500ms) on AMD
-///    * with one parameter, it slows 160ms extra
-///
 ///@name Conditional compililation options
 ///@}
-#define DO_WASM         1     /**< for WASM output     */
-#define LAMBDA_OK       0     /**< lambda support      */
-#define RANGE_CHECK     0     /**< vector range check  */
-#define CC_DEBUG        0     /**< debug tracing flag  */
-#define INLINE          __attribute__((always_inline))
+#define CC_DEBUG        0               /**< debug tracing flag  */
+#define RANGE_CHECK     0               /**< vector range check  */
+#define DO_WASM         __EMSCRIPTEN__  /**< for WASM output     */
 ///@}
 ///@name Memory block configuation
 ///@{
@@ -48,13 +40,13 @@
         #define analogWrite(c,v,mx) ledcWrite((c),(8191/mx)*min((int)(v),mx))
     #endif // ESP32
 
-#elif  __EMSCRIPTEN__
+#elif  DO_WASM
     #include <emscripten.h>
     #define millis()        EM_ASM_INT({ return Date.now(); })
     #define delay(ms)       EM_ASM({ let t = setTimeout(()=>clearTimeout(t), $0); }, ms)
     #define yield()
 
-#else  // !ARDUINO && !__EMSCRIPTEN__
+#else  // !ARDUINO && !DO_WASM
     #include <chrono>
     #include <thread>
     #define millis()        chrono::duration_cast<chrono::milliseconds>( \
@@ -63,8 +55,10 @@
     #define yield()         this_thread::yield()
     #define PROGMEM
 
-#endif // ARDUINO && __EMSCRIPTEN__
-
+#endif // ARDUINO && DO_WASM
+///@}
+///@name Debugging support
+///@{
 #if CC_DEBUG
 #if ARDUINO
     #define LOG_KV(k, v)    LOGS(k); LOG(v)
@@ -118,8 +112,9 @@ typedef int32_t         DU;
 #endif // USE_FLOAT
 typedef uint16_t        IU;    ///< instruction pointer unit
 ///@}
-///@name Alignment macros
+///@name Inline & Alignment macros
 ///@{
+#define INLINE          __attribute__((always_inline))
 #define ALIGN2(sz)      ((sz) + (-(sz) & 0x1))
 #define ALIGN4(sz)      ((sz) + (-(sz) & 0x3))
 #define ALIGN16(sz)     ((sz) + (-(sz) & 0xf))
@@ -133,7 +128,7 @@ typedef uint16_t        IU;    ///< instruction pointer unit
 ///   * this is similar to vector class but much simplified
 ///
 template<class T, int N>
-struct alignas(4) List {
+struct List {
     T   *v;             ///< fixed-size array storage
     int idx = 0;        ///< current index of array
     int max = 0;        ///< high watermark for debugging
@@ -142,7 +137,7 @@ struct alignas(4) List {
         v = N ? new T[N] : 0;                     ///< dynamically allocate array storage
         if (!v) throw "ERR: List allot failed";
     }
-    ~List() { if (v) delete v;   }                ///< free memory
+    ~List() { if (v) delete[] v;   }              ///< free memory
 
     List &operator=(T *a)   INLINE { v = a; return *this; }
     T    &operator[](int i) INLINE { return i < 0 ? v[idx + i] : v[i]; }
@@ -167,81 +162,51 @@ struct alignas(4) List {
     void clear(int i=0)    INLINE { idx=i; }
 };
 ///
-/// Code flag masking options
-///
+///@name Code flag masking options
+///@{
 #define WORD_NA    -1
-#define UDF_ATTR   0x0001        /** user defined word  */
-#define IMM_ATTR   0x0002        /** immediate word     */
-#define MSK_ATTR   ~0x3          /** user defined word  */
-
-#if DO_WASM                      /** WASM function ptr is not aligned */
-    #define UDF_FLAG   0x8000    /** colon word flag    */
-#else // !DO_WASM
+#if !DO_WASM                      /** WASM function ptr is index to vtable */
+    #define UDF_ATTR   0x0001     /** user defined word  */
+    #define IMM_ATTR   0x0002     /** immediate word     */
+    #define MSK_ATTR   ~0x3       /** attribute mask     */
     #define UDF_FLAG   0x0001
-#endif // DO_WASM
+#else // DO_WASM
+    #define UDF_ATTR   0x8000     /** user defined word  */
+    #define IMM_ATTR   0x4000     /** immediate word     */
+    #define MSK_ATTR   0x3fffffff /** attribute mask     */
+    #define UDF_FLAG   0x8000     /** colon word flag    */
+#endif // !DO_WASM
 
 #define IS_UDF(w) (dict[w].attr & UDF_ATTR)
 #define IS_IMM(w) (dict[w].attr & IMM_ATTR)
+///@}
 ///
-/// universal functor (no STL) and Code class
+///> Universal functor (no STL) and Code class
 /// Note:
-///   * 8-byte on 32-bit machine, 16-byte on 64-bit machine
-///
-#if LAMBDA_OK
-
-struct fop { virtual void operator()() = 0; };
-template<typename F>
-struct alignas(4) FP : fop {           ///< universal functor
-    F fp;
-    FP(F &f) INLINE : fp(f) {}
-    void operator()() INLINE { fp(); }
-};
-typedef fop* FPTR;          ///< lambda function pointer
-struct alignas(4) Code {
-    static UFP XT0, NM0;
-    const char *name = 0;   ///< name field
-    union {                 ///< either a primitive or colon word
-        FPTR xt = 0;        ///< lambda pointer (4-byte align, 2 LSBs can be used for attr)
-        IU   pfa;           ///< colon word pamam mem offset
-    };
-    IU attr;                ///< word attribute
-    
-    static FPTR XT(IU ix)   INLINE { return (FPTR)(XT0 + (UFP)ix); }
-    static void exec(IU ix) INLINE { (*XT(ix))(); }
-    template<typename F>    ///< template function for lambda
-    Code(const char *n, F f, bool im) : name(n), xt(new FP<F>(f)) {
-        if (((UFP)xt - 4) < XT0) XT0 = ((UFP)xt - 4);  ///> collect xt base (4 prevent dXT==0)
-        if ((UFP)n  < NM0) NM0 = (UFP)n;               ///> collect name string base
-        attr = im ? IMM_FLAG : 0;
-#if CC_DEBUG > 1
-        printf("XT0=%lx xt=%lx %s\n", XT0, (UFP)xt, n);
-#endif // CC_DEBUG
-    }
-    Code() {}               ///< create a blank struct (for initilization)
-    IU xtoff() INLINE { return (IU)((UFP)xt - XT0); }  ///< xt offset in code space
-};
-#define ADD_CODE(n, g, im) {     \
-    Code c(n, []() { g; }, im);  \
-    dict.push(c);                \
-    }
-#define WORD_NULL [](){}    /** blank lambda */
-
-#else  // !LAMBDA_OK
-///
-/// a lambda without capture can degenerate into a function pointer
+///    a lambda without capture can degenerate into a function pointer
 ///
 typedef void (*FPTR)();     ///< function pointer
-struct alignas(4) Code {
+struct Code {
     static UFP XT0, NM0;
     const char *name = 0;   ///< name field
     union {                 ///< either a primitive or colon word
         FPTR xt = 0;        ///< lambda pointer (4-byte align, 2 LSBs can be used for attr)
-        IU   pfa;           ///< offset to pmem space (16-bit for 64K range)
+#if !DO_WASM
+        struct {
+            IU attr;        ///< steal 2 LSBs because xt is 4-byte aligned on 32-bit CPU
+            IU pfa;         ///< offset to pmem space (16-bit for 64K range)
+        };
+#else // DO_WASM
+        struct {
+            IU pfa;         ///< offset to pmem space (16-bit for 64K range)
+            IU attr;        ///< WASM xt is index to vtable (so LSBs will be used)
+        };
+#endif // !DO_WASM
     };
-    U16 attr;               ///< attributes (def, imm, xx=reserved)
 
     static FPTR XT(IU ix)   INLINE { return (FPTR)(XT0 + (UFP)ix); }
     static void exec(IU ix) INLINE { (*XT(ix))(); }
+    
     Code(const char *n, FPTR fp, bool im) : name(n), xt(fp) {
         if (((UFP)xt - 4) < XT0) XT0 = ((UFP)xt - 4);    ///> collect xt base (4 prevent dXT==0)
         if ((UFP)n  < NM0) NM0 = (UFP)n;                 ///> collect name string base
@@ -251,15 +216,14 @@ struct alignas(4) Code {
 #endif // CC_DEBUG
     }
     Code() {}               ///< create a blank struct (for initilization)
-    IU xtoff() INLINE { return (IU)((UFP)xt - XT0); }    ///< xt offset in code space
+    IU   xtoff() INLINE { return (IU)((UFP)xt - XT0); }  ///< xt offset in code space
+    void call()  INLINE { (*(FPTR)((UFP)xt & MSK_ATTR))(); }
 };
 #define ADD_CODE(n, g, im) {    \
     Code c(n, []{ g; }, im);	\
     dict.push(c);               \
     }
 #define WORD_NULL  (FPTR)0     /** blank function pointer */
-
-#endif // LAMBDA_OK
 
 #define CODE(n, g) ADD_CODE(n, g, false)
 #define IMMD(n, g) ADD_CODE(n, g, true)
