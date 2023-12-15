@@ -29,7 +29,7 @@ With WASM, the interoperability between different languages become a thing of th
 
 ### To Compile to Web Worker (run almost at the same speed as main thread)
 * cp template/weforth.html template/weforth.css template/file_io.js template/weforth_helper.js template/weforth_worker.js tests
-* em++ -o tests/weforth.js src/ceforth.cpp -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+* em++ -o tests/weforth.js src/ceforth.cpp -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap -O2
 * Server-side
   > python3 tests/serv.py
 * Client-side Browser
@@ -45,10 +45,10 @@ With WASM, the interoperability between different languages become a thing of th
 |ceforth v8|C|-O2|CPU|139|82|
 |ceforth v8|C|-O3|CPU|155|90|
 |eforth.js v6|JavaScript||FireFox v107|1550|20|
-|uEforth v7|asm.js / C|--|FireFox v107|959|?|
+|uEforth v7|asm.js / C|--|FireFox v107|280|?|
 |||||||
-|weForth v1|WASM / C|-O0|FireFox v107|7433?|285|
-|weForth v1|WASM / C|-O2|FireFox v107|1901?|166|
+|weForth v1|WASM / C|-O0|FireFox v107|7433|285|
+|weForth v1|WASM / C|-O2|FireFox v107|1901|166|
 |weForth v1|WASM / C|-O3|FireFox v107|failed(unknown function)|182|
 |||||||
 |weForth v1|WASM / C|-O0|FireFox v107 1-Worker|7496|237|
@@ -59,9 +59,10 @@ With WASM, the interoperability between different languages become a thing of th
 |weForth+switch|WASM / C|-O2|FireFox v107 1-Worker|3780|168|
 |weForth+switch|WASM / C|-O3|FireFox v107 1-Worker|3755|185|
 |||||||
-|weForth v1.2|WASM / C, no yield|-O0|FireFox v107 1-Worker|988|232|
-|weForth v1.2|WASM / C, no yield|-O2|FireFox v107 1-Worker|528|156|
-|weForth v1.2|WASM / C, no yield|-O3|FireFox v107 1-Worker|553|173|
+|weForth v1.2|WASM / C, no yield|-O0|FireFox v120 1-Worker|5230|254|
+|weForth v1.2|WASM / C, no yield|-O1|FireFox v120 1-Worker|1347|196|
+|weForth v1.2|WASM / C, no yield|-O2|FireFox v120 1-Worker|1294|165|
+|weForth v1.2|WASM / C, no yield|-O3|FireFox v120 1-Worker|err - fn NA|182|
 
 * Note1: uEforth v7 uses switch(op), instead of 'computed goto' (asm.js/WASM has no goto)
 * Note2: weForth v1 uses subroutine indirected-threaded
