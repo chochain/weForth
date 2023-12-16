@@ -21,12 +21,6 @@ With WASM, the interoperability between different languages become a thing of th
 * Client-side Browser
   > http://localhost:8000/tests/ceforth.html
 
-* em++ -o tests/ceForth_403.html src/ceForth_403.cpp --shell-file template/ceforth.html -sEXPORTED_FUNCTIONS=_main,_forth -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
-* Server-side
-  > python3 tests/serv.py
-* Client-side Browser
-  > http://localhost:8000/tests/ceForth_403.html
-
 ### To Compile to Web Worker (run almost at the same speed as main thread)
 * cp template/weforth.html template/weforth.css template/file_io.js template/weforth_helper.js template/weforth_worker.js tests
 * em++ -o tests/weforth.js src/ceforth.cpp -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap -O2
