@@ -40,11 +40,12 @@ With WASM, the interoperability between different languages become a thing of th
 * wasm-objdump -x tests/ceforth.wasm > ceforth.wasm.txt
 
 ### Benchmark (on my aged IBM X230)
-> Simple 1K*10K
->> : xx 9999 FOR 34 DROP NEXT ;
->> : yy 999 FOR xx NEXT ;
->> : zz MS NEGATE yy MS + ;
+> Simple 1K*10K tests
+>> : xx 9999 FOR 34 DROP NEXT ;<br/>
+>> : yy 999 FOR xx NEXT ;<br/>
+>> : zz MS NEGATE yy MS + ;<br/>
 >> zz
+
 |implementation|source code|optimization|Platform|1K*10K cycles (in ms)|code size (KB)|
 |---|---|---|---|---|---|
 |ceforth v8|C|-O0|CPU|266|111|
