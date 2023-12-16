@@ -13,7 +13,7 @@ With WASM, the interoperability between different languages become a thing of th
 * Forth in Web Worker threads (multi-VMs possible)
 * IDE-style interactive front-end (cloud possible, i.g. JupyterLab)
 
-### To Compile and Run (make sure python3 and Emscripten is installed)
+### To Compile and Run (make sure python3 and Emscripten are installed)
 * em++ -o tests/ceforth.html src/ceforth.cpp --shell-file template/ceforth.html -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
   > Note: -O2 works OK, -O3 emscripten spits wrong code
 * Server-side
@@ -35,10 +35,16 @@ With WASM, the interoperability between different languages become a thing of th
 * Client-side Browser
   > http://localhost:8000/tests/weforth.html
 
-### To Debug (dump all functions)
-* em++ -o tests/ceforth.html src/ceforth.cpp --shell-file src/forth_template.html -sEXPORT_ALL=1 -sLINKABLE=1 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+### To Debug (dump all functions, check with wasm-objdump in WABT kit)
+* em++ -o tests/ceforth.html src/ceforth.cpp --shell-file template/ceforth.html -sEXPORT_ALL=1 -sLINKABLE=1 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+* wasm-objdump -x tests/ceforth.wasm > ceforth.wasm.txt
 
 ### Benchmark (on my aged IBM X230)
+> Simple 1K*10K
+>> : xx 9999 FOR 34 DROP NEXT ;
+>> : yy 999 FOR xx NEXT ;
+>> : zz MS NEGATE yy MS + ;
+>> zz
 |implementation|source code|optimization|Platform|1K*10K cycles (in ms)|code size (KB)|
 |---|---|---|---|---|---|
 |ceforth v8|C|-O0|CPU|266|111|
