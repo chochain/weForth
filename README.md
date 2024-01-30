@@ -41,31 +41,35 @@ With WASM, the interoperability between different languages become a thing of th
 >> zz
 
 * CPU = Intel i5-3470 @ 3.2GHz
-* FF = FireFox v120, FF1w = FireFox v120 1-worker
-* WASM = Emscripten v3.1.51
+* FFa = FireFox v120, FFa1 = FireFox v120+1-worker
+* FFb = FireFox v122, FFb1 = FireFox v122+1-worker
+* EMa = Emscripten v3.1.51
+* EMb = Emscripten v3.1.53
 
 |implementation|source code|optimization|platform|run time(ms)|code size(KB)|
 |---|---|---|---|---|---|
-|ceforth v8|C|-O0|CPU|266|111|
-|||-O2|CPU|106|83|
-|||-O3|CPU|108|91|
-|eForth.js v6|JavaScript||FF|756|20|
-|uEforth v7.0|asm.js / C|?|FF|814|?|
-|weForth v1|WASM / C|-O0|FF1w|7496|237|
-|||-O2|FF1w|1922|157|
-|||-O3|FF1w|1847|174|
-|weForth v1.2|WASM / C|-O0|FF1w|943|254|
-|||-O2|FF1w|410|165|
-|||-O3|FF1w|err - fn NA|182|
+|ceforth v8    |C         |-O0|CPU |266 |111|
+|              |          |-O2|CPU |106 |83 |
+|eForth.js v6  |JavaScript|   |FFa |756 |20 |
+|uEforth v7.0.2|asm.js / C|?  |FFa |814 |?  |
+|uEforth v7.0.7|asm.js / C|?  |FFb |1364|?  |
+|weForth v1.2  |EMa / C   |-O0|FFa1|943 |254|
+|              |          |-O2|FFa1|410 |165|
+|weForth v1.4  |EMb / C   |-O0|FFb |515 |259|
+|              |          |-O2|FFb |161 |168|
+|weForth v1.4  |EMb / C   |-O0|FFb1|515 |259|
+|              |          |-O2|FFb1|163 |168|
 
 * Note1: uEforth v7 uses switch(op), instead of 'computed goto' (asm.js/WASM has no goto)
 * Note2: weForth v1 uses token indirected threaded
-* Note3: weForth+switch(op), is 2x slower than just function pointers. Why?
-* Note4: weForth v1.2 without yield in nest() speeds up 3x. Why?
+* Note3: weForth+switch(op), is 2x slower than just function pointers.
+* Note4: weForth v1.2 without yield in nest() speeds up 3x.
+* Note5: WASM -O3 => err functions (wa.*) not found
+* Note6: Chrome is about 10% slower than FireFox
        
 ### TODO
 * review wasmtime (CLI), perf+hotspot (profiling)
-* Sync UI with eForth.js
+* Forth CPU visualizer (with SDL2)
 * GraFORTH spec.
   * File system (FS/IndexedDB)
   * Editor
