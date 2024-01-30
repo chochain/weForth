@@ -12,18 +12,19 @@ importScripts('weforth_helper.js')             /// * vocabulary handler
 importScripts('weforth.js')                    /// * load js emscripten created
 
 function send_ss() {
-    const ex  = Module.asm
-    const base= ex.vm_base()
-    const len = ex.vm_ss_idx()
-    const ss  = new Int32Array(Module.asm.memory.buffer, ex.vm_ss(), len)
-    const top = new Int32Array(Module.asm.memory.buffer, ex.top, 1)
+    const wa  = wasmExports
+    const base= wa.vm_base()
+    const len = wa.vm_ss_idx()
+    const ss  = new Int32Array(wa.memory.buffer, wa.vm_ss(), len)
+    const top = new Int32Array(wa.memory.buffer, wa.top, 1)
     let div = []
     ss.forEach(v=>div.push(v.toString(base)))
     div.push(top[0].toString(base))
     postMessage([ 'ss', '[ ' + div.join(' ') + ' ]' ])
 }
 function send_dict() {
-    const len = Module.asm.vm_dict_idx()
+    const wa  = wasmExports
+    const len = wa.vm_dict_idx()
     if (vm_dict_len == len) return             /// * dict no change, skip
     
     vm_dict_len = len
@@ -42,11 +43,12 @@ function send_dict() {
     postMessage([ 'us', colon_words(clst) ])
 }
 function send_mem(off, len) {
+    const wa = wasmExports
     const hx = '0123456789ABCDEF'
     const h2 = (v)=>hx[(v>>4)&0xf]+hx[v&0xf]
     const h4 = (v)=>h2(v>>8)+h2(v)
-    const adr = Module.asm.vm_mem() + off
-    const mem = new Uint8Array(Module.asm.memory.buffer, adr, len)
+    const adr = wa.vm_mem() + off
+    const mem = new Uint8Array(wa.memory.buffer, adr, len)
     const n   = (off + len + 0x10) & ~0xf
     let div = '', bt = '', tx = ''
     for (let j = off&~0xf; j < n; j+=0x10) {

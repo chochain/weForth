@@ -81,10 +81,10 @@
     /// TextArea handler functions
     ///
     function show_ss() {
-        let ex  = Module.asm
-        let len = ex.vm_ss_idx()
-        let ss  = new Int32Array(ex.memory.buffer, ex.vm_ss(), len)
-        let top = new Int32Array(ex.memory.buffer, ex.top, 1)
+        let wa  = wasmExports
+        let len = wa.vm_ss_idx()
+        let ss  = new Int32Array(wa.memory.buffer, wa.vm_ss(), len)
+        let top = new Int32Array(wa.memory.buffer, wa.top, 1)
         let div = document.getElementById('ss')
         div.innerHTML = top + '<br/>'
         for (let i = len - 1; i >= 0; --i) {
@@ -92,8 +92,8 @@
         }
     }
     function show_dict() {
-        let ex  = Module.asm          
-        let len = ex.vm_dict_idx()
+        let wa  = wasmExports         
+        let len = wa.vm_dict_idx()
         let dict= Module.cwrap('vm_dict', 'string', ['number'])
         let div = document.getElementById('dc')
         div.innerHTML = ''
