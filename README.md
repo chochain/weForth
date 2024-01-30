@@ -42,18 +42,15 @@ With WASM, the interoperability between different languages become a thing of th
 
 |implementation|source code|optimization|Platform|run time(ms)|code size(KB)|
 |---|---|---|---|---|---|
-|ceforth v8|C|||||
-|||-O0|CPU|266|111|
+|ceforth v8|C|-O0|CPU|266|111|
 |||-O2|CPU|106|83|
 |||-O3|CPU|108|91|
 |eForth.js v6|JavaScript||FF|756|20|
 |uEforth v7.0|asm.js / C|?|FF|814|?|
-|weForth v1|WASM / C|||||
-|||-O0|FF1w|7496|237|
+|weForth v1|WASM / C|-O0|FF1w|7496|237|
 |||-O2|FF1w|1922|157|
 |||-O3|FF1w|1847|174|
-|weForth v1.2|WASM / C|||||
-|||-O0|FF1w|943|254|
+|weForth v1.2|WASM / C|-O0|FF1w|943|254|
 |||-O2|FF1w|410|165|
 |||-O3|FF1w|err - fn NA|182|
 
