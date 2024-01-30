@@ -1,6 +1,6 @@
 # weForth - Web eForth with WASM
 
-WebAssembly enpowered eForth on web browsers. Is it faster? Is it more portable?
+WebAssembly enpowered eForth on web browsers. Is it faster? Is it more portable? Yes, and Yes.
 
 Well, on my aged laptop, the impression is pretty exciting! It's about 2x faster than pure Javascript implementation on a browser and at 1/4 speed of C/C++ natively compiled code on CPU. On the portability end, though not exactly plug-and-play but some simple alteration turned my C code web-eabled. Of course, WASM has not integrated with the front-end well enough, updating DOM is a different feat.
 
@@ -40,24 +40,24 @@ With WASM, the interoperability between different languages become a thing of th
 >> : zz MS NEGATE yy MS + ;<br/>
 >> zz
 
-|implementation|source code|optimization|Platform|1K*10K cycles (in ms)|code size (KB)|
+|implementation|source code|optimization|Platform|run time(ms)|code size(KB)|
 |---|---|---|---|---|---|
-|ceforth v8|C|-O0|CPU|266|111|
-|ceforth v8|C|-O1|CPU|133|86|
-|ceforth v8|C|-O2|CPU|106|83|
-|ceforth v8|C|-O3|CPU|108|91|
-|eForth.js v6|JavaScript||FireFox v120|756|20|
-|uEforth v7.0|asm.js / C|?|FireFox v120|814|?|
-|||||||
-|weForth v1|WASM / C|-O0|FireFox v120 1-Worker|7496|237|
-|weForth v1|WASM / C|-O2|FireFox v120 1-Worker|1922|157|
-|weForth v1|WASM / C|-O3|FireFox v120 1-Worker|1847|174|
-|||||||
-|weForth v1.2|WASM / C|-O0|FireFox v120 1-Worker|943|254|
-|weForth v1.2|WASM / C|-O1|FireFox v120 1-Worker|450|196|
-|weForth v1.2|WASM / C|-O2|FireFox v120 1-Worker|410|165|
-|weForth v1.2|WASM / C|-O3|FireFox v120 1-Worker|err - fn NA|182|
+|ceforth v8|C|||||
+|||-O0|CPU|266|111|
+|||-O2|CPU|106|83|
+|||-O3|CPU|108|91|
+|eForth.js v6|JavaScript||FF|756|20|
+|uEforth v7.0|asm.js / C|?|FF|814|?|
+|weForth v1|WASM / C|||||
+|||-O0|FF1w|7496|237|
+|||-O2|FF1w|1922|157|
+|||-O3|FF1w|1847|174|
+|weForth v1.2|WASM / C|||||
+|||-O0|FF1w|943|254|
+|||-O2|FF1w|410|165|
+|||-O3|FF1w|err - fn NA|182|
 
+* Note0: FF = FireFox v120, FF1w = FireFox v120 1-worker
 * Note1: uEforth v7 uses switch(op), instead of 'computed goto' (asm.js/WASM has no goto)
 * Note2: weForth v1 uses token indirected threaded
 * Note3: weForth+switch(op), is 2x slower than just function pointers. Why?
