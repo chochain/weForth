@@ -40,7 +40,11 @@ With WASM, the interoperability between different languages become a thing of th
 >> : zz MS NEGATE yy MS + ;<br/>
 >> zz
 
-|implementation|source code|optimization|Platform|run time(ms)|code size(KB)|
+* CPU = Intel i5-3470 @ 3.2GHz
+* FF = FireFox v120, FF1w = FireFox v120 1-worker
+* WASM = Emscripten v3.1.51
+
+|implementation|source code|optimization|platform|run time(ms)|code size(KB)|
 |---|---|---|---|---|---|
 |ceforth v8|C|-O0|CPU|266|111|
 |||-O2|CPU|106|83|
@@ -54,7 +58,6 @@ With WASM, the interoperability between different languages become a thing of th
 |||-O2|FF1w|410|165|
 |||-O3|FF1w|err - fn NA|182|
 
-* Note0: FF = FireFox v120, FF1w = FireFox v120 1-worker
 * Note1: uEforth v7 uses switch(op), instead of 'computed goto' (asm.js/WASM has no goto)
 * Note2: weForth v1 uses token indirected threaded
 * Note3: weForth+switch(op), is 2x slower than just function pointers. Why?
