@@ -10,17 +10,25 @@ struct Context {
     SDL_Window     *window;
     SDL_Renderer   *rndr;
     SDL_Texture    *tex;
-    SDL_Event      event;
-    SDL_Rect       img, rect;
+    SDL_Rect       bg, img, rect;
 };
 
 void callback(void * arg){
-    Context *ctx  = static_cast<Context*>(arg);
-    while(SDL_PollEvent(&ctx->event)) {
-        switch (ctx->event.type) {
+    Context   *ctx = static_cast<Context*>(arg);
+    SDL_Event ev;
+    while(SDL_PollEvent(&ev)) {
+        switch (ev.type) {
         case SDL_QUIT:            exit(0);           break;
         case SDL_MOUSEBUTTONDOWN: ctx->rect.x -= 20; break;
-        default: /* do nothing */                    break;
+        case SDL_KEYDOWN:
+            switch(ev.key.keysym.sym) {
+            case SDLK_UP:    ctx->rect.y -= 20; break;
+            case SDLK_DOWN:  ctx->rect.y += 20; break;
+            case SDLK_LEFT:  ctx->rect.x -= 20; break;
+            case SDLK_RIGHT: ctx->rect.x += 20; break;
+            default: /* do nothing */ break;
+            }
+        default: /* do nothing */ break;
         }
     }
     
