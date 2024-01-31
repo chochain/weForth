@@ -18,8 +18,9 @@ void callback(void * arg){
     SDL_Event ev;
     while(SDL_PollEvent(&ev)) {
         switch (ev.type) {
-        case SDL_QUIT:            exit(0);           break;
-        case SDL_MOUSEBUTTONDOWN: ctx->rect.x -= 20; break;
+        case SDL_QUIT:            exit(0);          break;
+        case SDL_MOUSEBUTTONDOWN: ctx->img.w <<= 1; break;
+        case SDL_MOUSEBUTTONUP:   ctx->img.w >>= 1; break;
         case SDL_KEYDOWN:
             switch(ev.key.keysym.sym) {
             case SDLK_UP:    ctx->rect.y -= 20; break;
@@ -69,7 +70,7 @@ int play(Context &ctx) {
     ctx.tex = SDL_CreateTextureFromSurface(ctx.rndr, image);
     SDL_FreeSurface(image);
 
-    RECT(ctx.img,  260, 260, image->w, image->h);
+    RECT(ctx.img,  160, 160, image->w, image->h);
     RECT(ctx.rect, 400, 100, 200, 200);
 
     return 0;
