@@ -10,13 +10,13 @@ struct Context {
     SDL_Window     *window;
     SDL_Renderer   *rndr;
     SDL_Texture    *tex;
-    SDL_Rect       bg, img, rect;
+    SDL_Rect       img, rect;
 };
 
-void callback(void * arg){
+void callback(void *arg){
     Context   *ctx = static_cast<Context*>(arg);
     SDL_Event ev;
-    while(SDL_PollEvent(&ev)) {
+    while (SDL_PollEvent(&ev)) {
         switch (ev.type) {
         case SDL_QUIT:            exit(0);          break;
         case SDL_MOUSEBUTTONDOWN: ctx->img.w <<= 1; break;
@@ -36,9 +36,9 @@ void callback(void * arg){
     SDL_Renderer *rn = ctx->rndr;
     SDL_RenderClear(rn);
     SDL_RenderCopy(rn, ctx->tex, NULL, &ctx->img);         // display image
-    SDL_SetRenderDrawColor(rn, 0x40, 0x80, 0xc0, 0xa0);    // draw blue rectangle
+    SDL_SetRenderDrawColor(rn, 0xc0, 0xf0, 0xc0, 0xa0);    // draw blue rectangle
     SDL_RenderFillRect(rn, &ctx->rect);
-    SDL_SetRenderDrawColor(rn, 0x8, 0x10, 0x20, 0x80);     // shade the background
+    SDL_SetRenderDrawColor(rn, 0xf0, 0xff, 0xe0, 0x80);    // shade the background
     SDL_RenderPresent(rn);
 }
 
@@ -62,15 +62,15 @@ void inline RECT(SDL_Rect &r, int x, int y, int w, int h) {
 }
 
 int play(Context &ctx) {
-    SDL_Surface *image = IMG_Load("tests/assets/owl.png");
-    if (!image) {
+    SDL_Surface *img = IMG_Load("tests/assets/owl.png");
+    if (!img) {
         printf("IMG_Load: %s\n", IMG_GetError());
         return 1;
     }
-    ctx.tex = SDL_CreateTextureFromSurface(ctx.rndr, image);
-    SDL_FreeSurface(image);
+    ctx.tex = SDL_CreateTextureFromSurface(ctx.rndr, img);
+    SDL_FreeSurface(img);
 
-    RECT(ctx.img,  160, 160, image->w, image->h);
+    RECT(ctx.img,  160, 160, img->w, img->h);
     RECT(ctx.rect, 400, 100, 200, 200);
 
     return 0;
