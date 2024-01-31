@@ -47,13 +47,13 @@ With WASM, the interoperability between different languages become a thing of th
 * EM.b = Emscripten v3.1.53
 
 |implementation|version|source code|optimization|platform|run time(ms)|code size(KB)|
-|--|--|--|--|--|--|--|
+|--|--|--|--|--|--|--|--|
 |ceforth  |8.0  |C         |-O0|CPU  |266 |111|
 |         |     |          |-O2|CPU  |106 |83 |
 |eForth.js|6.0  |JavaScript|   |FF.a |756 |20 |
 |         |     |          |   |FF.b |1059|20 |
-|uEforth  |7.0.2|asm.js / C|?  |FF.a |814 |?  |
-|         |7.0.7|          |?  |FF.b |302 |?  |
+|uEforth  |7.0.2|Asm.js    |   |FF.a |814 |29 |
+|         |7.0.7|          |   |FF.b |302 |29 |
 |weForth  |1.2  |EM.a / C  |-O0|FF.a1|943 |254|
 |         |     |          |-O2|FF.a1|410 |165|
 |weForth  |1.4  |EM.b / C  |-O0|FF.b |515 |259|
@@ -61,13 +61,14 @@ With WASM, the interoperability between different languages become a thing of th
 |weForth  |1.4  |EM.b / C  |-O0|FF.b1|516 |259|
 |         |     |          |-O2|FF.b1|163 |168|
 
-* Note1: uEforth v7 uses switch(op), instead of 'computed goto' (asm.js/WASM has no goto)
-* Note2: weForth v1 uses token indirected threaded
-* Note3: weForth+switch(op), is 2x slower than just function pointers.
-* Note4: weForth v1.2 without yield in nest() speeds up 3x.
-* Note5: WASM -O3 => err functions (wa.*) not found
-* Note6: FireFox v122 is vastly faster than v120
-* Note7: Chrome is about 10% slower than FireFox
+* Note1: eForth.js uses JS straight, can do floating-points
+* Note2: uEforth v7 uses Asm.js, build Forth up with JS "assembly".
+* Note3: weForth v1 uses token indirected threaded
+* Note4: weForth+switch(op), is 2x slower than just function pointers.
+* Note5: weForth v1.2 without yield in nest() speeds up 3x.
+* Note6: WASM -O3 => err functions (wa.*) not found
+* Note7: FireFox v122 is vastly faster than v120
+* Note8: Chrome is about 10% slower than FireFox
 
 ### SDL2 [read first](https://lyceum-allotments.github.io/2016/06/emscripten-and-sdl-2-tutorial-part-1/)
 * install sdl2, image, sound, and fonts
