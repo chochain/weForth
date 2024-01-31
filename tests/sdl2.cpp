@@ -6,7 +6,7 @@
 
 struct Context {
     std::string    title;
-    int            width, height;
+    int            w, h;
     SDL_Window     *window;
     SDL_Renderer   *rndr;
     SDL_Event      event;
@@ -18,9 +18,9 @@ void callback(void * arg){
     Context *ctx  = static_cast<Context*>(arg);
     while(SDL_PollEvent(&ctx->event)) {
         switch (ctx->event.type) {
-        case SDL_QUIT:            exit(0);                break;
+        case SDL_QUIT:            exit(0);            break;
         case SDL_MOUSEBUTTONDOWN: ctx->rect2.x -= 20; break;
-        default: /* do nothing */                         break;
+        default: /* do nothing */                     break;
         }
     }
     
@@ -29,7 +29,7 @@ void callback(void * arg){
     SDL_SetRenderDrawColor(rn, 0x40, 0x80, 0xc0, 0xa0);
     //SDL_RenderDrawRect(rn, &rect2);
     SDL_RenderFillRect(rn, &ctx->rect2);
-    SDL_SetRenderDrawColor(rn, 9, 20, 33, 255);
+    SDL_SetRenderDrawColor(rn, 0x8, 0x10, 0x20, 0x80);
     SDL_RenderCopy(rn, ctx->logo, NULL, &ctx->rect);
     SDL_RenderPresent(rn);
 }
@@ -38,12 +38,11 @@ void setup(Context &ctx) {
     SDL_Init(SDL_INIT_EVERYTHING);
     
     ctx.title  = "SDL2 It Works!";
-    ctx.width  = 640;
-    ctx.height = 480;
+    ctx.w      = 640;
+    ctx.h      = 480;
     ctx.window = SDL_CreateWindow(
         ctx.title.c_str(),
-        50, 30,
-        ctx.width, ctx.height,
+        50, 30, ctx.w, ctx.h,
         SDL_WINDOW_SHOWN
         );
     ctx.rndr = SDL_CreateRenderer(ctx.window, -1, 0);
