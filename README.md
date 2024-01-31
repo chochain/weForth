@@ -47,7 +47,7 @@ With WASM, the interoperability between different languages become a thing of th
 * EM.b = Emscripten v3.1.53
 
 |implementation|version|source code|optimization|platform|run time(ms)|code size(KB)|
-|--|--|--|--|--|--|--|--|
+|--|--|--|--|--|--|--|
 |ceforth  |8.0  |C         |-O0|CPU  |266 |111|
 |         |     |          |-O2|CPU  |106 |83 |
 |eForth.js|6.0  |JavaScript|   |FF.a |756 |20 |
