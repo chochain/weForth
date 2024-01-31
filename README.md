@@ -13,7 +13,7 @@ With WASM, the interoperability between different languages become a thing of th
 * Forth in Web Worker threads (multi-VMs possible)
 * IDE-style interactive front-end (cloud possible, i.g. JupyterLab)
 
-### To Compile and Run (make sure python3 and Emscripten are installed)
+### To Compile and Run with single file (make sure python3 and Emscripten are installed)
 * em++ -o tests/ceforth.html src/ceforth.cpp --shell-file template/ceforth.html -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
   > Note: -O2 works OK, -O3 emscripten spits wrong code
 * Server-side
@@ -21,7 +21,7 @@ With WASM, the interoperability between different languages become a thing of th
 * Client-side Browser
   > http://localhost:8000/tests/ceforth.html
 
-### To Compile to Web Worker (run almost at the same speed as main thread)
+### To Compile and Run with Web Worker (multi-threaded)
 * cp template/weforth.html template/weforth.css template/file_io.js template/weforth_helper.js template/weforth_worker.js tests
 * em++ -o tests/weforth.js src/ceforth.cpp -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap -O2
 * Server-side
@@ -41,32 +41,45 @@ With WASM, the interoperability between different languages become a thing of th
 >> zz
 
 * CPU = Intel i5-3470 @ 3.2GHz
-* FFa = FireFox v120, FFa1 = FireFox v120+1-worker
-* FFb = FireFox v122, FFb1 = FireFox v122+1-worker
-* EMa = Emscripten v3.1.51
-* EMb = Emscripten v3.1.53
+* FF.a = FireFox v120, FF.a1 = FF.a + 1 worker
+* FF.b = FireFox v122, FF.b1 = FF.b + 1 worker
+* EM.a = Emscripten v3.1.51
+* EM.b = Emscripten v3.1.53
 
-|implementation|source code|optimization|platform|run time(ms)|code size(KB)|
-|---|---|---|---|---|---|
-|ceforth v8    |C         |-O0|CPU |266 |111|
-|              |          |-O2|CPU |106 |83 |
-|eForth.js v6  |JavaScript|   |FFa |756 |20 |
-|uEforth v7.0.2|asm.js / C|?  |FFa |814 |?  |
-|uEforth v7.0.7|asm.js / C|?  |FFb |1364|?  |
-|weForth v1.2  |EMa / C   |-O0|FFa1|943 |254|
-|              |          |-O2|FFa1|410 |165|
-|weForth v1.4  |EMb / C   |-O0|FFb |515 |259|
-|              |          |-O2|FFb |161 |168|
-|weForth v1.4  |EMb / C   |-O0|FFb1|515 |259|
-|              |          |-O2|FFb1|163 |168|
+|implementation|version|source code|optimization|platform|run time(ms)|code size(KB)|
+|--|--|--|--|--|--|--|
+|ceforth  |8.0  |C         |-O0|CPU  |266 |111|
+|         |     |          |-O2|CPU  |106 |83 |
+|eForth.js|6.0  |JavaScript|   |FF.a |756 |20 |
+|         |     |          |   |FF.b |1059|20 |
+|uEforth  |7.0.2|asm.js / C|?  |FF.a |814 |?  |
+|         |7.0.7|          |?  |FF.b |302 |?  |
+|weForth  |1.2  |EM.a / C  |-O0|FF.a1|943 |254|
+|         |     |          |-O2|FF.a1|410 |165|
+|weForth  |1.4  |EM.b / C  |-O0|FF.b |515 |259|
+|         |     |          |-O2|FF.b |161 |168|
+|weForth  |1.4  |EM.b / C  |-O0|FF.b1|516 |259|
+|         |     |          |-O2|FF.b1|163 |168|
 
 * Note1: uEforth v7 uses switch(op), instead of 'computed goto' (asm.js/WASM has no goto)
 * Note2: weForth v1 uses token indirected threaded
 * Note3: weForth+switch(op), is 2x slower than just function pointers.
 * Note4: weForth v1.2 without yield in nest() speeds up 3x.
 * Note5: WASM -O3 => err functions (wa.*) not found
-* Note6: Chrome is about 10% slower than FireFox
-       
+* Note6: FireFox v122 is vastly faster than v120
+* Note7: Chrome is about 10% slower than FireFox
+
+### SDL2 [read first](https://lyceum-allotments.github.io/2016/06/emscripten-and-sdl-2-tutorial-part-1/)
+* install sdl2, image, sound, and fonts
+> sudo apt install libsdl2-dev libsdl2-2.0-0 -y;
+> sudo apt install libjpeg-dev libwebp-dev libtiff5-dev libsdl2-image-dev libsdl2-image-2.0-0 -y;
+> sudo apt install libmikmod-dev libfishsound1-dev libsmpeg-dev liboggz2-dev libflac-dev libfluidsynth-dev libsdl2-mixer-dev libsdl2-mixer-2.0-0 -y;
+> sudo apt install libfreetype6-dev libsdl2-ttf-dev libsdl2-ttf-2.0-0 -y;
+* compile C code
+> g++ -o tests/sdl2_test src/sdl2.cpp `sdl2-config --cflags --libs` -lSDL2_image -lSDL2_mixer -lSDL2_ttf
+* compile to WASM
+> em++ -o tests/sdl2_test.js src/sdl2.cpp -s WASM=1 -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' --preload-file tests/img
+
 ### TODO
 * review wasmtime (CLI), perf+hotspot (profiling)
 * Forth CPU visualizer (with SDL2)
