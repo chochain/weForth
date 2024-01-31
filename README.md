@@ -13,25 +13,22 @@ With WASM, the interoperability between different languages become a thing of th
 * Forth in Web Worker threads (multi-VMs possible)
 * IDE-style interactive front-end (cloud possible, i.g. JupyterLab)
 
-### To Compile and Run with single file (make sure python3 and Emscripten are installed)
-* em++ -o tests/ceforth.html src/ceforth.cpp --shell-file template/ceforth.html -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+### To Compile with single file (make sure python3 and Emscripten are installed)
+  > make one
   > Note: -O2 works OK, -O3 emscripten spits wrong code
+
+### To Compile with one Web Worker thread (multi-threaded)
+  > make two
+
+### To Compile with one Web Worker thread (multi-threaded)
 * Server-side
   > python3 tests/serv.py
 * Client-side Browser
-  > http://localhost:8000/tests/ceforth.html
+  > http://localhost:8000/tests/ceforth.html or weforth.html
 
-### To Compile and Run with Web Worker (multi-threaded)
-* cp template/weforth.html template/weforth.css template/file_io.js template/weforth_helper.js template/weforth_worker.js tests
-* em++ -o tests/weforth.js src/ceforth.cpp -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap -O2
-* Server-side
-  > python3 tests/serv.py
-* Client-side Browser
-  > http://localhost:8000/tests/weforth.html
-
-### To Debug (dump all functions, check with wasm-objdump in WABT kit)
-* em++ -o tests/ceforth.html src/ceforth.cpp --shell-file template/ceforth.html -sEXPORT_ALL=1 -sLINKABLE=1 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
-* wasm-objdump -x tests/ceforth.wasm > ceforth.wasm.txt
+### To Debug the WASM file (dump all functions, check with wasm-objdump in WABT kit)
+  > make debug
+  > read tests/ceforth.wasm.txt (really long)
 
 ### Benchmark (on my aged IBM X230)
 > Simple 1K*10K tests
