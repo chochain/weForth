@@ -22,7 +22,7 @@ With WASM, the interoperability between different languages become a thing of th
 
 ### To Compile with one Web Worker thread (multi-threaded)
 * Server-side
-  > python3 tests/serv.py
+  > python3 -m http.server
 * Client-side Browser
   > http://localhost:8000/tests/ceforth.html or weforth.html
 
