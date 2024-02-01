@@ -1,8 +1,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
-#include <emscripten.h>
 #include <iostream>
+#include <emscripten.h>
 
 struct RGBA {
     Uint8 r, g, b, a;
@@ -125,7 +125,7 @@ int play(Context &ctx, const char *fname) {
     ctx.sq  = new Tile(ctx.rndr, 400, 100, 200, 200);
     ctx.img = new Tile(ctx.rndr, 160, 160);
     if (!ctx.img->load(fname, &key)) {
-        printf("IMG_Load: %s\n", fname, IMG_GetError());
+        printf("IMG_Load: %s\n", IMG_GetError());
         return 1;
     }
     return 0;
@@ -146,6 +146,7 @@ int main(int argc, char** argv) {
     if (play(ctx, fname)) return -1;
     
     emscripten_set_main_loop_arg(callback, &ctx, -1, 1);
+    
     teardown(ctx);
   
     return 0;
