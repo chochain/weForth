@@ -26,4 +26,7 @@ all: one two
 	echo "cmd: enter http://localhost:8000/tests/ceforth.html or weforth.html to test"
 
 sdl: tests/sdl2.cpp
-	$(CC) -o tests/sdl2.js tests/sdl2.cpp -s WASM=1 -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' --preload-file tests/assets
+	$(CC) -o tests/sdl2.js tests/sdl2.cpp -s WASM=1 -s USE_SDL=2 -s USE_SDL_TTF=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' --preload-file tests/assets
+
+exe: tests/sdl2.cpp
+	g++ -o tests/sdl2 tests/sdl2.cpp `sdl2-config --cflags --libs` -lSDL2_image -lSDL2_mixer -lSDL2_ttf
