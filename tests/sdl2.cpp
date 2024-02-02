@@ -4,9 +4,12 @@
 #include <iostream>
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
+#define run_main_loop(cb,ctx) emscripten_set_main_loop_arg(cb,ctx,-1,1)
 #else
-#define emscripten_set_main_loop_arg(cb,ctx,a,b)  while(1) { cb(ctx); }
+#define run_main_loop(cb,ctx) while(g_run) { cb(ctx); }
 #endif
+
+bool g_run = true;
 
 struct C4 : SDL_Color {
     C4(Uint8 r, Uint8 g, Uint8 b, Uint8 a) { set(r, g, b, a);         }
@@ -108,15 +111,15 @@ struct Context {
     TTF_Font       *font = NULL;
 };
 
-void callback(void *arg){
+void callback(void *arg) {
     Context   &ctx = *static_cast<Context*>(arg);
     SDL_Event ev;
     SDL_Rect  &img = ctx.img->rect;
     while (SDL_PollEvent(&ev)) {
         switch (ev.type) {
-        case SDL_QUIT:            exit(0);     break;
-        case SDL_MOUSEBUTTONDOWN: img.w <<= 1; break;
-        case SDL_MOUSEBUTTONUP:   img.w >>= 1; break;
+        case SDL_QUIT:            exit(0);         break;
+        case SDL_MOUSEBUTTONDOWN: img.w <<= 1;     break;
+        case SDL_MOUSEBUTTONUP:   img.w >>= 1;     break;
         case SDL_KEYDOWN: {
             SDL_Rect &sq = ctx.sq->rect;
             switch(ev.key.keysym.sym) {
@@ -130,6 +133,7 @@ void callback(void *arg){
             case SDLK_x:     ctx.a += 0x20;        break;
             case SDLK_s:     ctx.r -= 0x20;        break;
             case SDLK_d:     ctx.r += 0x20;        break;
+            case SDLK_q:     g_run = false;        break;
             default: /* do nothing */ break;
             }
         } break;
@@ -166,7 +170,7 @@ int setup(Context &ctx) {
         );
     
     ctx.rndr = SDL_CreateRenderer(ctx.window, -1, 0);
-    ctx.font = TTF_OpenFont("tests/assets/FreeSans.ttf", 30);
+    ctx.font = TTF_OpenFont("tests/assets/FreeSans.ttf", 48);
     if (!ctx.font) {
         printf("TTF_OpenFont: %s\n", TTF_GetError());
         return 1;
@@ -190,10 +194,15 @@ int play(Context &ctx, const char *title, const char *fname) {
 }    
 
 void teardown(Context &ctx) {
+#ifndef EMSCRIPTEN
+    printf("SDL shutting down...\n");
     SDL_DestroyRenderer(ctx.rndr);
+    ctx.txt->free();
     ctx.img->free();
     SDL_DestroyWindow(ctx.window);
     SDL_Quit();
+    printf("%s done.\n", __FILE__);
+#endif
 }
 
 int main(int argc, char** argv) {
@@ -204,7 +213,7 @@ int main(int argc, char** argv) {
     if (setup(ctx)) return -1;
     if (play(ctx, title, fname)) return -1;
     
-    emscripten_set_main_loop_arg(callback, &ctx, -1, 1);
+    run_main_loop(callback, &ctx);
     
     teardown(ctx);
   
