@@ -84,9 +84,9 @@ struct Text : Tile {
     Text *render(SDL_Rect *clip=NULL) {
         Uint32 t = SDL_GetTicks();
         stime.str("");
-        stime << header << " : " << (t - t0) / 1000;
+        stime << header << " : " << (t - t0) / 1000;         // timer ticks (in second)
 
-        SDL_Surface *txt = TTF_RenderText_Solid(             // create text texture real-time
+        SDL_Surface *txt = TTF_RenderText_Solid(             // create surface (real-time text)
             g_font, stime.str().c_str(), c4);
         if (!txt) {
             printf("TTF_Load: %s\n", TTF_GetError());
@@ -94,14 +94,15 @@ struct Text : Tile {
         }
         rect.w = txt->w;
         rect.h = txt->h;
-//        SDL_QueryTexture(tex, NULL, NULL, &rect.w, &rect.h);
         
-        tex = SDL_CreateTextureFromSurface(rndr, txt);
+        free();                                              // release previous allocated tex
+        tex = SDL_CreateTextureFromSurface(rndr, txt);       // build new texture
+        SDL_FreeSurface(txt);                                // release surface object
+        
         if (!tex) {
             printf("SDL_Load: %s\n", SDL_GetError());
             return NULL;
         }
-        SDL_FreeSurface(txt);
         Tile::render();
         
         return this;
@@ -191,13 +192,14 @@ int setup(Context &ctx) {
 
 int play(Context &ctx, const char *text, const char *fname) {
     SDL_Color key = {0xff, 0xff, 0xff, 0xff};          // key on white (as transparent)
+    SDL_Color red = {0xff, 0x0,  0x0,  0xff};
     
     ctx.sq  = new Tile(ctx.rndr, 400, 100, 200, 200);  // initialize square
     ctx.img = new Tile(ctx.rndr, 160, 160);            // initialize image
     if (!ctx.img->load(fname, &key)) return 1;
 
     ctx.txt = new Text(ctx.rndr, 100, 100);            // initialize text
-    if (!ctx.txt->load(text)) return 1;
+    if (!ctx.txt->load(text, &red)) return 1;
     
     return 0;
 }    
