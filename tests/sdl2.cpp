@@ -9,7 +9,8 @@
 #define run_main_loop(cb,ctx) while(g_run) { cb(ctx); }
 #endif
 
-bool g_run = true;
+bool     g_run   = true;
+TTF_Font *g_font = NULL;
 
 struct C4 : SDL_Color {
     C4(Uint8 r, Uint8 g, Uint8 b, Uint8 a) { set(r, g, b, a);         }
@@ -73,13 +74,17 @@ struct Tile {
 };
 
 struct Text : Tile {
-    Text(SDL_Renderer *rndr, int x, int y, int w=0, int h=0) : Tile(rndr, x, y, w, h) {}
+    Uint32 t0;
+//    std::stringstream stime;
     
-    Text *load(TTF_Font *font, const char *str, C4 *c4=NULL) {
+    Text(SDL_Renderer *rndr, int x, int y, int w=0, int h=0) : Tile(rndr, x, y, w, h) {
+        t0 = SDL_GetTicks();
+    }
+    Text *load(const char *str, C4 *c4=NULL) {
         SDL_Color c = { 0, 0, 0, 0xff };
         if (c4) { c.r=c4->r; c.g=c4->g; c.b=c4->b; c.a=c4->a; }
         
-        SDL_Surface *txt = TTF_RenderText_Solid(font, str, c);
+        SDL_Surface *txt = TTF_RenderText_Solid(g_font, str, c);
         if (!txt) {
             printf("TTF_Load: %s\n", TTF_GetError());
             return NULL;
@@ -95,9 +100,16 @@ struct Text : Tile {
             return NULL;
         }
         SDL_FreeSurface(txt);
-
+        
         return this;
     }
+/*    
+    Text *render(const char *txt) {
+        Uint32 t = SDL_GetTicks();
+        stime.str("");
+        stime << "tick: " << (t - t0) / 1000.0f;
+    }
+*/
 };
 
 struct Context {
@@ -108,7 +120,6 @@ struct Context {
     SDL_Renderer   *rndr;
     Tile           *img, *sq;
     Text           *txt;
-    TTF_Font       *font = NULL;
 };
 
 void callback(void *arg) {
@@ -117,7 +128,7 @@ void callback(void *arg) {
     SDL_Rect  &img = ctx.img->rect;
     while (SDL_PollEvent(&ev)) {
         switch (ev.type) {
-        case SDL_QUIT:            exit(0);         break;
+        case SDL_QUIT: exit(0); /* force exit */   break;
         case SDL_MOUSEBUTTONDOWN: img.w <<= 1;     break;
         case SDL_MOUSEBUTTONUP:   img.w >>= 1;     break;
         case SDL_KEYDOWN: {
@@ -162,6 +173,10 @@ int setup(Context &ctx) {
     if (TTF_Init()==-1) {
         printf("TTF_Init: %s\n", TTF_GetError()); return 1;
     }
+    g_font = TTF_OpenFont("tests/assets/FreeSans.ttf", 48);
+    if (!g_font) {
+        printf("TTF_OpenFont: %s\n", TTF_GetError()); return 1;
+    }
     
     ctx.window = SDL_CreateWindow(
         ctx.title.c_str(),
@@ -170,11 +185,6 @@ int setup(Context &ctx) {
         );
     
     ctx.rndr = SDL_CreateRenderer(ctx.window, -1, 0);
-    ctx.font = TTF_OpenFont("tests/assets/FreeSans.ttf", 48);
-    if (!ctx.font) {
-        printf("TTF_OpenFont: %s\n", TTF_GetError());
-        return 1;
-    }
     SDL_SetRenderDrawBlendMode(ctx.rndr, SDL_BLENDMODE_BLEND);  // for alpha blending
 
     return 0;
@@ -188,7 +198,7 @@ int play(Context &ctx, const char *title, const char *fname) {
     if (!ctx.img->load(fname, &key)) return 1;
 
     ctx.txt = new Text(ctx.rndr, 100, 100);
-    if (!ctx.txt->load(ctx.font, title)) return 1;
+    if (!ctx.txt->load(title)) return 1;
     
     return 0;
 }    
