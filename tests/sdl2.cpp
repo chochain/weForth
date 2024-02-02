@@ -2,6 +2,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include <iostream>
+#include <sstream>
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
 #define run_main_loop(cb,ctx) emscripten_set_main_loop_arg(cb,ctx,-1,1)
@@ -12,26 +13,20 @@
 bool     g_run   = true;
 TTF_Font *g_font = NULL;
 
-struct C4 : SDL_Color {
-    C4(Uint8 r, Uint8 g, Uint8 b, Uint8 a) { set(r, g, b, a);         }
-    C4(SDL_Color &c)                       { set(c.r, c.g, c.b, c.a); }
-    void set(Uint8 r0, Uint8 g0, Uint8 b0, Uint8 a0) { r=r0; g=g0; b=b0; a=a0; }
-};
-
 struct Tile {
-    SDL_Renderer *rndr;         // pointer to renderer
-    SDL_Texture  *tex= NULL;    // Texture (stored in hardwared/GPU)
-    C4           *c4 = NULL;    // set draw color if defined
-    SDL_Rect     rect;          // rectangle to be drawn upon
+    SDL_Renderer *rndr;          // pointer to renderer
+    SDL_Texture  *tex= NULL;     // Texture (stored in hardwared/GPU)
+    SDL_Color    c4;             // set draw color if defined
+    bool         c4_set = false; // color set
+    SDL_Rect     rect;           // rectangle to be drawn upon
     double       ang = 0.0;
     
     Tile(SDL_Renderer *rndr, int x, int y, int w=0, int h=0) : rndr(rndr) {
         rect.x = x; rect.y = y, rect.w = w; rect.h = h;
     }
-    ~Tile() { if (c4) delete c4; }
     
     void free() { if (tex) SDL_DestroyTexture(tex); }  // run before destructor is called
-    Tile *load(const char *fname, C4 *key=NULL) {
+    Tile *load(const char *fname, SDL_Color *key=NULL) {
         SDL_Surface *img = IMG_Load(fname);
         if (!img) {
             printf("IMG_Load: %s\n", IMG_GetError());
@@ -41,7 +36,7 @@ struct Tile {
         rect.h = img->h;
         
         if (key) {
-            C4 &k = *key;                              // use reference
+            SDL_Color &k = *key;                       // use reference
             SDL_SetColorKey(img, SDL_TRUE,             // key color => transparent 
                 SDL_MapRGB(img->format, k.r, k.g, k.b));
         }
@@ -50,15 +45,14 @@ struct Tile {
         
         return this;
     }
-    Tile *set_color(Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
-        if (c4) c4->set(r,g,b,a);
-        else    c4 = new C4(r,g,b,a);
-        
+    Tile *set_color(SDL_Color c) {
+        c4     = c;
+        c4_set = true;
         return this;
     }
     Tile *render(SDL_Rect *clip=NULL) {
-        if (c4) {                                             // set draw color if given
-            SDL_SetRenderDrawColor(rndr, c4->r, c4->g, c4->b, c4->a);
+        if (c4_set) {
+            SDL_SetRenderDrawColor(rndr, c4.r, c4.g, c4.b, c4.a);
         }
         if (tex) {                                            // display texture
             SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);// can use other blending mode
@@ -74,22 +68,30 @@ struct Tile {
 };
 
 struct Text : Tile {
-    Uint32 t0;
-//    std::stringstream stime;
+    const char        *header;
+    Uint32            t0;
+    std::stringstream stime;
     
     Text(SDL_Renderer *rndr, int x, int y, int w=0, int h=0) : Tile(rndr, x, y, w, h) {
-        t0 = SDL_GetTicks();
+        SDL_Color black = {0,0,0,0xff};
+        set_color(black);                                    // default to black
     }
-    Text *load(const char *str, C4 *c4=NULL) {
-        SDL_Color c = { 0, 0, 0, 0xff };
-        if (c4) { c.r=c4->r; c.g=c4->g; c.b=c4->b; c.a=c4->a; }
-        
-        SDL_Surface *txt = TTF_RenderText_Solid(g_font, str, c);
+    Text *load(const char *str, SDL_Color *c=NULL) {         // text string with color
+        header = str;
+        if (c) set_color(*c);                                // if color given
+        return this;
+    }
+    Text *render(SDL_Rect *clip=NULL) {
+        Uint32 t = SDL_GetTicks();
+        stime.str("");
+        stime << header << " : " << (t - t0) / 1000;
+
+        SDL_Surface *txt = TTF_RenderText_Solid(             // create text texture real-time
+            g_font, stime.str().c_str(), c4);
         if (!txt) {
             printf("TTF_Load: %s\n", TTF_GetError());
             return NULL;
         }
-        c4     = new C4(c);
         rect.w = txt->w;
         rect.h = txt->h;
 //        SDL_QueryTexture(tex, NULL, NULL, &rect.w, &rect.h);
@@ -100,26 +102,21 @@ struct Text : Tile {
             return NULL;
         }
         SDL_FreeSurface(txt);
+        Tile::render();
         
         return this;
     }
-/*    
-    Text *render(const char *txt) {
-        Uint32 t = SDL_GetTicks();
-        stime.str("");
-        stime << "tick: " << (t - t0) / 1000.0f;
-    }
-*/
 };
 
 struct Context {
-    std::string    title = "SDL2 works";
-    int            x=50, y=30, w=640, h=480;
-    Uint8          r = 0x80, a = 0x80;
-    SDL_Window     *window;
-    SDL_Renderer   *rndr;
-    Tile           *img, *sq;
-    Text           *txt;
+    const char   *title = "SDL2 works";
+    int          x=50, y=30, w=640, h=480;   // default size
+    Uint8        r = 0x80, a = 0x80;         // default colors
+    Uint32       t0, t1;
+    SDL_Window   *window;
+    SDL_Renderer *rndr;
+    Tile         *img, *sq;
+    Text         *txt;
 };
 
 void callback(void *arg) {
@@ -158,8 +155,9 @@ void callback(void *arg) {
     {
         ctx.img->render();                                // display image
         ctx.txt->render();                                // display text
-        Tile &t = *ctx.sq;                                // display square
-        t.set_color(ctx.r, 0xf0, 0xc0, ctx.a);            // with changing color
+        Tile      &t = *ctx.sq;                           // display square
+        SDL_Color c  = {ctx.r, 0xf0, 0xc0, ctx.a};        // update color
+        t.set_color(c);                                   // with changing color
         t.render();
     }
     SDL_RenderPresent(rn);                                // update screen
@@ -179,26 +177,27 @@ int setup(Context &ctx) {
     }
     
     ctx.window = SDL_CreateWindow(
-        ctx.title.c_str(),
-        ctx.x, ctx.y, ctx.w, ctx.h,
+        ctx.title, ctx.x, ctx.y, ctx.w, ctx.h,
         SDL_WINDOW_SHOWN
         );
     
     ctx.rndr = SDL_CreateRenderer(ctx.window, -1, 0);
     SDL_SetRenderDrawBlendMode(ctx.rndr, SDL_BLENDMODE_BLEND);  // for alpha blending
 
+    ctx.t0 = SDL_GetTicks();       // get start up time
+
     return 0;
 }
 
-int play(Context &ctx, const char *title, const char *fname) {
-    C4 key(0xff, 0xff, 0xff, 0xff);
+int play(Context &ctx, const char *text, const char *fname) {
+    SDL_Color key = {0xff, 0xff, 0xff, 0xff};          // key on white (as transparent)
     
-    ctx.sq  = new Tile(ctx.rndr, 400, 100, 200, 200);
-    ctx.img = new Tile(ctx.rndr, 160, 160);
+    ctx.sq  = new Tile(ctx.rndr, 400, 100, 200, 200);  // initialize square
+    ctx.img = new Tile(ctx.rndr, 160, 160);            // initialize image
     if (!ctx.img->load(fname, &key)) return 1;
 
-    ctx.txt = new Text(ctx.rndr, 100, 100);
-    if (!ctx.txt->load(title)) return 1;
+    ctx.txt = new Text(ctx.rndr, 100, 100);            // initialize text
+    if (!ctx.txt->load(text)) return 1;
     
     return 0;
 }    
@@ -216,12 +215,12 @@ void teardown(Context &ctx) {
 }
 
 int main(int argc, char** argv) {
-    const char *title = "Hello Owl!";
+    const char *text  = "Hello Owl!";
     const char *fname = "tests/assets/owl.png";
     Context ctx;
     
     if (setup(ctx)) return -1;
-    if (play(ctx, title, fname)) return -1;
+    if (play(ctx, text, fname)) return -1;
     
     run_main_loop(callback, &ctx);
     
