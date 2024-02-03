@@ -5,14 +5,15 @@
 #include <sstream>
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
-#define run_main_loop(cb,ctx) emscripten_set_main_loop_arg(cb,ctx,-1,1)
-#else
-#define run_main_loop(cb,ctx) while(g_run) { cb(ctx); }
 #endif
-
+///
+///> global control variables
+///
 bool     g_run   = true;
 TTF_Font *g_font = NULL;
-
+///
+///> Rectangle textured tile class (for image or solid color)
+///
 struct Tile {
     SDL_Renderer *rndr;          // pointer to renderer
     SDL_Texture  *tex= NULL;     // Texture (stored in hardwared/GPU)
@@ -66,7 +67,9 @@ struct Tile {
         return this;
     }
 };
-
+///
+///> Text string tile
+///
 struct Text : Tile {
     const char        *header;
     Uint32            t0;
@@ -108,18 +111,24 @@ struct Text : Tile {
         return this;
     }
 };
-
+///====================================================================================
+///
+///> Context class
+///
 struct Context {
+    SDL_Window   *win;
+    SDL_Renderer *rndr;
+    
     const char   *title = "SDL2 works";
     int          x=50, y=30, w=640, h=480;   // default size
     Uint8        r = 0x80, a = 0x80;         // default colors
     Uint32       t0, t1;
-    SDL_Window   *window;
-    SDL_Renderer *rndr;
     Tile         *img, *sq;
     Text         *txt;
 };
-
+///
+///> global main loop callback handler
+///
 void callback(void *arg) {
     Context   &ctx = *static_cast<Context*>(arg);
     SDL_Event ev;
@@ -163,7 +172,9 @@ void callback(void *arg) {
     }
     SDL_RenderPresent(rn);                                // update screen
 }
-
+///
+///> SDL setup
+///
 int setup(Context &ctx) {
     SDL_Init(SDL_INIT_VIDEO);
     if (IMG_Init(IMG_INIT_PNG)==-1) {
@@ -177,19 +188,21 @@ int setup(Context &ctx) {
         printf("TTF_OpenFont: %s\n", TTF_GetError()); return 1;
     }
     
-    ctx.window = SDL_CreateWindow(
+    ctx.win = SDL_CreateWindow(
         ctx.title, ctx.x, ctx.y, ctx.w, ctx.h,
         SDL_WINDOW_SHOWN
         );
     
-    ctx.rndr = SDL_CreateRenderer(ctx.window, -1, 0);
+    ctx.rndr = SDL_CreateRenderer(ctx.win, -1, 0);
     SDL_SetRenderDrawBlendMode(ctx.rndr, SDL_BLENDMODE_BLEND);  // for alpha blending
 
     ctx.t0 = SDL_GetTicks();       // get start up time
 
     return 0;
 }
-
+///
+///> SDL core
+///
 int play(Context &ctx, const char *text, const char *fname) {
     SDL_Color key = {0xff, 0xff, 0xff, 0xff};          // key on white (as transparent)
     SDL_Color red = {0xff, 0x0,  0x0,  0xff};
@@ -203,14 +216,16 @@ int play(Context &ctx, const char *text, const char *fname) {
     
     return 0;
 }    
-
+///
+/// SDL teardown (not called by WASM)
+///
 void teardown(Context &ctx) {
 #ifndef EMSCRIPTEN
     printf("SDL shutting down...\n");
     SDL_DestroyRenderer(ctx.rndr);
     ctx.txt->free();
     ctx.img->free();
-    SDL_DestroyWindow(ctx.window);
+    SDL_DestroyWindow(ctx.win);
     SDL_Quit();
     printf("%s done.\n", __FILE__);
 #endif
@@ -224,7 +239,11 @@ int main(int argc, char** argv) {
     if (setup(ctx)) return -1;
     if (play(ctx, text, fname)) return -1;
     
-    run_main_loop(callback, &ctx);
+#ifdef EMSCRIPTEN
+    emscripten_set_main_loop_arg(callback, &ctx, -1, 1);
+#else
+    while (g_run) { callback(&ctx); }
+#endif 
     
     teardown(ctx);
   
