@@ -16,22 +16,37 @@ TTF_Font *g_font = NULL;
 ///
 struct Tile {
     SDL_Renderer *rndr;          // pointer to renderer
-    SDL_Texture  *tex= NULL;     // Texture (stored in hardwared/GPU)
     SDL_Color    c4;             // set draw color if defined
     bool         c4_set = false; // color set
     SDL_Rect     rect;           // rectangle to be drawn upon
     double       ang = 0.0;
     
-    Tile(SDL_Renderer *rndr, int x, int y, int w=0, int h=0) : rndr(rndr) {
+    Tile(SDL_Renderer *rndr, int x, int y, int w, int h) : rndr(rndr) {
         rect.x = x; rect.y = y, rect.w = w; rect.h = h;
     }
-    void free() { if (tex) SDL_DestroyTexture(tex); }  // run before destructor is called
     Tile *set_color(SDL_Color c) {
         c4     = c;
         c4_set = true;
         return this;
     }
-    virtual int load(const char *fname, SDL_Color *key=NULL) {
+    virtual void free() {}
+    virtual int  load(const char *str, SDL_Color *c=NULL) { return 0; }
+    virtual int  render(SDL_Rect *clip=NULL) {
+        if (c4_set) {
+            SDL_SetRenderDrawColor(rndr, c4.r, c4.g, c4.b, c4.a);
+        }
+        SDL_RenderFillRect(rndr, &rect);    // fill rectangle
+        return 0;
+    }
+};
+
+struct Image : Tile {
+    SDL_Texture *tex= NULL;       // Texture stored in hardwared/GPU
+
+    Image(SDL_Renderer *rndr, int x, int y, int w=0, int h=0) : Tile(rndr, x, y, w, h) {}
+    void free() override { if (tex) SDL_DestroyTexture(tex); }  // run before destructor is called
+    
+    virtual int load(const char *fname, SDL_Color *key=NULL) override {
         SDL_Surface *img = IMG_Load(fname);
         if (!img) {
             printf("IMG_Load: %s\n", IMG_GetError());
@@ -50,30 +65,27 @@ struct Tile {
         
         return 0;
     }
-    virtual int render(SDL_Rect *clip=NULL) {
+    virtual int render(SDL_Rect *clip=NULL) override {
         if (c4_set) {
             SDL_SetRenderDrawColor(rndr, c4.r, c4.g, c4.b, c4.a);
         }
-        if (tex) {                                            // display texture
-            SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);// can use other blending mode
+        SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);    // can use other blending mode
 //          SDL_RenderCopy(rndr, tex, NULL, &rect);           // entire texture
 //          SDL_RenderCopy(rndr, tex, NULL, NULL);            // stretch to entire viewport
-            SDL_RenderCopyEx(rndr, tex, NULL, &rect,
-                             ang, NULL /* center */, SDL_FLIP_NONE);
-        }
-        else SDL_RenderFillRect(rndr, &rect);                 // fill rectangle
+        SDL_RenderCopyEx(rndr, tex, NULL, &rect,
+                         ang, NULL /* center */, SDL_FLIP_NONE);
         return 0;
     }
 };
 ///
 ///> Text string tile
 ///
-struct Text : Tile {
+struct Text : Image {
     const char        *header;
     Uint32            t0;
     std::stringstream stime;
     
-    Text(SDL_Renderer *rndr, int x, int y, int w=0, int h=0) : Tile(rndr, x, y, w, h) {
+    Text(SDL_Renderer *rndr, int x, int y, int w=0, int h=0) : Image(rndr, x, y, w, h) {
         SDL_Color black = {0,0,0,0xff};
         set_color(black);                                    // default to black
     }
@@ -104,7 +116,7 @@ struct Text : Tile {
             printf("SDL_Load: %s\n", SDL_GetError());
             return 1;
         }
-        Tile::render();
+        Image::render();
         return 0;
     }
 };
@@ -120,8 +132,7 @@ struct Context {
     int          x=50, y=30, w=640, h=480;   // default size
     Uint8        r = 0x80, a = 0x80;         // default colors
     Uint32       t0, t1;
-    Tile         *img, *sq;
-    Tile         *txt;                       // polymorphic Text
+    Tile         *img, *sq, *txt;            // pointers (ploymorphic)
 };
 ///
 ///> global main loop callback handler
@@ -205,11 +216,11 @@ int test_sdl2(Context &ctx, const char *text, const char *fname) {
     SDL_Color red = {0xff, 0x0,  0x0,  0xff};
     
     ctx.sq  = new Tile(ctx.rndr, 400, 100, 200, 200);  // initialize square
-    ctx.img = new Tile(ctx.rndr, 160, 160);            // initialize image
+    ctx.img = new Image(ctx.rndr, 160, 160);           // initialize image
     if (ctx.img->load(fname, &key)) return 1;
 
-    ctx.txt = new Text(ctx.rndr, 100, 100);            // initialize text
-    if (ctx.txt->load(text, &red)) return 1;
+    ctx.txt = new Text(ctx.rndr, 100, 120);            // initialize text
+    if (ctx.txt->load(text, &red)) return 1;           // text default background transparent
     
     return 0;
 }    
