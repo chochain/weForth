@@ -25,13 +25,17 @@ struct Tile {
     Tile(SDL_Renderer *rndr, int x, int y, int w=0, int h=0) : rndr(rndr) {
         rect.x = x; rect.y = y, rect.w = w; rect.h = h;
     }
-    
     void free() { if (tex) SDL_DestroyTexture(tex); }  // run before destructor is called
-    Tile *load(const char *fname, SDL_Color *key=NULL) {
+    Tile *set_color(SDL_Color c) {
+        c4     = c;
+        c4_set = true;
+        return this;
+    }
+    virtual int load(const char *fname, SDL_Color *key=NULL) {
         SDL_Surface *img = IMG_Load(fname);
         if (!img) {
             printf("IMG_Load: %s\n", IMG_GetError());
-            return NULL;
+            return 1;
         }
         rect.w = img->w;                               // adjust image size
         rect.h = img->h;
@@ -44,14 +48,9 @@ struct Tile {
         tex = SDL_CreateTextureFromSurface(rndr, img); // convert img to GPU texture
         SDL_FreeSurface(img);
         
-        return this;
+        return 0;
     }
-    Tile *set_color(SDL_Color c) {
-        c4     = c;
-        c4_set = true;
-        return this;
-    }
-    Tile *render(SDL_Rect *clip=NULL) {
+    virtual int render(SDL_Rect *clip=NULL) {
         if (c4_set) {
             SDL_SetRenderDrawColor(rndr, c4.r, c4.g, c4.b, c4.a);
         }
@@ -63,8 +62,7 @@ struct Tile {
                              ang, NULL /* center */, SDL_FLIP_NONE);
         }
         else SDL_RenderFillRect(rndr, &rect);                 // fill rectangle
-        
-        return this;
+        return 0;
     }
 };
 ///
@@ -79,12 +77,12 @@ struct Text : Tile {
         SDL_Color black = {0,0,0,0xff};
         set_color(black);                                    // default to black
     }
-    Text *load(const char *str, SDL_Color *c=NULL) {         // text string with color
+    int load(const char *str, SDL_Color *c=NULL) override {  // text string with color
         header = str;
         if (c) set_color(*c);                                // if color given
-        return this;
+        return 0;
     }
-    Text *render(SDL_Rect *clip=NULL) {
+    int render(SDL_Rect *clip=NULL) override {
         Uint32 t = SDL_GetTicks();
         stime.str("");
         stime << header << " : " << (t - t0) / 1000;         // timer ticks (in second)
@@ -93,7 +91,7 @@ struct Text : Tile {
             g_font, stime.str().c_str(), c4);
         if (!txt) {
             printf("TTF_Load: %s\n", TTF_GetError());
-            return NULL;
+            return 1;
         }
         rect.w = txt->w;
         rect.h = txt->h;
@@ -104,11 +102,10 @@ struct Text : Tile {
         
         if (!tex) {
             printf("SDL_Load: %s\n", SDL_GetError());
-            return NULL;
+            return 1;
         }
         Tile::render();
-        
-        return this;
+        return 0;
     }
 };
 ///====================================================================================
@@ -124,8 +121,7 @@ struct Context {
     Uint8        r = 0x80, a = 0x80;         // default colors
     Uint32       t0, t1;
     Tile         *img, *sq;
-    Tile         *txt;
-//    Text         *txt;
+    Tile         *txt;                       // polymorphic Text
 };
 ///
 ///> global main loop callback handler
@@ -210,10 +206,10 @@ int test_sdl2(Context &ctx, const char *text, const char *fname) {
     
     ctx.sq  = new Tile(ctx.rndr, 400, 100, 200, 200);  // initialize square
     ctx.img = new Tile(ctx.rndr, 160, 160);            // initialize image
-    if (!ctx.img->load(fname, &key)) return 1;
+    if (ctx.img->load(fname, &key)) return 1;
 
     ctx.txt = new Text(ctx.rndr, 100, 100);            // initialize text
-    if (!ctx.txt->load(text, &red)) return 1;
+    if (ctx.txt->load(text, &red)) return 1;
     
     return 0;
 }    
