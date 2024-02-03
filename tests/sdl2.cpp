@@ -124,12 +124,13 @@ struct Context {
     Uint8        r = 0x80, a = 0x80;         // default colors
     Uint32       t0, t1;
     Tile         *img, *sq;
-    Text         *txt;
+    Tile         *txt;
+//    Text         *txt;
 };
 ///
 ///> global main loop callback handler
 ///
-void callback(void *arg) {
+void run(void *arg) {
     Context   &ctx = *static_cast<Context*>(arg);
     SDL_Event ev;
     SDL_Rect  &img = ctx.img->rect;
@@ -203,7 +204,7 @@ int setup(Context &ctx) {
 ///
 ///> SDL core
 ///
-int play(Context &ctx, const char *text, const char *fname) {
+int test_sdl2(Context &ctx, const char *text, const char *fname) {
     SDL_Color key = {0xff, 0xff, 0xff, 0xff};          // key on white (as transparent)
     SDL_Color red = {0xff, 0x0,  0x0,  0xff};
     
@@ -237,12 +238,12 @@ int main(int argc, char** argv) {
     Context ctx;
     
     if (setup(ctx)) return -1;
-    if (play(ctx, text, fname)) return -1;
+    if (test_sdl2(ctx, text, fname)) return -1;
     
 #ifdef EMSCRIPTEN
-    emscripten_set_main_loop_arg(callback, &ctx, -1, 1);
+    emscripten_set_main_loop_arg(run, &ctx, -1, 1);
 #else
-    while (g_run) { callback(&ctx); }
+    while (g_run) { run(&ctx); }
 #endif 
     
     teardown(ctx);
