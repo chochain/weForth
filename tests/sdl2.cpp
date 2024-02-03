@@ -3,6 +3,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <iostream>
 #include <sstream>
+#include <vector>
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
 #endif
@@ -145,10 +146,7 @@ struct Text : Image {
         rect.w = txt->w;
         rect.h = txt->h;
 
-        int err = replace_tex_then_free(txt);
-        if (!err) Image::render();
-        
-        return err;
+        return replace_tex_then_free(txt) || Image::render();
     }
 };
 ///====================================================================================
@@ -162,7 +160,17 @@ struct Context {
     const char   *title = "SDL2 works";
     int          x=50, y=30, w=640, h=480;   // default size
     Uint8        r = 0x80, a = 0x80;         // default colors
-    Tile         *img, *sq, *txt, *cnv;      // polymorphic pointers
+    std::vector<Tile*> tile;                 // polymorphic pointers
+    Tile         *img, *sq;                  // specialized
+
+    void free() {
+        SDL_DestroyRenderer(rndr);
+        for (int i=0; i < tile.size(); i++) {
+            tile[i]->free();
+        }
+        tile.clear();
+        SDL_DestroyWindow(win);
+    }
 };
 ///
 ///> global main loop callback handler
@@ -201,13 +209,12 @@ void run(void *arg) {
     SDL_SetRenderDrawColor(rn, 0xf0, 0xff, 0xe0, 0x80);   // shade the background
     SDL_RenderClear(rn);
     {
-        ctx.cnv->render();
-        ctx.img->render();                                // display image
-        ctx.txt->render();                                // display text
-        Tile      &t = *ctx.sq;                           // display square
-        SDL_Color c  = {ctx.r, 0xf0, 0xc0, ctx.a};        // update color
-        t.set_color(c);                                   // with changing color
-        t.render();
+        SDL_Color c = {ctx.r, 0xf0, 0xc0, ctx.a};         // update color
+        ctx.sq->set_color(c);                             // with changing color
+
+        for (int i=0; i < ctx.tile.size(); i++) {
+            ctx.tile[i]->render();
+        }
     }
     SDL_RenderPresent(rn);                                // update screen
 }
@@ -238,16 +245,21 @@ int setup(Context &ctx) {
 int test_sdl2(Context &ctx, const char *text, const char *fname) {
     SDL_Color key = {0xff, 0xff, 0xff, 0xff};          // key on white (as transparent)
     SDL_Color red = {0xff, 0x0,  0x0,  0xff};
-    
+
     ctx.sq  = new Tile(ctx.rndr, 400, 80, 200, 200);   // initialize square
     ctx.img = new Image(ctx.rndr, 160, 160);           // initialize image
     if (ctx.img->load(fname, &key)) return 1;
 
-    ctx.txt = new Text(ctx.rndr, 60, 120);             // initialize text
-    if (ctx.txt->load(text, &red)) return 1;           // text default background transparent
+    Tile *txt = new Text(ctx.rndr, 60, 120);             // initialize text
+    if (txt->load(text, &red)) return 1;           // text default background transparent
     
-    ctx.cnv = new Canvas(ctx.rndr, 240, 100, 256, 256);
-    if (ctx.cnv->load()) return 1;
+    Tile *cnv = new Canvas(ctx.rndr, 240, 100, 256, 256);
+    if (cnv->load()) return 1;
+
+    ctx.tile.push_back(cnv);
+    ctx.tile.push_back(ctx.img);
+    ctx.tile.push_back(txt);
+    ctx.tile.push_back(ctx.sq);
 
     return 0;
 }    
@@ -257,11 +269,7 @@ int test_sdl2(Context &ctx, const char *text, const char *fname) {
 void teardown(Context &ctx) {
 #ifndef EMSCRIPTEN
     printf("SDL shutting down...\n");
-    SDL_DestroyRenderer(ctx.rndr);
-    ctx.cnv->free();
-    ctx.txt->free();
-    ctx.img->free();
-    SDL_DestroyWindow(ctx.win);
+    ctx.free();
     SDL_Quit();
     printf("%s done.\n", __FILE__);
 #endif
