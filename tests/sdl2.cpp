@@ -87,11 +87,17 @@ struct Image : Tile {
 ///> Canvas class (to be drawn on)
 ///
 struct Canvas : Image {
-    Canvas(SDL_Renderer *rndr, int x, int y, int w, int h) : Image(rndr, x, y, w, h) {}
+    SDL_Surface *rgb = NULL;
     
+    Canvas(SDL_Renderer *rndr, int x, int y, int w, int h) : Image(rndr, x, y, w, h) {}
+
+    virtual void free() override {
+        if (rgb) SDL_FreeSurface(rgb);
+        Image::free();
+    }
     virtual int  load(const char *dummy=NULL, SDL_Color *key=NULL) override {
-        SDL_Surface *rgb =
-            SDL_CreateRGBSurface(0, rect.w, rect.h, 32, 0, 0, 0, 0);
+        free();
+        rgb = SDL_CreateRGBSurface(0, rect.w, rect.h, 32, 0, 0, 0, 0);
         CHK(!rgb, SDL);
 
         if (SDL_MUSTLOCK(rgb)) SDL_LockSurface(rgb);
@@ -101,9 +107,7 @@ struct Canvas : Image {
         }
         if (SDL_MUSTLOCK(rgb)) SDL_UnlockSurface(rgb);
 
-        free();
         tex = SDL_CreateTextureFromSurface(rndr, rgb);
-        SDL_FreeSurface(rgb);
         CHK(!tex, SDL);
 
         return 0;
@@ -265,6 +269,7 @@ void teardown(Context &ctx) {
 #ifndef EMSCRIPTEN
     printf("SDL shutting down...\n");
     SDL_DestroyRenderer(ctx.rndr);
+    ctx.cnv->free();
     ctx.txt->free();
     ctx.img->free();
     SDL_DestroyWindow(ctx.win);
