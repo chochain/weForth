@@ -156,13 +156,27 @@ struct Text : Image {
 struct Context {
     SDL_Window   *win;
     SDL_Renderer *rndr;
+    SDL_Rect     vport;
+    SDL_Color    bg;
     
-    const char   *title = "SDL2 works";
-    int          x=50, y=30, w=640, h=480;   // default size
     Uint8        r = 0x80, a = 0x80;         // default colors
     std::vector<Tile*> tile;                 // polymorphic pointers
     Tile         *img, *sq;                  // specialized
 
+    void init(SDL_Window *wn, SDL_Renderer *rn, SDL_Color *c=NULL) {
+        SDL_Color white = { 0xff, 0xff, 0xff, 0xff };
+        win = wn; rndr = rn; bg = c ? *c : white;
+        
+        SDL_SetRenderDrawBlendMode(rndr, SDL_BLENDMODE_BLEND);  // for alpha blending
+    }
+    void render() {
+        SDL_SetRenderDrawColor(rndr, bg.r, bg.g, bg.b, bg.a);   // shade the background
+        SDL_RenderClear(rndr);
+        for (int i=0; i < tile.size(); i++) {
+            tile[i]->render();
+        }
+        SDL_RenderPresent(rndr);                                // update screen
+    }
     void free() {
         SDL_DestroyRenderer(rndr);
         for (int i=0; i < tile.size(); i++) {
@@ -204,38 +218,29 @@ void run(void *arg) {
         default: /* do nothing */ break;
         }
     }
-
-    SDL_Renderer *rn = ctx.rndr;
-    SDL_SetRenderDrawColor(rn, 0xf0, 0xff, 0xe0, 0x80);   // shade the background
-    SDL_RenderClear(rn);
-    {
-        SDL_Color c = {ctx.r, 0xf0, 0xc0, ctx.a};         // update color
-        ctx.sq->set_color(c);                             // with changing color
-
-        for (int i=0; i < ctx.tile.size(); i++) {
-            ctx.tile[i]->render();
-        }
-    }
-    SDL_RenderPresent(rn);                                // update screen
+    SDL_Color c = {ctx.r, 0xf0, 0xc0, ctx.a};   // update color
+    ctx.sq->set_color(c);                       // with changing color
+    
+    ctx.render();                               // shade the background
 }
 ///
 ///> SDL setup
 ///
-int setup(Context &ctx) {
-    SDL_Init(SDL_INIT_VIDEO);
+int setup(Context &ctx, const char *title, SDL_Rect vp) {
     CHK(IMG_Init(IMG_INIT_PNG)==-1, IMG);
     CHK(TTF_Init()==-1, TTF);
     
     g_font = TTF_OpenFont("tests/assets/FreeSans.ttf", 48);
     CHK(!g_font, TTF);
-    
-    ctx.win = SDL_CreateWindow(
-        ctx.title, ctx.x, ctx.y, ctx.w, ctx.h,
+
+    SDL_Window *win = SDL_CreateWindow(
+        title, vp.x, vp.y, vp.w, vp.h,
         SDL_WINDOW_SHOWN
         );
+    SDL_Renderer *rndr = SDL_CreateRenderer(win, -1, 0);
+    SDL_Color    bg    = { 0xf0, 0xff, 0xe0, 0x80 };
     
-    ctx.rndr = SDL_CreateRenderer(ctx.win, -1, 0);
-    SDL_SetRenderDrawBlendMode(ctx.rndr, SDL_BLENDMODE_BLEND);  // for alpha blending
+    ctx.init(win, rndr, &bg);
 
     return 0;
 }
@@ -250,8 +255,8 @@ int test_sdl2(Context &ctx, const char *text, const char *fname) {
     ctx.img = new Image(ctx.rndr, 160, 160);           // initialize image
     if (ctx.img->load(fname, &key)) return 1;
 
-    Tile *txt = new Text(ctx.rndr, 60, 120);             // initialize text
-    if (txt->load(text, &red)) return 1;           // text default background transparent
+    Tile *txt = new Text(ctx.rndr, 60, 120);           // initialize text
+    if (txt->load(text, &red)) return 1;               // text default background transparent
     
     Tile *cnv = new Canvas(ctx.rndr, 240, 100, 256, 256);
     if (cnv->load()) return 1;
@@ -270,17 +275,20 @@ void teardown(Context &ctx) {
 #ifndef EMSCRIPTEN
     printf("SDL shutting down...\n");
     ctx.free();
-    SDL_Quit();
     printf("%s done.\n", __FILE__);
 #endif
 }
 
 int main(int argc, char** argv) {
+    const char *title = "SDL2 works";
     const char *text  = "Hello Owl!";
     const char *fname = "tests/assets/owl.png";
+    SDL_Rect    vport = {50, 30, 640, 480};
     Context ctx;
+
+    SDL_Init(SDL_INIT_VIDEO);
+    if (setup(ctx, title, vport)) return -1;
     
-    if (setup(ctx)) return -1;
     if (test_sdl2(ctx, text, fname)) return -1;
     
 #ifdef EMSCRIPTEN
@@ -290,6 +298,7 @@ int main(int argc, char** argv) {
 #endif 
     
     teardown(ctx);
+    SDL_Quit();
   
     return 0;
 }
