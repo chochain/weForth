@@ -50,7 +50,14 @@ struct Image : Tile {
 
     Image(SDL_Renderer *rndr, int x, int y, int w=0, int h=0) : Tile(rndr, x, y, w, h) {}
     void free() override { if (tex) SDL_DestroyTexture(tex); }  // run before destructor is called
-    
+
+    int replace_tex_then_free(SDL_Surface *img) {      // boiler plate
+        free();
+        tex = SDL_CreateTextureFromSurface(rndr, img); // convert img to GPU texture
+        SDL_FreeSurface(img);
+        CHK(!tex, SDL);
+        return 0;
+    }
     virtual int load(const char *fname=NULL, SDL_Color *key=NULL) override {
         if (!fname) { printf("IMG_Load: filename not given\n"); return 1; }
         
@@ -65,11 +72,7 @@ struct Image : Tile {
             SDL_SetColorKey(img, SDL_TRUE,             // key color => transparent 
                 SDL_MapRGB(img->format, k.r, k.g, k.b));
         }
-        tex = SDL_CreateTextureFromSurface(rndr, img); // convert img to GPU texture
-        SDL_FreeSurface(img);
-        CHK(!tex, SDL);
-        
-        return 0;
+        return replace_tex_then_free(img);
     }
     virtual int render(SDL_Rect *clip=NULL) override {
         if (c4_set) {
@@ -87,30 +90,23 @@ struct Image : Tile {
 ///> Canvas class (to be drawn on)
 ///
 struct Canvas : Image {
-    SDL_Surface *rgb = NULL;
-    
     Canvas(SDL_Renderer *rndr, int x, int y, int w, int h) : Image(rndr, x, y, w, h) {}
 
-    virtual void free() override {
-        if (rgb) SDL_FreeSurface(rgb);
-        Image::free();
-    }
     virtual int  load(const char *dummy=NULL, SDL_Color *key=NULL) override {
-        free();
-        rgb = SDL_CreateRGBSurface(0, rect.w, rect.h, 32, 0, 0, 0, 0);
+        SDL_Surface *rgb =
+            SDL_CreateRGBSurface(0, rect.w, rect.h, 32, 0, 0, 0, 0);
         CHK(!rgb, SDL);
-
+        
         if (SDL_MUSTLOCK(rgb)) SDL_LockSurface(rgb);
-        Uint8 *px = (Uint8*)rgb->pixels;
-        for (int i=0; i < rect.w*rect.h*4; i++) {
-            *px++ = rand() % 0xff;
+        Uint32 *px = (Uint32*)rgb->pixels;
+        for (int y=0; y < rect.h; y++) {
+            for (int x=0; x < rect.w; x++) {
+                *px++ = y | (x << 8);
+            }
         }
         if (SDL_MUSTLOCK(rgb)) SDL_UnlockSurface(rgb);
 
-        tex = SDL_CreateTextureFromSurface(rndr, rgb);
-        CHK(!tex, SDL);
-
-        return 0;
+        return replace_tex_then_free(rgb);
     }
 };
 ///
@@ -118,7 +114,6 @@ struct Canvas : Image {
 ///
 struct Text : Image {
     const char        *header;
-    Uint32            t0;
     std::stringstream stime;
     
     Text(SDL_Renderer *rndr, int x, int y, int w=0, int h=0) : Image(rndr, x, y, w, h) {
@@ -131,6 +126,7 @@ struct Text : Image {
         return 0;
     }
     int render(SDL_Rect *clip=NULL) override {
+        static Uint32 t0  = SDL_GetTicks();
         static Uint32 dt0 = 0, cnt = 0, fps = 0;
         
         Uint32 t  = SDL_GetTicks();
@@ -148,15 +144,11 @@ struct Text : Image {
         
         rect.w = txt->w;
         rect.h = txt->h;
-        
-        free();                                              // release previous allocated tex
-        tex = SDL_CreateTextureFromSurface(rndr, txt);       // build new texture
-        SDL_FreeSurface(txt);                                // release surface object
-        
-        CHK(!tex, SDL);
 
-        Image::render();
-        return 0;
+        int err = replace_tex_then_free(txt);
+        if (!err) Image::render();
+        
+        return err;
     }
 };
 ///====================================================================================
@@ -170,7 +162,6 @@ struct Context {
     const char   *title = "SDL2 works";
     int          x=50, y=30, w=640, h=480;   // default size
     Uint8        r = 0x80, a = 0x80;         // default colors
-    Uint32       t0, t1;
     Tile         *img, *sq, *txt, *cnv;      // polymorphic pointers
 };
 ///
@@ -239,8 +230,6 @@ int setup(Context &ctx) {
     ctx.rndr = SDL_CreateRenderer(ctx.win, -1, 0);
     SDL_SetRenderDrawBlendMode(ctx.rndr, SDL_BLENDMODE_BLEND);  // for alpha blending
 
-    ctx.t0 = SDL_GetTicks();       // get start up time
-
     return 0;
 }
 ///
@@ -250,14 +239,14 @@ int test_sdl2(Context &ctx, const char *text, const char *fname) {
     SDL_Color key = {0xff, 0xff, 0xff, 0xff};          // key on white (as transparent)
     SDL_Color red = {0xff, 0x0,  0x0,  0xff};
     
-    ctx.sq  = new Tile(ctx.rndr, 400, 100, 200, 200);  // initialize square
+    ctx.sq  = new Tile(ctx.rndr, 400, 80, 200, 200);   // initialize square
     ctx.img = new Image(ctx.rndr, 160, 160);           // initialize image
     if (ctx.img->load(fname, &key)) return 1;
 
     ctx.txt = new Text(ctx.rndr, 60, 120);             // initialize text
     if (ctx.txt->load(text, &red)) return 1;           // text default background transparent
     
-    ctx.cnv = new Canvas(ctx.rndr, 300, 200, 200, 200);
+    ctx.cnv = new Canvas(ctx.rndr, 240, 100, 256, 256);
     if (ctx.cnv->load()) return 1;
 
     return 0;
