@@ -6,6 +6,11 @@
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
 #endif
+
+#define CHK(t, mod) if (t) {                                \
+        printf("%s Error: %s\n", #mod, mod ## _GetError()); \
+        return 1;                                           \
+    }
 ///
 ///> global control variables
 ///
@@ -30,7 +35,7 @@ struct Tile {
         return this;
     }
     virtual void free() {}
-    virtual int  load(const char *str, SDL_Color *c=NULL) { return 0; }
+    virtual int  load(const char *str=NULL, SDL_Color *c=NULL) { return 0; }
     virtual int  render(SDL_Rect *clip=NULL) {
         if (c4_set) {
             SDL_SetRenderDrawColor(rndr, c4.r, c4.g, c4.b, c4.a);
@@ -46,12 +51,12 @@ struct Image : Tile {
     Image(SDL_Renderer *rndr, int x, int y, int w=0, int h=0) : Tile(rndr, x, y, w, h) {}
     void free() override { if (tex) SDL_DestroyTexture(tex); }  // run before destructor is called
     
-    virtual int load(const char *fname, SDL_Color *key=NULL) override {
+    virtual int load(const char *fname=NULL, SDL_Color *key=NULL) override {
+        if (!fname) { printf("IMG_Load: filename not given\n"); return 1; }
+        
         SDL_Surface *img = IMG_Load(fname);
-        if (!img) {
-            printf("IMG_Load: %s\n", IMG_GetError());
-            return 1;
-        }
+        CHK(!img, IMG);
+        
         rect.w = img->w;                               // adjust image size
         rect.h = img->h;
         
@@ -62,6 +67,7 @@ struct Image : Tile {
         }
         tex = SDL_CreateTextureFromSurface(rndr, img); // convert img to GPU texture
         SDL_FreeSurface(img);
+        CHK(!tex, SDL);
         
         return 0;
     }
@@ -74,6 +80,32 @@ struct Image : Tile {
 //          SDL_RenderCopy(rndr, tex, NULL, NULL);            // stretch to entire viewport
         SDL_RenderCopyEx(rndr, tex, NULL, &rect,
                          ang, NULL /* center */, SDL_FLIP_NONE);
+        return 0;
+    }
+};
+///
+///> Canvas class (to be drawn on)
+///
+struct Canvas : Image {
+    Canvas(SDL_Renderer *rndr, int x, int y, int w, int h) : Image(rndr, x, y, w, h) {}
+    
+    virtual int  load(const char *dummy=NULL, SDL_Color *key=NULL) override {
+        SDL_Surface *rgb =
+            SDL_CreateRGBSurface(0, rect.w, rect.h, 32, 0, 0, 0, 0);
+        CHK(!rgb, SDL);
+
+        if (SDL_MUSTLOCK(rgb)) SDL_LockSurface(rgb);
+        Uint8 *px = (Uint8*)rgb->pixels;
+        for (int i=0; i < rect.w*rect.h*4; i++) {
+            *px++ = rand() % 0xff;
+        }
+        if (SDL_MUSTLOCK(rgb)) SDL_UnlockSurface(rgb);
+
+        free();
+        tex = SDL_CreateTextureFromSurface(rndr, rgb);
+        SDL_FreeSurface(rgb);
+        CHK(!tex, SDL);
+
         return 0;
     }
 };
@@ -95,16 +127,21 @@ struct Text : Image {
         return 0;
     }
     int render(SDL_Rect *clip=NULL) override {
-        Uint32 t = SDL_GetTicks();
+        static Uint32 dt0 = 0, cnt = 0, fps = 0;
+        
+        Uint32 t  = SDL_GetTicks();
+        Uint32 dt = (t - t0) / 1000;
+        
+        if (dt <= dt0) cnt++;
+        else { fps = cnt; dt0 = dt; cnt=0; }
+        
         stime.str("");
-        stime << header << " : " << (t - t0) / 1000;         // timer ticks (in second)
-
+        stime << header << " : " << dt << ", fps=" << fps;   // timer ticks (in second)
+        
         SDL_Surface *txt = TTF_RenderText_Solid(             // create surface (real-time text)
             g_font, stime.str().c_str(), c4);
-        if (!txt) {
-            printf("TTF_Load: %s\n", TTF_GetError());
-            return 1;
-        }
+        CHK(!txt, TTF);
+        
         rect.w = txt->w;
         rect.h = txt->h;
         
@@ -112,10 +149,8 @@ struct Text : Image {
         tex = SDL_CreateTextureFromSurface(rndr, txt);       // build new texture
         SDL_FreeSurface(txt);                                // release surface object
         
-        if (!tex) {
-            printf("SDL_Load: %s\n", SDL_GetError());
-            return 1;
-        }
+        CHK(!tex, SDL);
+
         Image::render();
         return 0;
     }
@@ -132,7 +167,7 @@ struct Context {
     int          x=50, y=30, w=640, h=480;   // default size
     Uint8        r = 0x80, a = 0x80;         // default colors
     Uint32       t0, t1;
-    Tile         *img, *sq, *txt;            // pointers (ploymorphic)
+    Tile         *img, *sq, *txt, *cnv;      // polymorphic pointers
 };
 ///
 ///> global main loop callback handler
@@ -171,6 +206,7 @@ void run(void *arg) {
     SDL_SetRenderDrawColor(rn, 0xf0, 0xff, 0xe0, 0x80);   // shade the background
     SDL_RenderClear(rn);
     {
+        ctx.cnv->render();
         ctx.img->render();                                // display image
         ctx.txt->render();                                // display text
         Tile      &t = *ctx.sq;                           // display square
@@ -185,16 +221,11 @@ void run(void *arg) {
 ///
 int setup(Context &ctx) {
     SDL_Init(SDL_INIT_VIDEO);
-    if (IMG_Init(IMG_INIT_PNG)==-1) {
-        printf("IMG_Init: %s\n", IMG_GetError()); return 1;
-    }
-    if (TTF_Init()==-1) {
-        printf("TTF_Init: %s\n", TTF_GetError()); return 1;
-    }
+    CHK(IMG_Init(IMG_INIT_PNG)==-1, IMG);
+    CHK(TTF_Init()==-1, TTF);
+    
     g_font = TTF_OpenFont("tests/assets/FreeSans.ttf", 48);
-    if (!g_font) {
-        printf("TTF_OpenFont: %s\n", TTF_GetError()); return 1;
-    }
+    CHK(!g_font, TTF);
     
     ctx.win = SDL_CreateWindow(
         ctx.title, ctx.x, ctx.y, ctx.w, ctx.h,
@@ -219,9 +250,12 @@ int test_sdl2(Context &ctx, const char *text, const char *fname) {
     ctx.img = new Image(ctx.rndr, 160, 160);           // initialize image
     if (ctx.img->load(fname, &key)) return 1;
 
-    ctx.txt = new Text(ctx.rndr, 100, 120);            // initialize text
+    ctx.txt = new Text(ctx.rndr, 60, 120);             // initialize text
     if (ctx.txt->load(text, &red)) return 1;           // text default background transparent
     
+    ctx.cnv = new Canvas(ctx.rndr, 300, 200, 200, 200);
+    if (ctx.cnv->load()) return 1;
+
     return 0;
 }    
 ///
