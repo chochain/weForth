@@ -27,9 +27,7 @@ struct Tile {
     bool         c4_set = false; // color set
     double       ang = 0.0;
     
-    Tile(SDL_Renderer *rndr, int x, int y, int w, int h) : rn(rndr) {
-        vp.x = x; vp.y = y, vp.w = w; vp.h = h;
-    }
+    Tile(SDL_Renderer *r, SDL_Rect v) : rn(r), vp(v) {}
     Tile *set_color(SDL_Color c) {
         c4     = c;
         c4_set = true;
@@ -49,7 +47,7 @@ struct Tile {
 struct Image : Tile {
     SDL_Texture *tex= NULL;       // Texture stored in hardwared/GPU
 
-    Image(SDL_Renderer *rndr, int x, int y, int w=0, int h=0) : Tile(rndr, x, y, w, h) {}
+    Image(SDL_Renderer *r, SDL_Rect v) : Tile(r, v) {}
     void free() override { if (tex) SDL_DestroyTexture(tex); }  // run before destructor is called
 
     int replace_tex_then_free(SDL_Surface *img) {      // boiler plate
@@ -91,7 +89,7 @@ struct Image : Tile {
 ///> Canvas class (to be drawn on)
 ///
 struct Canvas : Image {
-    Canvas(SDL_Renderer *rndr, int x, int y, int w, int h) : Image(rndr, x, y, w, h) {}
+    Canvas(SDL_Renderer *r, SDL_Rect v) : Image(r, v) {}
 
     virtual int  load(const char *dummy=NULL, SDL_Color *key=NULL) override {
         SDL_Surface *rgb =
@@ -117,8 +115,8 @@ struct Text : Image {
     const char        *header;
     std::stringstream stime;
     
-    Text(SDL_Renderer *rndr, int x, int y, int w=0, int h=0) : Image(rndr, x, y, w, h) {
-        SDL_Color black = { 0, 0, 0, 0xff};
+    Text(SDL_Renderer *r, SDL_Rect v) : Image(r, v) {
+        SDL_Color black = { 0, 0, 0, 0xff };
         set_color(black);                                    // default to black
     }
     int load(const char *str, SDL_Color *c=NULL) override {  // text string with color
@@ -247,18 +245,22 @@ int setup(Context *ctx, const char *title, SDL_Rect *vp, SDL_Color *bg) {
 ///> SDL core
 ///
 int test_sdl2(Context &ctx, const char *text, const char *fname) {
-    SDL_Renderer *rn = ctx.rn;
-    SDL_Color    key = {0xff, 0xff, 0xff, 0xff};       // key on white (as transparent)
-    SDL_Color    red = {0xff, 0x0,  0x0,  0xff};
+    SDL_Color key   = { 0xff, 0xff, 0xff, 0xff };       // key on white (as transparent)
+    SDL_Color red   = { 0xff, 0x0,  0x0,  0xff };
+    SDL_Rect  sq_v  = { 400, 80,  200, 200 };
+    SDL_Rect  img_v = { 160, 160, 0,   0   };
+    SDL_Rect  txt_v = { 60,  120, 0,   0   };
+    SDL_Rect  cnv_v = { 240, 100, 256, 256 };
 
-    ctx.sq  = new Tile(rn, 400, 80, 200, 200);         // initialize square
-    ctx.img = new Image(rn, 160, 160);                 // initialize image
+    SDL_Renderer *rn  = ctx.rn;               // short hand
+    ctx.sq  = new Tile(rn, sq_v);             // initialize square
+    ctx.img = new Image(rn, img_v);           // initialize image
     if (ctx.img->load(fname, &key)) return 1;
 
-    Tile *txt = new Text(rn, 60, 120);                 // initialize text
-    if (txt->load(text, &red)) return 1;               // text default background transparent
+    Tile *txt = new Text(rn, txt_v);          // initialize text
+    if (txt->load(text, &red)) return 1;      // text default background transparent
     
-    Tile *cnv = new Canvas(rn, 240, 100, 256, 256);
+    Tile *cnv = new Canvas(rn, cnv_v);
     if (cnv->load()) return 1;
 
     ctx.tile.push_back(cnv);
