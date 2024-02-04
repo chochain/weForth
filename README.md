@@ -67,7 +67,10 @@ With WASM, the interoperability between different languages become a thing of th
 * Note7: FireFox v122 is vastly faster than v120
 * Note8: Chrome is about 10% slower than FireFox
 
-### SDL2 [read first](https://lyceum-allotments.github.io/2016/06/emscripten-and-sdl-2-tutorial-part-1/)
+### SDL2
+* learn SDL2
+> [Read first](https://lyceum-allotments.github.io/2016/06/emscripten-and-sdl-2-tutorial-part-1/)
+> [LazyFoo for SDL2](https://lazyfoo.net/tutorials/SDL/)
 * install sdl2, image, sound, and fonts
 > sudo apt install libsdl2-dev libsdl2-2.0-0 -y;
 > sudo apt install libjpeg-dev libwebp-dev libtiff5-dev libsdl2-image-dev libsdl2-image-2.0-0 -y;
