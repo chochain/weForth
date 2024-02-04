@@ -65,6 +65,7 @@ struct Image : Tile {
         
         vp.w = img->w;                                 // adjust image size
         vp.h = img->h;
+        printf("image %s[%d,%d] loaded ok\n", fname, vp.w, vp.h);
         
         if (key) {
             SDL_Color &k = *key;                       // use reference
@@ -158,7 +159,7 @@ struct Context {
     SDL_Color    bg;
     
     Uint8        r = 0x80, a = 0x80;         // default colors
-    std::vector<Tile*> tile;                 // polymorphic pointers
+    std::vector<Tile*> que;                  // polymorphic pointers
     Tile         *img, *sq;                  // specialized
 
     void init(SDL_Window *w, SDL_Renderer *r, SDL_Color *c=NULL) {
@@ -167,20 +168,24 @@ struct Context {
         
         SDL_SetRenderDrawBlendMode(rn, SDL_BLENDMODE_BLEND);  // for alpha blending
     }
+    void add(Tile *t) { que.push_back(t); }
     void render() {
         SDL_SetRenderDrawColor(rn, bg.r, bg.g, bg.b, bg.a);   // shade the background
         SDL_RenderClear(rn);
-        for (int i=0; i < tile.size(); i++) {
-            tile[i]->render();
+//        que[0]->render();
+//        que[2]->render();
+//        que[3]->render();
+        for (int i=0; i < que.size(); i++) {
+            que[i]->render();
         }
         SDL_RenderPresent(rn);                                // update screen
     }
     void free() {
         SDL_DestroyRenderer(rn);
-        for (int i=0; i < tile.size(); i++) {
-            tile[i]->free();
+        for (int i=0; i < que.size(); i++) {
+            que[i]->free();
         }
-        tile.clear();
+        que.clear();
         SDL_DestroyWindow(win);
     }
 };
@@ -218,8 +223,10 @@ void run(void *arg) {
     }
     SDL_Color c = {ctx.r, 0xf0, 0xc0, ctx.a};   // update color
     ctx.sq->set_color(c);                       // with changing color
-    
-    ctx.render();                               // shade the background
+    ///
+    /// display all tiles in vector
+    ///
+    ctx.render();
 }
 ///
 ///> SDL setup
@@ -253,6 +260,7 @@ int test_sdl2(Context &ctx, const char *text, const char *fname) {
     SDL_Rect  cnv_v = { 240, 100, 256, 256 };
 
     SDL_Renderer *rn  = ctx.rn;               // short hand
+
     ctx.sq  = new Tile(rn, sq_v);             // initialize square
     ctx.img = new Image(rn, img_v);           // initialize image
     if (ctx.img->load(fname, &key)) return 1;
@@ -263,10 +271,10 @@ int test_sdl2(Context &ctx, const char *text, const char *fname) {
     Tile *cnv = new Canvas(rn, cnv_v);
     if (cnv->load()) return 1;
 
-    ctx.tile.push_back(cnv);
-    ctx.tile.push_back(ctx.img);
-    ctx.tile.push_back(txt);
-    ctx.tile.push_back(ctx.sq);
+    ctx.add(cnv);                             // push Tiles into render queue
+    ctx.add(ctx.img);
+    ctx.add(txt);
+    ctx.add(ctx.sq);
 
     return 0;
 }    
@@ -290,8 +298,8 @@ int main(int argc, char** argv) {
     Context ctx;
 
     SDL_Init(SDL_INIT_VIDEO);
+
     if (setup(&ctx, title, &wsize, &bg)) return -1;
-    
     if (test_sdl2(ctx, text, fname)) return -1;
     
 #ifdef EMSCRIPTEN
