@@ -168,14 +168,11 @@ struct Context {
         
         SDL_SetRenderDrawBlendMode(rn, SDL_BLENDMODE_BLEND);  // for alpha blending
     }
-    void add(Tile *t) { que.push_back(t); }
+    Tile *add(Tile *t) { que.push_back(t); return t; }
     void render() {
         SDL_SetRenderDrawColor(rn, bg.r, bg.g, bg.b, bg.a);   // shade the background
         SDL_RenderClear(rn);
-//        que[0]->render();
-//        que[2]->render();
-//        que[3]->render();
-        for (int i=0; i < que.size(); i++) {
+        for (int i=0; i < que.size(); i++) {                  // render all tiles
             que[i]->render();
         }
         SDL_RenderPresent(rn);                                // update screen
@@ -251,7 +248,7 @@ int setup(Context *ctx, const char *title, SDL_Rect *vp, SDL_Color *bg) {
 ///
 ///> SDL core
 ///
-int test_sdl2(Context &ctx, const char *text, const char *fname) {
+int test_sdl2(Context *ctx, const char *text, const char *fname) {
     SDL_Color key   = { 0xff, 0xff, 0xff, 0xff };       // key on white (as transparent)
     SDL_Color red   = { 0xff, 0x0,  0x0,  0xff };
     SDL_Rect  sq_v  = { 400, 80,  200, 200 };
@@ -259,22 +256,24 @@ int test_sdl2(Context &ctx, const char *text, const char *fname) {
     SDL_Rect  txt_v = { 60,  120, 0,   0   };
     SDL_Rect  cnv_v = { 240, 100, 256, 256 };
 
-    SDL_Renderer *rn  = ctx.rn;               // short hand
+    SDL_Renderer *rn  = ctx->rn;                  // short hand
 
-    ctx.sq  = new Tile(rn, sq_v);             // initialize square
-    ctx.img = new Image(rn, img_v);           // initialize image
-    if (ctx.img->load(fname, &key)) return 1;
+    Tile *sq  = ctx->sq  = new Tile(rn, sq_v);    // initialize square
+    Tile *img = ctx->img = new Image(rn, img_v);  // initialize image
+    if (img->load(fname, &key)) return 1;
 
-    Tile *txt = new Text(rn, txt_v);          // initialize text
-    if (txt->load(text, &red)) return 1;      // text default background transparent
+    Tile *txt = new Text(rn, txt_v);              // initialize text
+    if (txt->load(text, &red)) return 1;          // text default background transparent
     
     Tile *cnv = new Canvas(rn, cnv_v);
     if (cnv->load()) return 1;
 
-    ctx.add(cnv);                             // push Tiles into render queue
-    ctx.add(ctx.img);
-    ctx.add(txt);
-    ctx.add(ctx.sq);
+    ctx->add(cnv);                                // push Tiles into render queue
+    ctx->add(img);
+    ctx->add(txt);
+    ctx->add(sq);
+
+    printf("ctx.cue with %ld tiles\n", ctx->que.size());
 
     return 0;
 }    
@@ -295,15 +294,17 @@ int main(int argc, char** argv) {
     const char *fname = "tests/assets/owl.png";
     SDL_Rect    wsize = { 50, 30, 640, 480 };
     SDL_Color   bg    = { 0xf0, 0xff, 0xe0, 0x80 };
-    Context ctx;
+    Context     ctx;
 
     SDL_Init(SDL_INIT_VIDEO);
 
     if (setup(&ctx, title, &wsize, &bg)) return -1;
-    if (test_sdl2(ctx, text, fname)) return -1;
+    if (test_sdl2(&ctx, text, fname)) return -1;
     
 #ifdef EMSCRIPTEN
-    emscripten_set_main_loop_arg(run, &ctx, -1, 1);
+    emscripten_set_main_loop_arg(run, &ctx, -1, 1);  // -1:fps=RAF, 1=infinite loop
+    printf("emscripten force exit...\n");            // should neve come here
+    emscripten_force_exit(-1);
 #else
     while (g_run) { run(&ctx); }
 #endif 
