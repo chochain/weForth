@@ -34,7 +34,6 @@ struct Tile {
         return this;
     }
     virtual void free() {}
-    virtual int  load(const char *str=NULL, SDL_Color *c=NULL) { return 0; }
     virtual int  render(SDL_Rect *clip=NULL) {
         if (c4_set) {
             SDL_SetRenderDrawColor(rn, c4.r, c4.g, c4.b, c4.a);
@@ -45,11 +44,10 @@ struct Tile {
 };
 
 struct Image : Tile {
-    SDL_Texture *tex= NULL;       // Texture stored in hardwared/GPU
-
+    SDL_Texture *tex = NULL;            // texture stored in hardward/GPU
+    
     Image(SDL_Renderer *r, SDL_Rect v) : Tile(r, v) {}
-    void free() override { if (tex) SDL_DestroyTexture(tex); }  // run before destructor is called
-
+    
     int replace_tex_then_free(SDL_Surface *img) {      // boiler plate
         free();
         tex = SDL_CreateTextureFromSurface(rn, img);   // convert img to GPU texture
@@ -57,7 +55,8 @@ struct Image : Tile {
         CHK(!tex, SDL);
         return 0;
     }
-    virtual int load(const char *fname=NULL, SDL_Color *key=NULL) override {
+    void free() { if (tex) SDL_DestroyTexture(tex); }
+    int  load(const char *fname=NULL, SDL_Color *key=NULL) {
         if (!fname) { printf("IMG_Load: filename not given\n"); return 1; }
         
         SDL_Surface *img = IMG_Load(fname);
@@ -87,12 +86,12 @@ struct Image : Tile {
     }
 };
 ///
-///> Canvas class (to be drawn on)
+///> Canvas class using locked Surface
 ///
 struct Canvas : Image {
     Canvas(SDL_Renderer *r, SDL_Rect v) : Image(r, v) {}
 
-    virtual int  load(const char *dummy=NULL, SDL_Color *key=NULL) override {
+    int render(SDL_Rect *clip=NULL) override {
         SDL_Surface *rgb =
             SDL_CreateRGBSurface(0, vp.w, vp.h, 32, 0, 0, 0, 0);
         CHK(!rgb, SDL);
@@ -106,7 +105,7 @@ struct Canvas : Image {
         }
         if (SDL_MUSTLOCK(rgb)) SDL_UnlockSurface(rgb);
 
-        return replace_tex_then_free(rgb);
+        return replace_tex_then_free(rgb) || Image::render();
     }
 };
 ///
@@ -120,7 +119,7 @@ struct Text : Image {
         SDL_Color black = { 0, 0, 0, 0xff };
         set_color(black);                                    // default to black
     }
-    int load(const char *str, SDL_Color *c=NULL) override {  // text string with color
+    int load(const char *str, SDL_Color *c=NULL) {           // text string with color
         header = str;
         if (c) set_color(*c);                                // if color given
         return 0;
@@ -146,6 +145,43 @@ struct Text : Image {
         vp.h = txt->h;
 
         return replace_tex_then_free(txt) || Image::render();
+    }
+};
+///
+/// Canvas class using locked Texture (no texture replacement, parallel to Image)
+/// Note:
+///   No surface creation or texture replace => but not faster 
+///
+struct Canvas1 : Tile {
+    SDL_Texture *tex = NULL;           // texture pointer
+    
+    Canvas1(SDL_Renderer *r, SDL_Rect v) : Tile(r, v) {}
+
+    void free() override { if (tex) SDL_DestroyTexture(tex); }
+    int  load(const char *dummy=NULL, SDL_Color *key=NULL) {
+        free();
+        tex = SDL_CreateTexture(rn,
+              SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING,
+            vp.w, vp.h);
+        CHK(!tex, SDL);
+        
+        return 0;
+    }
+    virtual int render(SDL_Rect *clip=NULL) override {
+        static Uint8  c = 0, r = 0;
+        Uint32 *buf;
+        int    sz;
+        if (++c==0) r++;
+        CHK(SDL_LockTexture(tex, clip, (void**)&buf, &sz), SDL);  // get a pointer to GPU mem
+        for (int y=0; y < vp.h; y++) {
+            for (int x=0; x < vp.w; x++) {
+                *buf++ = (x<<16) | (y<<8) | r;   // AGBR
+            }
+        }
+        SDL_UnlockTexture(tex);                                   // update GPU mem
+        SDL_RenderCopyEx(rn, tex, NULL, &vp,
+                         ang, NULL /* center */, SDL_FLIP_NONE);
+        return 0;
     }
 };
 ///====================================================================================
@@ -258,22 +294,24 @@ int test_sdl2(Context *ctx, const char *text, const char *fname) {
 
     SDL_Renderer *rn  = ctx->rn;                  // short hand
 
-    Tile *sq  = ctx->sq  = new Tile(rn, sq_v);    // initialize square
-    Tile *img = ctx->img = new Image(rn, img_v);  // initialize image
+    Tile  *sq  = new Tile(rn, sq_v);              // initialize square
+    Image *img = new Image(rn, img_v);            // initialize image
     if (img->load(fname, &key)) return 1;
 
-    Tile *txt = new Text(rn, txt_v);              // initialize text
+    Text *txt = new Text(rn, txt_v);              // initialize text
     if (txt->load(text, &red)) return 1;          // text default background transparent
     
-    Tile *cnv = new Canvas(rn, cnv_v);
+    Canvas1 *cnv = new Canvas1(rn, cnv_v);
     if (cnv->load()) return 1;
 
-    ctx->add(cnv);                                // push Tiles into render queue
+    ctx->sq  = sq;                                // keep individual pointers
+    ctx->img = img;
+    ctx->add(cnv);                                // keep Tiles in a vector
     ctx->add(img);
     ctx->add(txt);
     ctx->add(sq);
 
-    printf("ctx.cue with %ld tiles\n", ctx->que.size());
+    printf("ctx.que with %ld tiles\n", ctx->que.size());
 
     return 0;
 }    
