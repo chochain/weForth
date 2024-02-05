@@ -170,10 +170,14 @@ struct Canvas1 : Tile {
         return 0;
     }
     virtual int render(SDL_Rect *clip=NULL) override {
-        static Uint8 r = 0, c = 0;
+        static Uint8 r = 0;
+        static Uint32 t0 = SDL_GetTicks();
+
+        Uint32 t = SDL_GetTicks();
+        if ((SDL_GetTicks() - t0) > 200) { r += 8; t0 = t; }      // update every 200 ms
+
         Uint32 *buf;
         int    sz;
-        if (++c==0) r += 0x8;
         CHK(SDL_LockTexture(tex, clip, (void**)&buf, &sz), SDL);  // get a pointer to GPU mem
         for (int y=0; y < vp.h; y++) {
             for (int x=0; x < vp.w; x++) {
