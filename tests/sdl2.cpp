@@ -15,7 +15,6 @@
 ///
 ///> global control variables
 ///
-bool     g_run    = true;
 TTF_Font *g_font  = NULL;
 ///
 ///> Rectangle textured tile class (for image or solid color)
@@ -199,6 +198,7 @@ struct Context {
     SDL_Renderer *rn;
     SDL_Rect     vp;
     SDL_Color    bg;
+    bool         run = true;
     
     Uint8        r = 0x80, a = 0x80;         // default colors
     std::vector<Tile*> que;                  // polymorphic pointers
@@ -219,6 +219,35 @@ struct Context {
         }
         SDL_RenderPresent(rn);                                // update screen
     }
+    void event() {
+        SDL_Event ev;
+        SDL_Rect  &i = img->vp;
+        while (SDL_PollEvent(&ev)) {
+            switch (ev.type) {
+            case SDL_QUIT: exit(0); /* force exit */   break;
+            case SDL_MOUSEBUTTONDOWN: i.w <<= 1;     break;
+            case SDL_MOUSEBUTTONUP:   i.w >>= 1;     break;
+            case SDL_KEYDOWN: {
+                SDL_Rect &s = sq->vp;
+                switch(ev.key.keysym.sym) {
+                case SDLK_UP:    s.y -= 20;        break;
+                case SDLK_DOWN:  s.y += 20;        break;
+                case SDLK_LEFT:  s.x -= 20;        break;
+                case SDLK_RIGHT: s.x += 20;        break;
+                case SDLK_a:     img->ang -= 30.0; break;
+                case SDLK_f:     img->ang += 30.0; break;
+                case SDLK_e:     a -= 0x20;        break;
+                case SDLK_x:     a += 0x20;        break;
+                case SDLK_s:     r -= 0x20;        break;
+                case SDLK_d:     r += 0x20;        break;
+                case SDLK_q:     run = false;      break;
+                default: /* do nothing */ break;
+                }
+            } break;
+            default: /* do nothing */ break;
+            }
+        }
+    }
     void free() {
         SDL_DestroyRenderer(rn);
         for (int i=0; i < que.size(); i++) {
@@ -233,33 +262,8 @@ struct Context {
 ///
 void run(void *arg) {
     Context   &ctx = *static_cast<Context*>(arg);
-    SDL_Event ev;
-    SDL_Rect  &img = ctx.img->vp;
-    while (SDL_PollEvent(&ev)) {
-        switch (ev.type) {
-        case SDL_QUIT: exit(0); /* force exit */   break;
-        case SDL_MOUSEBUTTONDOWN: img.w <<= 1;     break;
-        case SDL_MOUSEBUTTONUP:   img.w >>= 1;     break;
-        case SDL_KEYDOWN: {
-            SDL_Rect &sq = ctx.sq->vp;
-            switch(ev.key.keysym.sym) {
-            case SDLK_UP:    sq.y -= 20;           break;
-            case SDLK_DOWN:  sq.y += 20;           break;
-            case SDLK_LEFT:  sq.x -= 20;           break;
-            case SDLK_RIGHT: sq.x += 20;           break;
-            case SDLK_a:     ctx.img->ang -= 30.0; break;
-            case SDLK_f:     ctx.img->ang += 30.0; break;
-            case SDLK_e:     ctx.a -= 0x20;        break;
-            case SDLK_x:     ctx.a += 0x20;        break;
-            case SDLK_s:     ctx.r -= 0x20;        break;
-            case SDLK_d:     ctx.r += 0x20;        break;
-            case SDLK_q:     g_run = false;        break;
-            default: /* do nothing */ break;
-            }
-        } break;
-        default: /* do nothing */ break;
-        }
-    }
+    ctx.event();
+    
     SDL_Color c = {ctx.r, 0xf0, 0xc0, ctx.a};   // update color
     ctx.sq->set_color(c);                       // with changing color
     ///
@@ -351,7 +355,7 @@ int main(int argc, char** argv) {
     printf("emscripten force exit...\n");            // should neve come here
     emscripten_force_exit(-1);
 #else
-    while (g_run) { run(&ctx); }
+    while (ctx.run) { run(&ctx); }
 #endif 
     
     teardown(&ctx);
