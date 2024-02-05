@@ -4,7 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
 
@@ -55,8 +55,8 @@ struct Image : Tile {
         CHK(!tex, SDL);
         return 0;
     }
-    void free() { if (tex) SDL_DestroyTexture(tex); }
-    int  load(const char *fname=NULL, SDL_Color *key=NULL) {
+    void free() override { if (tex) SDL_DestroyTexture(tex); }
+    int  load(const char *fname, SDL_Color *key=NULL) {
         if (!fname) { printf("IMG_Load: filename not given\n"); return 1; }
         
         SDL_Surface *img = IMG_Load(fname);
@@ -92,15 +92,17 @@ struct Canvas : Image {
     Canvas(SDL_Renderer *r, SDL_Rect v) : Image(r, v) {}
 
     int render(SDL_Rect *clip=NULL) override {
+        static Uint8 r = 0, c = 0;
         SDL_Surface *rgb =
             SDL_CreateRGBSurface(0, vp.w, vp.h, 32, 0, 0, 0, 0);
         CHK(!rgb, SDL);
+        if (++c==0) r += 0x8;
         
         if (SDL_MUSTLOCK(rgb)) SDL_LockSurface(rgb);
         Uint32 *px = (Uint32*)rgb->pixels;
         for (int y=0; y < vp.h; y++) {
             for (int x=0; x < vp.w; x++) {
-                *px++ = y | (x << 8);
+                *px++ = y | (x << 8) | (r << 16);
             }
         }
         if (SDL_MUSTLOCK(rgb)) SDL_UnlockSurface(rgb);
@@ -168,10 +170,10 @@ struct Canvas1 : Tile {
         return 0;
     }
     virtual int render(SDL_Rect *clip=NULL) override {
-        static Uint8  c = 0, r = 0;
+        static Uint8 r = 0, c = 0;
         Uint32 *buf;
         int    sz;
-        if (++c==0) r++;
+        if (++c==0) r += 0x8;
         CHK(SDL_LockTexture(tex, clip, (void**)&buf, &sz), SDL);  // get a pointer to GPU mem
         for (int y=0; y < vp.h; y++) {
             for (int x=0; x < vp.w; x++) {
@@ -303,6 +305,7 @@ int test_sdl2(Context *ctx, const char *text, const char *fname) {
     
     Canvas1 *cnv = new Canvas1(rn, cnv_v);
     if (cnv->load()) return 1;
+//    Canvas *cnv = new Canvas(rn, cnv_v);
 
     ctx->sq  = sq;                                // keep individual pointers
     ctx->img = img;
@@ -319,7 +322,7 @@ int test_sdl2(Context *ctx, const char *text, const char *fname) {
 /// SDL teardown (not called by WASM)
 ///
 void teardown(Context *ctx) {
-#ifndef EMSCRIPTEN
+#ifndef __EMSCRIPTEN__
     printf("SDL shutting down...\n");
     ctx->free();
     printf("%s done.\n", __FILE__);
@@ -339,7 +342,7 @@ int main(int argc, char** argv) {
     if (setup(&ctx, title, &wsize, &bg)) return -1;
     if (test_sdl2(&ctx, text, fname)) return -1;
     
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
     emscripten_set_main_loop_arg(run, &ctx, -1, 1);  // -1:fps=RAF, 1=infinite loop
     printf("emscripten force exit...\n");            // should neve come here
     emscripten_force_exit(-1);
