@@ -76,22 +76,27 @@ With WASM, the interoperability between different languages become a thing of th
 > sudo apt install libjpeg-dev libwebp-dev libtiff5-dev libsdl2-image-dev libsdl2-image-2.0-0 -y;
 > sudo apt install libmikmod-dev libfishsound1-dev libsmpeg-dev liboggz2-dev libflac-dev libfluidsynth-dev libsdl2-mixer-dev libsdl2-mixer-2.0-0 -y;
 > sudo apt install libfreetype6-dev libsdl2-ttf-dev libsdl2-ttf-2.0-0 -y;
-* compile C code
-> g++ -o tests/sdl2_test src/sdl2.cpp `sdl2-config --cflags --libs` -lSDL2_image -lSDL2_mixer -lSDL2_ttf
+* compile to host exe
+> make exe
+> ./tests/sdl2
 * compile to WASM
-> em++ -o tests/sdl2_test.js src/sdl2.cpp -s WASM=1 -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' --preload-file tests/img
+> make sdl
+> http://localhost:8000/tests/sdl2.html
 
 ### TODO
 * review wasmtime (CLI), perf+hotspot (profiling)
-* Forth CPU visualizer (with SDL2)
+* Forth CPU visualizer (with SDL)
 * GraFORTH spec.
-  * File system (FS/IndexedDB)
-  * Editor
-  * 2D graphic (SDL)
-  * Character graphic (HTML5)
-  * 3D graphic (WebGL)
-  * Music (SDL)
-* add network system (wget/WebSocket)
+  + File system (FS/IndexedDB)
+  + Editor
+  + 2D graphic (SDL_gfx, SDL_image)
+  + Character graphic (SDL_ttf or HTML5)
+  + 3D graphic (GL)
+  + Music (SDL_media)
+* Robotic Simulation Engine
+  + CSG Object (with optional motion trail)
+  + Collision (with directional distance sensing)
+* add network system (SD_net)
 * inter-VM communication
 * use WASM stack as ss
 * macro-assembler
