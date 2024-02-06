@@ -33,7 +33,7 @@ struct Tile {
         return this;
     }
     virtual void free() {}
-    virtual int  render(SDL_Rect *clip=NULL) {
+    virtual int  draw(SDL_Rect *clip=NULL) {
         if (c4_set) {
             SDL_SetRenderDrawColor(rn, c4.r, c4.g, c4.b, c4.a);
         }
@@ -72,13 +72,13 @@ struct Image : Tile {
         }
         return replace_tex_then_free(img);
     }
-    virtual int render(SDL_Rect *clip=NULL) override {
+    virtual int draw(SDL_Rect *clip=NULL) override {
         if (c4_set) {
             SDL_SetRenderDrawColor(rn, c4.r, c4.g, c4.b, c4.a);
         }
         SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);    // can use other blending mode
-//          SDL_RenderCopy(rndr, tex, NULL, &rect);           // entire texture
-//          SDL_RenderCopy(rndr, tex, NULL, NULL);            // stretch to entire viewport
+//      SDL_RenderCopy(rndr, tex, NULL, &rect);           // entire texture
+//      SDL_RenderCopy(rndr, tex, NULL, NULL);            // stretch to entire viewport
         SDL_RenderCopyEx(rn, tex, NULL, &vp,
                          ang, NULL /* center */, SDL_FLIP_NONE);
         return 0;
@@ -90,7 +90,7 @@ struct Image : Tile {
 struct Canvas : Image {
     Canvas(SDL_Renderer *r, SDL_Rect v) : Image(r, v) {}
 
-    int render(SDL_Rect *clip=NULL) override {
+    int draw(SDL_Rect *clip=NULL) override {
         static Uint8 r = 0, c = 0;
         SDL_Surface *rgb =
             SDL_CreateRGBSurface(0, vp.w, vp.h, 32, 0, 0, 0, 0);
@@ -106,7 +106,7 @@ struct Canvas : Image {
         }
         if (SDL_MUSTLOCK(rgb)) SDL_UnlockSurface(rgb);
 
-        return replace_tex_then_free(rgb) || Image::render();
+        return replace_tex_then_free(rgb) || Image::draw();
     }
 };
 ///
@@ -125,7 +125,7 @@ struct Text : Image {
         if (c) set_color(*c);                                // if color given
         return 0;
     }
-    int render(SDL_Rect *clip=NULL) override {
+    int draw(SDL_Rect *clip=NULL) override {
         static Uint32 t0  = SDL_GetTicks();
         static Uint32 dt0 = 0, cnt = 0, fps = 0;
         
@@ -145,7 +145,7 @@ struct Text : Image {
         vp.w = txt->w;
         vp.h = txt->h;
 
-        return replace_tex_then_free(txt) || Image::render();
+        return replace_tex_then_free(txt) || Image::draw();
     }
 };
 ///
@@ -168,7 +168,7 @@ struct Canvas1 : Tile {
         
         return 0;
     }
-    virtual int render(SDL_Rect *clip=NULL) override {
+    virtual int draw(SDL_Rect *clip=NULL) override {
         static Uint8 r = 0;
         static Uint32 t0 = SDL_GetTicks();
 
@@ -215,7 +215,7 @@ struct Context {
         SDL_SetRenderDrawColor(rn, bg.r, bg.g, bg.b, bg.a);   // shade the background
         SDL_RenderClear(rn);
         for (int i=0; i < que.size(); i++) {                  // render all tiles
-            que[i]->render();
+            que[i]->draw();
         }
         SDL_RenderPresent(rn);                                // update screen
     }
