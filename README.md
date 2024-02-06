@@ -94,7 +94,7 @@ With WASM, the interoperability between different languages become a thing of th
   + 3D graphic (GL)
   + Music (SDL_media)
 * Robotic Simulation Engine
-  + CSG Object (with optional motion trail)
+  + CSG Object (with optional motion trail) [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
   + Collision (with directional distance sensing)
 * add network system (SD_net)
 * inter-VM communication

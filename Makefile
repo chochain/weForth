@@ -30,3 +30,9 @@ sdl: tests/sdl2.cpp
 
 exe: tests/sdl2.cpp
 	g++ -o tests/sdl2 tests/sdl2.cpp `sdl2-config --cflags --libs` -lSDL2_image -lSDL2_ttf -lSDL2_gfx
+
+gfx: tests/gfx.c
+	g++ -o tests/gfx tests/gfx.c `sdl2-config --cflags --libs` -lSDL2_gfx
+
+gl: tests/gl.c
+	g++ -o tests/gl tests/gl.c `sdl2-config --cflags --libs` -lGL
