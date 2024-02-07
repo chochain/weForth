@@ -1,146 +1,245 @@
-<html>
-  <head>    
-  <title>weForth</title>
-  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/codemirror.min.css'></link>
-  <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/codemirror.min.js'></script>
-  <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/mode/forth/forth.min.js'></script>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-  <link rel='stylesheet' href='weforth.css'></link>
-  <script type='text/javascript' src='file_io.js'></script>
-  </head>
-  <body>
-    <div class='row' style='height:100%'>
-      <div id='dir' class='col' style='display:none; z-index:1; width:15%'>
-        <pre class='hdr'>Dictionary</pre>
-        <pre id='usr' class='usr'></pre>
-        <pre id='dc' class='usr'></pre>
-      </div>
-      <div class='col' style='z-index:0; width:100%; padding:8px'>
-        <cite>
-          <i class='material-icons' style='float:left' onclick='(toggle("dir"),forth(""))'>menu_open</i>
-          <span style='float:left; position:fixed'>
-            <b>weForth</b> - Web eForth - <span id='fname'></span>
-          </span>
-          <i class='material-icons' style='float:right' onclick='toggle("gra")'>perm_media</i>
-          <i class='material-icons' style='float:right' onclick='(toggle("edt"),cm_refresh())'>edit_square</i>
-        </cite>
-        <div id='edt' class='row' style='display:none'>
-          <input id='fopen' type='file' onchange='file_load(this.files, "#fname")' style='display:none'/>
-          <a id='fsave' style='display:none'></a>
-          <nav>
-            <i class='material-icons' onclick='forth("clear")'>home</i>
-            <p></p>
-            <i class='material-icons' onclick='file_new("#fname")'>create_new_folder</i>
-            <i class='material-icons' onclick='$("#fopen").click()'>folder</i>
-            <i class='material-icons' onclick='file_save("#fsave", cm.getValue(), "#fname")'>drive_file_move_rtl</i>
-            <p></p>
-            <i class='material-icons' onclick='(forth("clear"),forth("boot"))'>do_not_step</i>
-            <i onclick='forth(cm.getSelection())' class='material-icons'>install_desktop</i>
-            <i onclick='forth(cm.getValue())' class='material-icons'>directions_run</i>
-          </nav>
-          <textarea id='cm'>\ highlight the code and hit <Ctrl-Enter> to run</textarea>
-        </div>
-        <div id='txt' class='txt'></div>
-        <div style='width:auto'><input id='tib' class='code' value='' /></div>
-        <div id='ss' class='ss'>[ ]</div>
-      </div>
-      <div id='gra' class='col' style='display:none; width:100%'>
-        <pre id='mm' class='mem'></pre>
-        <canvas id='can'></canvas>
-      </div>
-    <script src='weforth.js'></script>
-    <script>
-    const $ = (s)=>s[0]=='#' && !s.includes(' ') ?      /* ala jQuery */
-        document.querySelector(s) : document.querySelectorAll(s)
-    const dir = $('#dir'), usr = $('#usr'), dc = $('#dc')
-    const tib = $('#tib'), txt = $('#txt'), ss = $('#ss'), mm = $('#mm')
-    const cm  = CodeMirror.fromTextArea($('#cm'), {
-        lineNumbers: true, styleActiveLine: true,
-        mode: 'forth',                            /// * Forth language
-        extraKeys: { 'Ctrl-Enter': (e)=>forth(e.getSelection()) }
-    })
-    const rz  = new ResizeObserver(e=>{           ///< adjust console height
-        edt.style.height = cm.innerHeight
-        txt.scrollTop    = txt.scrollHeight
-    }).observe($('#cm'))
-      
-    tib.onkeydown = (e)=>{                        ///< console input
-        if (13!=e.keyCode) return
-        forth(tib.value)
-        tib.value = ''
-        txt.scrollTop = txt.scrollHeight          /// * scroll down
-        tib.focus()
-    }
-    function toggle(id) {
-        let sty = $('#'+id).style
-        sty.display = sty.display=='none' ? 'flex' : 'none'
-    }
-    function cm_refresh() {                       /// * fix line number issue
-        $('#edt > .CodeMirror').forEach(e=>e.CodeMirror.refresh())
-    }
-    function to_txt(t, esc=true) {
-        const escape = (s)=>{
-            return s.replace(/\n/g,'<br/>').replace(/\s/g, '&nbsp;')+'<br/>'
-        }
-        txt.innerHTML += esc && typeof(t)=='string' ? escape(t) : t
-        txt.scrollTop = txt.scrollHeight
-    }
-    function clear_txt() { txt.innerHTML='' }
-    function show_cmd(cmd) {
-        let htm = cmd.replace(/:/g,'<br/>:')                  /// * show on a new line
-        if (htm.indexOf('<br/>')==0) htm.replace('<br/>','')  /// * remove blank lines
-        to_txt(`<pre class="cmd"><em>${htm}</em></pre>`, false)
-    }
-    ///
-    /// Forth section
-    ///
-    const vm = new Worker('weforth_worker.js')       ///< create the Forth worker thread
-    clear_txt()
-      
-    vm.onmessage = (e)=>{                            /// * wait for worker's response
-        let k = e.data[0], v = e.data[1]
-        switch (k) {
-        case 'cmd': to_txt(v);         break
-        case 'dc' : show_dict(v);      break
-        case 'us' : usr.innerHTML = v; break
-        case 'ss' : ss.innerHTML  = v; break
-        case 'mm' : mm.innerHTML  = v; break
-        default: console.log('onmessage.error=>'+e)
-        }
-    }
-    ///
-    /// Forth outer interpreter
-    ///
-    function forth(cmd) {                            ///< evaludate Forth command
-        if (cmd=='clear') clear_txt()                /// * clear output console
-        else if (cmd) {
-            show_cmd(cmd)
-            vm.postMessage(['cmd', cmd])             /// * send command to Forth worker
-            vm.postMessage(['ss'])                   /// * send command to Forth worker
-            vm.postMessage(['mm', [ 0, 256 ]])
-        }
-        if (dc.style.display!='none') {              /// * query dictionary
-            vm.postMessage(['dc'])
-        }
-    }
-    function show_dict(div) {
-        dc.innerHTML = div
-        let tree = document.querySelectorAll('ul.tree a:not(:last-child)')
-        tree.forEach(ul=>{
-            ul.onclick = e=>{
-                var pa = e.target.parentElement
-                var cl = pa.classList
-                if(cl.contains("open")) {
-                    cl.remove('open')
-                    pa.querySelectorAll(':scope .open').forEach(c=>{
-                        c.classList.remove('open')
-                    })
-                }
-                else cl.add('open')
-                e.preventDefault()
-            }
-        })
-    }          
-    </script>
-  </body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.8.17"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>weForth: weForth - Web eForth with WASM</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">weForth
+   &#160;<span id="projectnumber">v1.4</span>
+   </div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Generated by Doxygen 1.8.17 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+var searchBox = new SearchBox("searchBox", "search",false,'Search');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(document).ready(function(){initNavTree('index.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="PageDoc"><div class="header">
+  <div class="headertitle">
+<div class="title">weForth - Web eForth with WASM </div>  </div>
+</div><!--header-->
+<div class="contents">
+<div class="textblock"><p>WebAssembly enpowered eForth on web browsers. Is it faster? Is it more portable? Yes, and Yes.</p>
+<p>Well, on my aged laptop, the impression is pretty exciting! It's about 2x faster than pure Javascript implementation on a browser and at 1/4 speed of C/C++ natively compiled code on CPU. On the portability end, though not exactly plug-and-play but some simple alteration turned my C code web-eabled. Of course, WASM has not integrated with the front-end well enough, updating DOM is a different feat.</p>
+<p>Regardless, it brought me warm smiles seeing eForth run in a browser. Better yet, it's straight from C/C++ source code. Other popular scripting languages such as Python, Ruby are trending toward WASM/WASI implementation as well. However, depending solely on JIT without built-in compiler as Forth does, the interpreter-in-an-interpreter design will likely cap the top-end performance (i.e. stuck at 5%~10% of native, so far).</p>
+<p>With WASM, the interoperability between different languages become a thing of the near future. If Forth can compile word directly into WASM opcodes, engage WASI to access OS and peripherals, hookup the graphic front-end (i.g. SDL or WebGL), weForth can become a worthy scripting alternative for Web.</p>
+<h2>Features</h2>
+<ul>
+<li>Javascript access to ss, dict, and VM memory (via WebAssembly.Memory)</li>
+<li>Forth in Web Worker threads (multi-VMs possible)</li>
+<li>IDE-style interactive front-end (cloud possible, i.g. JupyterLab)</li>
+</ul>
+<h2>To Compile into a single wasm file (make sure python3 and Emscripten are installed)</h2>
+<blockquote class="doxtable">
+<p>&gt; make one<br  />
+ try it here <a href="https://chochain.github.io/weforth/html/ceforth.html" target="_blank">ceforth.html</a><br  />
+ Note: -O2 works OK, -O3 emscripten spits wrong code </p>
+</blockquote>
+<h2>To Compile into wasm and one Web Worker thread (multi-threaded)</h2>
+<blockquote class="doxtable">
+<p>&gt; make two<br  />
+ try it here <a href="https://chochain.github.io/weforth/html/weforth.html" target="_blank">weforth.html</a> </p>
+</blockquote>
+<h2>To Run on your own box</h2>
+<ul>
+<li>Server-side <blockquote class="doxtable">
+<p>&gt; python3 -m http.server </p>
+</blockquote>
+</li>
+<li>Client-side Browser <blockquote class="doxtable">
+<p>&gt; <a href="http://localhost:8000/tests/ceforth.html">http://localhost:8000/tests/ceforth.html</a> or weforth.html </p>
+</blockquote>
+</li>
+</ul>
+<h2>To Debug the WASM file (dump all functions, check with wasm-objdump in WABT kit)</h2>
+<blockquote class="doxtable">
+<p>&gt; make debug<br  />
+ read tests/ceforth.wasm.txt (really long) </p>
+</blockquote>
+<h2>Benchmark (on my aged IBM X230)</h2>
+<ul>
+<li>Simple 1K*10K tests <blockquote class="doxtable">
+<p>: xx 9999 FOR 34 DROP NEXT ;<br  />
+ : yy 999 FOR xx NEXT ;<br  />
+ : zz MS NEGATE yy MS + ;<br  />
+ zz </p>
+</blockquote>
+</li>
+<li>CPU = Intel i5-3470 @ 3.2GHz <blockquote class="doxtable">
+<p>FF.a = FireFox v120, FF.a1 = FF.a + 1 worker<br  />
+ FF.b = FireFox v122, FF.b1 = FF.b + 1 worker<br  />
+ EM.a = Emscripten v3.1.51<br  />
+ EM.b = Emscripten v3.1.53 </p>
+</blockquote>
+</li>
+</ul>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">implementation </th><th class="markdownTableHeadNone">version </th><th class="markdownTableHeadNone">source code </th><th class="markdownTableHeadNone">optimization </th><th class="markdownTableHeadNone">platform </th><th class="markdownTableHeadNone">run time(ms) </th><th class="markdownTableHeadNone">code size(KB)  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">ceforth </td><td class="markdownTableBodyNone">8.0 </td><td class="markdownTableBodyNone">C </td><td class="markdownTableBodyNone">-O0 </td><td class="markdownTableBodyNone">CPU </td><td class="markdownTableBodyNone">266 </td><td class="markdownTableBodyNone">111  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">-O2 </td><td class="markdownTableBodyNone">CPU </td><td class="markdownTableBodyNone">106 </td><td class="markdownTableBodyNone">83  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">eForth.js </td><td class="markdownTableBodyNone">6.0 </td><td class="markdownTableBodyNone">JavaScript </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">FF.a </td><td class="markdownTableBodyNone">756 </td><td class="markdownTableBodyNone">20  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">FF.b </td><td class="markdownTableBodyNone">1059 </td><td class="markdownTableBodyNone">20  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">uEforth </td><td class="markdownTableBodyNone">7.0.2 </td><td class="markdownTableBodyNone">Asm.js </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">FF.a </td><td class="markdownTableBodyNone">814 </td><td class="markdownTableBodyNone">29  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">7.0.7 </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">FF.b </td><td class="markdownTableBodyNone">302 </td><td class="markdownTableBodyNone">29  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">weForth </td><td class="markdownTableBodyNone">1.2 </td><td class="markdownTableBodyNone">EM.a / C </td><td class="markdownTableBodyNone">-O0 </td><td class="markdownTableBodyNone">FF.a1 </td><td class="markdownTableBodyNone">943 </td><td class="markdownTableBodyNone">254  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">-O2 </td><td class="markdownTableBodyNone">FF.a1 </td><td class="markdownTableBodyNone">410 </td><td class="markdownTableBodyNone">165  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">weForth </td><td class="markdownTableBodyNone">1.4 </td><td class="markdownTableBodyNone">EM.b / C </td><td class="markdownTableBodyNone">-O0 </td><td class="markdownTableBodyNone">FF.b </td><td class="markdownTableBodyNone">515 </td><td class="markdownTableBodyNone">259  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">-O2 </td><td class="markdownTableBodyNone">FF.b </td><td class="markdownTableBodyNone">161 </td><td class="markdownTableBodyNone">168  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">weForth </td><td class="markdownTableBodyNone">1.4 </td><td class="markdownTableBodyNone">EM.b / C </td><td class="markdownTableBodyNone">-O0 </td><td class="markdownTableBodyNone">FF.b1 </td><td class="markdownTableBodyNone">516 </td><td class="markdownTableBodyNone">259  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">-O2 </td><td class="markdownTableBodyNone">FF.b1 </td><td class="markdownTableBodyNone">163 </td><td class="markdownTableBodyNone">168  </td></tr>
+</table>
+<ul>
+<li>Note1: eForth.js uses JS straight, can do floating-points</li>
+<li>Note2: uEforth v7 uses Asm.js, build Forth up with JS "assembly".</li>
+<li>Note3: weForth v1 uses token indirected threaded</li>
+<li>Note4: weForth+switch(op), is 2x slower than just function pointers.</li>
+<li>Note5: weForth v1.2 without yield in <a class="el" href="ceforth_8cpp.html#ad846502b6abc77557b95ffb1d08699cc">nest()</a> speeds up 3x.</li>
+<li>Note6: WASM -O3 =&gt; err functions (wa.*) not found</li>
+<li>Note7: FireFox v122 is vastly faster than v120</li>
+<li>Note8: Chrome is about 10% slower than FireFox</li>
+</ul>
+<h2>SDL2</h2>
+<ul>
+<li>install sdl2, image, sound, and fonts <blockquote class="doxtable">
+<p>sudo apt install libsdl2-dev libsdl2-2.0-0 -y;<br  />
+ sudo apt install libjpeg-dev libwebp-dev libtiff5-dev libsdl2-image-dev libsdl2-image-2.0-0 -y;<br  />
+ sudo apt install libmikmod-dev libfishsound1-dev libsmpeg-dev liboggz2-dev libflac-dev libfluidsynth-dev libsdl2-mixer-dev libsdl2-mixer-2.0-0 -y;<br  />
+ sudo apt install libfreetype6-dev libsdl2-ttf-dev libsdl2-ttf-2.0-0 -y; </p>
+</blockquote>
+</li>
+<li>compile to host exe <blockquote class="doxtable">
+<p>&gt; make exe<br  />
+ ./tests/sdl2 </p>
+</blockquote>
+</li>
+<li>compile to WASM <blockquote class="doxtable">
+<p>&gt; make sdl<br  />
+ enter <a href="http://localhost:8000/tests/sdl2.html">http://localhost:8000/tests/sdl2.html</a> into the browser </p>
+</blockquote>
+</li>
+</ul>
+<h2>TODO</h2>
+<ul>
+<li>review wasmtime (CLI), perf+hotspot (profiling)</li>
+<li>Forth CPU visualizer (with SDL)</li>
+<li>GraFORTH spec.<ul>
+<li>File system (FS/IndexedDB)</li>
+<li>Editor</li>
+<li>2D graphic (SDL_gfx, SDL_image)</li>
+<li>Character graphic (SDL_ttf or HTML5)</li>
+<li>3D graphic (GL)</li>
+<li>Music (SDL_media)</li>
+</ul>
+</li>
+<li>Robotic Simulation Engine (raylib)<ul>
+<li>CSG Object (with optional motion trail) <a href="https://opencsg.org/">OpenCSG</a>, <a href="https://gts.sourceforge.net/">GTS</a></li>
+<li>Collision (with directional distance sensing)</li>
+</ul>
+</li>
+<li>add network system (SD_net)</li>
+<li>inter-VM communication</li>
+<li>use WASM stack as ss</li>
+<li>macro-assembler</li>
+</ul>
+<h2>References</h2>
+<ul>
+<li>SDL2<ul>
+<li>Read first <a href="https://lyceum-allotments.github.io/2016/06/emscripten-and-sdl-2-tutorial-part-1/">https://lyceum-allotments.github.io/2016/06/emscripten-and-sdl-2-tutorial-part-1/</a></li>
+<li>LazyFoo for SDL2 <a href="https://lazyfoo.net/tutorials/SDL/">https://lazyfoo.net/tutorials/SDL/</a></li>
+<li>raylib vs SDL2 <a href="https://gist.github.com/raysan5/17392498d40e2cb281f5d09c0a4bf798">https://gist.github.com/raysan5/17392498d40e2cb281f5d09c0a4bf798</a> </li>
+</ul>
+</li>
+</ul>
+</div></div><!-- PageDoc -->
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Generated by
+    <a href="http://www.doxygen.org/index.html">
+    <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.17 </li>
+  </ul>
+</div>
+</body>
 </html>
