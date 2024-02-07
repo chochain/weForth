@@ -14,22 +14,22 @@ With WASM, the interoperability between different languages become a thing of th
 * IDE-style interactive front-end (cloud possible, i.g. JupyterLab)
 
 ### To Compile with single file (make sure python3 and Emscripten are installed)
-  > > make one<br/>
+  > \> make one<br/>
   > try it <a href="https://chochain.github.io/weforth/docs/ceforth.html" target="_blank">here</a><br/>
   > Note: -O2 works OK, -O3 emscripten spits wrong code
 
 ### To Compile with one Web Worker thread (multi-threaded)
-  > > make two<br/>
+  > \> make two<br/>
   > try it <a href="https://chochain.github.io/weforth/docs/weforth.html" target="_blank">here</a>
 
 ### To Run on your own box
 * Server-side
-  > > python3 -m http.server
+  > \> python3 -m http.server
 * Client-side Browser
-  > > http://localhost:8000/tests/ceforth.html or weforth.html
+  > \> http://localhost:8000/tests/ceforth.html or weforth.html
 
 ### To Debug the WASM file (dump all functions, check with wasm-objdump in WABT kit)
-  > > make debug
+  > \> make debug
   > read tests/ceforth.wasm.txt (really long)
 
 ### Benchmark (on my aged IBM X230)
