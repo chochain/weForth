@@ -29,21 +29,21 @@ With WASM, the interoperability between different languages become a thing of th
   > \> http://localhost:8000/tests/ceforth.html or weforth.html
 
 ### To Debug the WASM file (dump all functions, check with wasm-objdump in WABT kit)
-  > \> make debug
+  > \> make debug<br/>
   > read tests/ceforth.wasm.txt (really long)
 
 ### Benchmark (on my aged IBM X230)
-> Simple 1K*10K tests
->> : xx 9999 FOR 34 DROP NEXT ;<br/>
->> : yy 999 FOR xx NEXT ;<br/>
->> : zz MS NEGATE yy MS + ;<br/>
->> zz
+* Simple 1K*10K tests
+  > : xx 9999 FOR 34 DROP NEXT ;<br/>
+  > : yy 999 FOR xx NEXT ;<br/>
+  > : zz MS NEGATE yy MS + ;<br/>
+  > zz
 
 * CPU = Intel i5-3470 @ 3.2GHz
-* FF.a = FireFox v120, FF.a1 = FF.a + 1 worker
-* FF.b = FireFox v122, FF.b1 = FF.b + 1 worker
-* EM.a = Emscripten v3.1.51
-* EM.b = Emscripten v3.1.53
+  > FF.a = FireFox v120, FF.a1 = FF.a + 1 worker<br/>
+  > FF.b = FireFox v122, FF.b1 = FF.b + 1 worker<br/>
+  > EM.a = Emscripten v3.1.51<br/>
+  > EM.b = Emscripten v3.1.53
 
 |implementation|version|source code|optimization|platform|run time(ms)|code size(KB)|
 |--|--|--|--|--|--|--|
@@ -70,21 +70,17 @@ With WASM, the interoperability between different languages become a thing of th
 * Note8: Chrome is about 10% slower than FireFox
 
 ### SDL2
-* learn SDL2
-> [Read first](https://lyceum-allotments.github.io/2016/06/emscripten-and-sdl-2-tutorial-part-1/)<br/>
-> [LazyFoo for SDL2](https://lazyfoo.net/tutorials/SDL/)<br/>
-> [raylib vs SDL2](https://gist.github.com/raysan5/17392498d40e2cb281f5d09c0a4bf798)
 * install sdl2, image, sound, and fonts
-> sudo apt install libsdl2-dev libsdl2-2.0-0 -y;<br/>
-> sudo apt install libjpeg-dev libwebp-dev libtiff5-dev libsdl2-image-dev libsdl2-image-2.0-0 -y;<br/>
-> sudo apt install libmikmod-dev libfishsound1-dev libsmpeg-dev liboggz2-dev libflac-dev libfluidsynth-dev libsdl2-mixer-dev libsdl2-mixer-2.0-0 -y;<br/>
-> sudo apt install libfreetype6-dev libsdl2-ttf-dev libsdl2-ttf-2.0-0 -y;
+  > sudo apt install libsdl2-dev libsdl2-2.0-0 -y;<br/>
+  > sudo apt install libjpeg-dev libwebp-dev libtiff5-dev libsdl2-image-dev libsdl2-image-2.0-0 -y;<br/>
+  > sudo apt install libmikmod-dev libfishsound1-dev libsmpeg-dev liboggz2-dev libflac-dev libfluidsynth-dev libsdl2-mixer-dev libsdl2-mixer-2.0-0 -y;<br/>
+  > sudo apt install libfreetype6-dev libsdl2-ttf-dev libsdl2-ttf-2.0-0 -y;
 * compile to host exe
-> \> make exe<br/>
-> ./tests/sdl2
+  > \> make exe<br/>
+  > ./tests/sdl2
 * compile to WASM
-> \> make sdl<br/>
-> enter http://localhost:8000/tests/sdl2.html into the browser
+  > \> make sdl<br/>
+  > enter http://localhost:8000/tests/sdl2.html into the browser
 
 ### TODO
 * review wasmtime (CLI), perf+hotspot (profiling)
@@ -96,10 +92,16 @@ With WASM, the interoperability between different languages become a thing of th
   + Character graphic (SDL_ttf or HTML5)
   + 3D graphic (GL)
   + Music (SDL_media)
-* Robotic Simulation Engine
+* Robotic Simulation Engine (raylib)
   + CSG Object (with optional motion trail) [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
   + Collision (with directional distance sensing)
 * add network system (SD_net)
 * inter-VM communication
 * use WASM stack as ss
 * macro-assembler
+
+### References
+* SDL2
+  + Read first https://lyceum-allotments.github.io/2016/06/emscripten-and-sdl-2-tutorial-part-1/
+  + LazyFoo for SDL2 https://lazyfoo.net/tutorials/SDL/
+  + raylib vs SDL2 https://gist.github.com/raysan5/17392498d40e2cb281f5d09c0a4bf798
