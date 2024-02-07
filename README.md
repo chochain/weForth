@@ -14,12 +14,12 @@ With WASM, the interoperability between different languages become a thing of th
 * IDE-style interactive front-end (cloud possible, i.g. JupyterLab)
 
 ### To Compile with single file (make sure python3 and Emscripten are installed)
-  > make one
+  > make one<br/>
+  > try it <a href="https://chochain.github.io/weforth/docs/ceforth.html" target="_blank">here</a><br/>
   > Note: -O2 works OK, -O3 emscripten spits wrong code
-  > try it <a href="https://chochain.github.io/weforth/docs/ceforth.html" target="_blank">here</a>
 
 ### To Compile with one Web Worker thread (multi-threaded)
-  > make two
+  > make two<br/>
   > try it <a href="https://chochain.github.io/weforth/docs/weforth.html" target="_blank">here</a>
 
 ### To Run on your own box
