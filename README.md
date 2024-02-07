@@ -13,12 +13,12 @@ With WASM, the interoperability between different languages become a thing of th
 * Forth in Web Worker threads (multi-VMs possible)
 * IDE-style interactive front-end (cloud possible, i.g. JupyterLab)
 
-### To Compile with single file (make sure python3 and Emscripten are installed)
+### To Compile into a single wasm file (make sure python3 and Emscripten are installed)
   > \> make one<br/>
   > try it here <a href="https://chochain.github.io/weforth/html/ceforth.html" target="_blank">ceforth.html</a><br/>
   > Note: -O2 works OK, -O3 emscripten spits wrong code
 
-### To Compile with one Web Worker thread (multi-threaded)
+### To Compile into wasm and one Web Worker thread (multi-threaded)
   > \> make two<br/>
   > try it here <a href="https://chochain.github.io/weforth/html/weforth.html" target="_blank">weforth.html</a>
 
@@ -71,20 +71,20 @@ With WASM, the interoperability between different languages become a thing of th
 
 ### SDL2
 * learn SDL2
-> [Read first](https://lyceum-allotments.github.io/2016/06/emscripten-and-sdl-2-tutorial-part-1/)
-> [LazyFoo for SDL2](https://lazyfoo.net/tutorials/SDL/)
+> [Read first](https://lyceum-allotments.github.io/2016/06/emscripten-and-sdl-2-tutorial-part-1/)<br/>
+> [LazyFoo for SDL2](https://lazyfoo.net/tutorials/SDL/)<br/>
 > [raylib vs SDL2](https://gist.github.com/raysan5/17392498d40e2cb281f5d09c0a4bf798)
 * install sdl2, image, sound, and fonts
-> sudo apt install libsdl2-dev libsdl2-2.0-0 -y;
-> sudo apt install libjpeg-dev libwebp-dev libtiff5-dev libsdl2-image-dev libsdl2-image-2.0-0 -y;
-> sudo apt install libmikmod-dev libfishsound1-dev libsmpeg-dev liboggz2-dev libflac-dev libfluidsynth-dev libsdl2-mixer-dev libsdl2-mixer-2.0-0 -y;
+> sudo apt install libsdl2-dev libsdl2-2.0-0 -y;<br/>
+> sudo apt install libjpeg-dev libwebp-dev libtiff5-dev libsdl2-image-dev libsdl2-image-2.0-0 -y;<br/>
+> sudo apt install libmikmod-dev libfishsound1-dev libsmpeg-dev liboggz2-dev libflac-dev libfluidsynth-dev libsdl2-mixer-dev libsdl2-mixer-2.0-0 -y;<br/>
 > sudo apt install libfreetype6-dev libsdl2-ttf-dev libsdl2-ttf-2.0-0 -y;
 * compile to host exe
-> make exe
+> \> make exe<br/>
 > ./tests/sdl2
 * compile to WASM
-> make sdl
-> http://localhost:8000/tests/sdl2.html
+> \> make sdl<br/>
+> enter http://localhost:8000/tests/sdl2.html into the browser
 
 ### TODO
 * review wasmtime (CLI), perf+hotspot (profiling)
