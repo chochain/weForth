@@ -16,11 +16,13 @@ With WASM, the interoperability between different languages become a thing of th
 ### To Compile with single file (make sure python3 and Emscripten are installed)
   > make one
   > Note: -O2 works OK, -O3 emscripten spits wrong code
+  > try it <a href="https://chochain.github.io/weforth/docs/ceforth.html" target="_blank">here</a>
 
 ### To Compile with one Web Worker thread (multi-threaded)
   > make two
+  > try it <a href="https://chochain.github.io/weforth/docs/weforth.html" target="_blank">here</a>
 
-### To Compile with one Web Worker thread (multi-threaded)
+### To Run on your own box
 * Server-side
   > python3 -m http.server
 * Client-side Browser
