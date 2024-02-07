@@ -71,6 +71,7 @@ With WASM, the interoperability between different languages become a thing of th
 * learn SDL2
 > [Read first](https://lyceum-allotments.github.io/2016/06/emscripten-and-sdl-2-tutorial-part-1/)
 > [LazyFoo for SDL2](https://lazyfoo.net/tutorials/SDL/)
+> [raylib vs SDL2](https://gist.github.com/raysan5/17392498d40e2cb281f5d09c0a4bf798)
 * install sdl2, image, sound, and fonts
 > sudo apt install libsdl2-dev libsdl2-2.0-0 -y;
 > sudo apt install libjpeg-dev libwebp-dev libtiff5-dev libsdl2-image-dev libsdl2-image-2.0-0 -y;
