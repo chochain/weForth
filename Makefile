@@ -14,7 +14,7 @@ one: src/ceforth.cpp template/ceforth.html
 
 two: src/ceforth.cpp $(FLST)
 	echo "WASM: eForth + one worker thread"
-	cp $(FLST) ./html
+	cp $(FLST) ./tests
 	$(EM) -o tests/weforth.js src/ceforth.cpp -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap -O2
 
 debug: src/ceforth.cpp $(FLST)
