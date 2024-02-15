@@ -46,10 +46,13 @@
       </div>
       <div id='gra' class='col' style='display:none; width:100%'>
         <pre id='mm' class='mem'></pre>
-        <canvas id='can'></canvas>
+        <canvas id='canvas' oncontextmenu='event.preventDefault()'></canvas>
       </div>
     <script src='weforth.js'></script>
     <script>
+    var Module = {
+        canvas: (()=>{ return document.getElementById('canvas'); })()
+    }
     const $ = (s)=>s[0]=='#' && !s.includes(' ') ?      /* ala jQuery */
         document.querySelector(s) : document.querySelectorAll(s)
     const dir = $('#dir'), usr = $('#usr'), dc = $('#dc')
