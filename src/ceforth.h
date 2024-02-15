@@ -165,17 +165,17 @@ struct List {
 ///@name Code flag masking options
 ///@{
 #define WORD_NA    -1
-#if !DO_WASM                      /** WASM function ptr is index to vtable */
-    #define UDF_ATTR   0x0001     /** user defined word  */
-    #define IMM_ATTR   0x0002     /** immediate word     */
-    #define MSK_ATTR   ~0x3       /** attribute mask     */
-    #define UDF_FLAG   0x0001
-#else // DO_WASM
+#if DO_WASM                       /** WASM function ptr is index to vtable */
     #define UDF_ATTR   0x8000     /** user defined word  */
     #define IMM_ATTR   0x4000     /** immediate word     */
     #define MSK_ATTR   0x3fffffff /** attribute mask     */
     #define UDF_FLAG   0x8000     /** colon word flag    */
-#endif // !DO_WASM
+#else // !DO_WASM
+    #define UDF_ATTR   0x0001     /** user defined word  */
+    #define IMM_ATTR   0x0002     /** immediate word     */
+    #define MSK_ATTR   ~0x3       /** attribute mask     */
+    #define UDF_FLAG   0x0001
+#endif // DO_WASM
 
 #define IS_UDF(w) (dict[w].attr & UDF_ATTR)
 #define IS_IMM(w) (dict[w].attr & IMM_ATTR)
@@ -189,17 +189,17 @@ struct Code {
     const char *name = 0;   ///< name field
     union {                 ///< either a primitive or colon word
         FPTR xt = 0;        ///< lambda pointer (4-byte align, 2 LSBs can be used for attr)
-#if !DO_WASM
-        struct {
-            IU attr;        ///< steal 2 LSBs because xt is 4-byte aligned on 32-bit CPU
-            IU pfa;         ///< offset to pmem space (16-bit for 64K range)
-        };
-#else // DO_WASM
+#if DO_WASM        
         struct {
             IU pfa;         ///< offset to pmem space (16-bit for 64K range)
             IU attr;        ///< WASM xt is index to vtable (so LSBs will be used)
         };
-#endif // !DO_WASM
+#else // !DO_WASM
+        struct {
+            IU attr;        ///< steal 2 LSBs because xt is 4-byte aligned on 32-bit CPU
+            IU pfa;         ///< offset to pmem space (16-bit for 64K range)
+        };
+#endif // DO_WASM
     };
 
     static FPTR XT(IU ix)   INLINE { return (FPTR)(XT0 + (UFP)ix); }
