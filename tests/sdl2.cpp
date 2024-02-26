@@ -7,7 +7,10 @@
 #include <vector>
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
-#endif
+#define  yield(ms)
+#else // !__EMSCRIPTEN__
+#define  yield(ms) SDL_Delay(ms)
+#endif // __EMSCRIPTEN__
 
 #define CHK(t, mod) if (t) {                                \
         printf("%s Error: %s\n", #mod, mod ## _GetError()); \
@@ -199,7 +202,7 @@ struct Context {
     SDL_Renderer *rn;
     SDL_Rect     vp;
     SDL_Color    bg;
-    bool         run = true;
+    SDL_bool     go = SDL_TRUE;
     
     Uint8        r = 0x80, a = 0x80;         // default colors
     std::vector<Tile*> que;                  // polymorphic pointers
@@ -220,34 +223,35 @@ struct Context {
         }
         SDL_RenderPresent(rn);                                // update screen
     }
-    void event() {
+    void event_loop() {
         SDL_Event ev;
         SDL_Rect  &i = img->vp;
         while (SDL_PollEvent(&ev)) {
             switch (ev.type) {
             case SDL_QUIT: exit(0); /* force exit */   break;
-            case SDL_MOUSEBUTTONDOWN: i.w <<= 1;     break;
-            case SDL_MOUSEBUTTONUP:   i.w >>= 1;     break;
+            case SDL_MOUSEBUTTONDOWN: i.w <<= 1;    break;
+            case SDL_MOUSEBUTTONUP:   i.w >>= 1;    break;
             case SDL_KEYDOWN: {
                 SDL_Rect &s = sq->vp;
                 switch(ev.key.keysym.sym) {
-                case SDLK_UP:    s.y -= 20;        break;
-                case SDLK_DOWN:  s.y += 20;        break;
-                case SDLK_LEFT:  s.x -= 20;        break;
-                case SDLK_RIGHT: s.x += 20;        break;
-                case SDLK_a:     img->ang -= 30.0; break;
-                case SDLK_f:     img->ang += 30.0; break;
-                case SDLK_e:     a -= 0x20;        break;
-                case SDLK_x:     a += 0x20;        break;
-                case SDLK_s:     r -= 0x20;        break;
-                case SDLK_d:     r += 0x20;        break;
-                case SDLK_q:     run = false;      break;
+                case SDLK_UP:     s.y -= 20;        break;
+                case SDLK_DOWN:   s.y += 20;        break;
+                case SDLK_LEFT:   s.x -= 20;        break;
+                case SDLK_RIGHT:  s.x += 20;        break;
+                case SDLK_a:      img->ang -= 30.0; break;
+                case SDLK_f:      img->ang += 30.0; break;
+                case SDLK_e:      a -= 0x20;        break;
+                case SDLK_x:      a += 0x20;        break;
+                case SDLK_s:      r -= 0x20;        break;
+                case SDLK_d:      r += 0x20;        break;
+                case SDLK_ESCAPE: go = SDL_FALSE;   break;
                 default: /* do nothing */ break;
                 }
             } break;
             default: /* do nothing */ break;
             }
         }
+        yield(10);   // sleep, CPU 100% -> 10%, FPS 1500->80
     }
     void free() {
         SDL_DestroyRenderer(rn);
@@ -263,7 +267,7 @@ struct Context {
 ///
 void run(void *arg) {
     Context   &ctx = *static_cast<Context*>(arg);
-    ctx.event();
+    ctx.event_loop();
     
     SDL_Color c = {ctx.r, 0xf0, 0xc0, ctx.a};   // update color
     ctx.sq->set_color(c);                       // with changing color
@@ -356,7 +360,7 @@ int main(int argc, char** argv) {
     printf("emscripten force exit...\n");            // should neve come here
     emscripten_force_exit(-1);
 #else
-    while (ctx.run) { run(&ctx); }
+    while (ctx.go) { run(&ctx); }
 #endif 
     
     teardown(&ctx);
