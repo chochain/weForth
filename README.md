@@ -84,7 +84,8 @@ With WASM, the interoperability between different languages become a thing of th
 
 ### TODO
 * review wasmtime (CLI), perf+hotspot (profiling)
-* Forth CPU visualizer (with SDL)
+* review DragonRuby/mRuby (SDL)
+* review R3, Forth CPU visualizer (SDL)
 * GraFORTH spec.
   + File system (FS/IndexedDB)
   + Editor
