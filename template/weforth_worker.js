@@ -1,9 +1,9 @@
 ///
 /// @file
-/// @brief weForth - worker proxy to ceforth.js (called by ceforth.html)
+/// @brief weForth - worker proxy to weforth.js (called by weforth.html)
 ///
 Module = {
-    print: (e)=>postMessage([ 'cmd', e ])
+  print: (e)=>postMessage([ 'cmd', e ])
 }
 var vm_dict_len = 0
 var vm_mem_addr = 0
@@ -63,6 +63,9 @@ function send_mem(off, len) {
     }
     postMessage([ 'mm', div ])
 }
+///
+/// worker message pipeline to main thread
+///
 self.onmessage = function(e) {                    /// * link worker input port
     let forth = Module.cwrap('forth', null, ['number', 'string'])
     let k = e.data[0], v = e.data[1]
@@ -71,6 +74,7 @@ self.onmessage = function(e) {                    /// * link worker input port
     case 'ss' : send_ss();            break
     case 'dc' : send_dict();          break
     case 'mm' : send_mem(v[0], v[1]); break
+    case 'ui' : send_ui();            break
     default: postMessage('unknown type');
     }
 }
