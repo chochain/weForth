@@ -330,6 +330,13 @@ void mem_dump(IU p0, DU sz) {
     }
     fout << setbase(base);
 }
+#if DO_WASM
+/// function in worker thread
+EM_JS(void, canvas, (const char *arg, U32 v=0), {
+        postMessage(['ui', [ UTF8ToString(arg), v]])
+    });
+#endif // DO_WASM
+
 ///====================================================================================
 ///
 ///> ForthVM - front-end proxy class
@@ -439,11 +446,12 @@ void dict_compile() {  ///< compile primitive words into dictionary
     /// @}
     /// @defgroup IO ops
     /// @{
-    CODE("ucase!",  ucase = POP());
+    CODE("case!",   ucase = POP() == DU0);          // case insensitive
     CODE("base@",   PUSH(base));
     CODE("base!",   fout << setbase(base = POP()));
-    CODE("hex",     fout << setbase(base = 16));
+    CODE("binary",  fout << setbase(base = 2));
     CODE("decimal", fout << setbase(base = 10));
+    CODE("hex",     fout << setbase(base = 16));
     CODE("bl",      fout << " ");
     CODE("cr",      fout << ENDL);
     CODE(".",       fout << POP() << " ");
@@ -575,6 +583,32 @@ void dict_compile() {  ///< compile primitive words into dictionary
     CODE("ms",    PUSH(millis()));
     CODE("delay", delay(POP()));
     /// @}
+    /// @defgroup LOGO ops
+    /// @{
+    CODE("CS",    canvas("cs"));         // clear screen
+    CODE("HT",    canvas("ht"));         // hide turtle
+    CODE("ST",    canvas("st"));         // show turtle
+    CODE("CT",    canvas("ct"));         // center turtle
+    CODE("PD",    canvas("pd"));         // pen down
+    CODE("PU",    canvas("pu"));         // pen up
+    CODE("HD",    canvas("hd", POP()));  // set heading
+    CODE("FD",    canvas("fd", POP()));  // forward
+    CODE("BK",    canvas("bk", POP()));  // backward
+    CODE("RT",    canvas("rt", POP()));  // right turn
+    CODE("LT",    canvas("lt", POP()));  // left turn
+    CODE("PC",                           // pencolor
+         int c = top | (ss.pop()<<8) | (ss.pop()<<16);
+         top = ss.pop();
+         canvas("pc", c));
+    CODE("PW",    canvas("pw", POP()));  // penwidth
+    CODE("XY",                           // set x, y
+         int xy = top | (ss.pop()<<16);
+         top = ss.pop();
+         canvas("xy", xy));
+    CODE("JS",
+         IU    len  = POP();                        // string length (not used)
+         const char *s = (const char*)MEM(POP());   // get string pointer
+         canvas(s));
     CODE("bye",   exit(0));
     CODE("boot",  dict.clear(find("boot") + 1); pmem.clear());
 }
@@ -583,14 +617,21 @@ void dict_compile() {  ///< compile primitive words into dictionary
 ///> ForthVM Outer interpreter
 ///
 DU parse_number(const char *idiom, int *err) {
+    int b = base;
+    switch (*idiom) {                        ///> base override
+    case '%': b = 2;  idiom++; break;
+    case '&':
+    case '#': b = 10; idiom++; break;
+    case '$': b = 16; idiom++; break;
+    }
     char *p;
     *err = errno = 0;
 #if DU==float
-    DU n = (base==10)
+    DU n = (b==10)
         ? static_cast<DU>(strtof(idiom, &p))
-        : static_cast<DU>(strtol(idiom, &p, base));
+        : static_cast<DU>(strtol(idiom, &p, b));
 #else
-    DU n = static_cast<DU>(strtol(idiom, &p, base));
+    DU n = static_cast<DU>(strtol(idiom, &p, b));
 #endif
     if (errno || *p != '\0') *err = 1;
     return n;
