@@ -44,7 +44,7 @@
         <div style='width:auto'><input id='tib' class='code' value='' /></div>
         <div id='ss' class='ss'>[ ]</div>
       </div>
-      <div id='gra' class='col' style='width:100%'>
+      <div id='gra' class='col'>
         <pre id='mm' class='mem' style='display:none; height=50%'></pre>
         <canvas id='canvas' width='600' height='800' oncontextmenu='event.preventDefault()'></canvas>
       </div>
@@ -96,7 +96,7 @@
     const _PI2 = Math.PI/180.0;
     const ctx  = document.getElementById('canvas').getContext('2d')
     ctx.width  = 5
-    let tu = {                        // turtle graphic context
+    let eve = {                       // EVE (turtle) graphic context
         'x': ctx.canvas.width/2,
         'y': ctx.canvas.height/2,
         'c': `rgb(0 0 0)`,            // color
@@ -106,56 +106,59 @@
         'w': ctx.canvas.width,
         'h': ctx.canvas.height
     }
-    function draw_turtle() {
-        ctx.arc(tu.x, tu.y, 20, -tu.d-Math.PI/15, -tu.d-Math.PI/6, true)
-        ctx.moveTo(tu.x, tu.y)
-        ctx.arc(tu.x, tu.y, 20, -tu.d+Math.PI/15, -tu.d+Math.PI/6)
-        let x = tu.x + 24*Math.cos(tu.d)
-        let y = tu.y - 24*Math.sin(tu.d)
+    function draw_eve() {
+        ctx.arc(eve.x, eve.y, 20, -eve.d-Math.PI/15, -eve.d-Math.PI/6, true)
+        ctx.moveTo(eve.x, eve.y)
+        ctx.arc(eve.x, eve.y, 20, -eve.d+Math.PI/15, -eve.d+Math.PI/6)
+        let x = eve.x + 24*Math.cos(eve.d)
+        let y = eve.y - 24*Math.sin(eve.d)
         ctx.moveTo(x, y)
-        ctx.arc(x, y, 4, -tu.d, -tu.d+Math.PI*2)
+        ctx.arc(x, y, 4, -eve.d, -eve.d+Math.PI*2)
     }
     function update_canvas(cmd) {
         ctx.beginPath()
-        ctx.moveTo(tu.x, tu.y)
-        if (ctx.t) draw_turtle(ctx)
+        ctx.moveTo(eve.x, eve.y)
         switch (cmd[0]) {
         case 'cs':
-            ctx.fillRect(0,0,tu.w,tu.h)
-            ctx.fillStroke = tu.c
+            ctx.fillRect(0,0,eve.w,eve.h)
+            ctx.fillStroke = eve.c
             ctx.fill()
             break
-        case 'ht': tu.t = 0; break
-        case 'st': tu.t = 1; break
-        case 'ct': tu.x = tu.w/2; tu.y = tu.d/2; tu.d = 90.0*_PI2; break
-        case 'pd': tu.p = 1; break
-        case 'pu': tu.p = 0; break
-        case 'hd': tu.d += (90.0 + cmd[1])*_PI2; break
+        case 'ht': eve.t = 0; break
+        case 'st': eve.t = 1; break
+        case 'ct':
+            eve.x = eve.w/2
+            eve.y = eve.h/2
+            eve.d = 90.0*_PI2
+            break
+        case 'pd': eve.p = 1; break
+        case 'pu': eve.p = 0; break
+        case 'hd': eve.d += (90.0 + cmd[1])*_PI2; break
         case 'fd':
-            tu.x += cmd[1]*Math.cos(tu.d)
-            tu.y -= cmd[1]*Math.sin(tu.d)
+            eve.x += cmd[1]*Math.cos(eve.d)
+            eve.y -= cmd[1]*Math.sin(eve.d)
             break
         case 'bk':
-            tu.x -= cmd[1]*Math.cos(tu.d)
-            tu.y += cmd[1]*Math.sin(tu.d)
+            eve.x -= cmd[1]*Math.cos(eve.d)
+            eve.y += cmd[1]*Math.sin(eve.d)
             break
-        case 'rt': tu.d -= cmd[1]*_PI2; break
-        case 'lt': tu.d += cmd[1]*_PI2; break
-        case 'pc': tu.c = `rgb(${(cmd[1]>>16)&0xff} ${(cmd[1]>>8)&0xff} ${(cmd[1])&0xff})`
+        case 'rt': eve.d -= cmd[1]*_PI2; break
+        case 'lt': eve.d += cmd[1]*_PI2; break
+        case 'pc': eve.c = `rgb(${(cmd[1]>>16)&0xff} ${(cmd[1]>>8)&0xff} ${(cmd[1])&0xff})`
             break
         case 'pw': ctx.width = cmd[1]; break
         case 'xy':
-            tu.x = (cmd[1]>>16)+tu.w/2
-            tu.y = (cmd[1]&0xffff)+tu.h/2
+            eve.x = (cmd[1]>>16)+eve.w/2
+            eve.y = (cmd[1]&0xffff)+eve.h/2
             break
         default: console.log('unknown opcode:' + cmd);
             eval?.(cmd[0]);                 ///< indirect eval
         }
-        console.log(JSON.stringify(cx))
-        if (tu.p) ctx.lineTo(tu.x, tu.y)
-        else      ctx.moveTo(tu.x, tu.y)
-        if (tu.t) draw_turtle(ctx)
-        ctx.strokeStyle = tu.c
+        console.log(JSON.stringify(eve))
+        if (eve.p) ctx.lineTo(eve.x, eve.y)
+        else       ctx.moveTo(eve.x, eve.y)
+        if (eve.t) draw_eve()
+        ctx.strokeStyle = eve.c
         ctx.stroke()
     }
     ///
