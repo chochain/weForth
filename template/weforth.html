@@ -47,8 +47,8 @@
       <div id='gra' class='col'>
         <pre id='mm' class='mem' style='display:none; height=50%'></pre>
         <div class='ctx'>
-          <canvas id='canvas' class='sfc' width='800' height='800' oncontextmenu='event.preventDefault()'></canvas>
-          <canvas id='eve' class='sfc' width='800' height='800'></canvas>
+          <canvas id='eve' class='sfc' width='800' height='800' style='z-index:0'></canvas>
+          <canvas id='canvas' class='sfc' width='800' height='800' style='z-index:1' oncontextmenu='event.preventDefault()'></canvas>
          </div>
       </div>
     <script type='text/javascript'>
@@ -96,19 +96,78 @@
         if (htm.indexOf('<br/>')==0) htm.replace('<br/>','')  /// * remove blank lines
         to_txt(`<pre class="cmd"><em>${htm}</em></pre>`, false)
     }
-    const _PI2 = Math.PI/180.0;
-    const cvs  = $('#canvas')
-    const ctx  = cvs.getContext('2d')
-    let st = {                        // EVE (turtle) graphic states
-        'c': `rgb(0 0 0)`,            // color
-        'p': 1,                       // pen 0: up, 1: down
-        't': 1,                       // show turtle
-        'w': cvs.width,
-        'h': cvs.height
+    /// LOGO implementation
+      const _PI2 = Math.PI/180.0;
+    const cvs = $('#canvas')      
+    const sfc = cvs.getContext('2d')
+    const eve = $('#eve').getContext('2d')
+    let st = {                // turtle drawing state
+        pd: 1,
+        t:  1,
+        fg: '#000',
+        bg: '#FFF',
+        w:  cvs.width,
+        h:  cvs.height
     }
-    const eve  = $('#eve').getContext('2d')
-    const img  = new Image(); img.src = './img/eve.jpg'
-    function draw_eve() {
+    function update_canvas(cmd) {
+        const op = cmd[0]
+        const v  = cmd[1]
+        var x, y, d
+        eve.beginPath()                  // erase Eve
+        eve.arc(15,0,15,0,360.0*_PI2)
+        eve.fill()
+        sfc.beginPath()
+        sfc.moveTo(0, 0)
+        switch (op) {
+        case 'cs':
+            sfc.fillRect(0,0,st.w,st.h)
+            sfc.fillStroke = st.bg
+            sfc.fill()
+            break
+        case 'ht': st.t = 0; break
+        case 'st': st.t = 1; break
+        case 'ct':
+            x = sfc.width/2
+            y = sfc.height/2
+            d = 90.0*_PI2
+            break
+        case 'pd': st.pd = 1; break
+        case 'pu': st.pd = 0; break
+        case 'hd': st.d += (90.0 + v)*_PI2; break
+        case 'fd':
+            sfc.translate(v, 0)
+            eve.translate(v, 0)
+            break
+        case 'bk':
+            sfc.translate(-v, 0)
+            eve.translate(-v, 0)
+            break
+        case 'rt':
+            d = v * _PI2
+            sfc.rotate(d)
+            eve.rotate(d)
+            break
+        case 'lt':
+            d = -v * _PI2
+            sfc.rotate(d)
+            eve.rotate(d)
+            break
+        case 'pc': st.c = `rgb(${(cmd[1]>>16)&0xff} ${(cmd[1]>>8)&0xff} ${(cmd[1])&0xff})`
+            break
+        case 'pw': sfc.width = v; break
+        case 'xy':
+            x = (v>>16)+st.w/2
+            y = (v&0xffff)+st.h/2
+            break
+        default: console.log('unknown opcode:' + cmd);
+            eval?.(op);                 ///< indirect eval
+        }
+        if (st.pd) sfc.lineTo(0, 0)
+        else       sfc.moveTo(0, 0)
+        sfc.strokeStyle = st.fg
+        sfc.stroke()
+    }
+    function draw_eve(c) {
         eve.beginPath()
         eve.moveTo(0, 0)
         eve.arc(0, 0, 20, -Math.PI/15, -Math.PI/6, true) // left shoulder
@@ -116,77 +175,19 @@
         eve.arc(0, 0, 20, Math.PI/15, Math.PI/6)         // right shoulder
         eve.moveTo(24, 0)
         eve.arc(24, 0, 4, 0, Math.PI*2)                  // head
-        eve.strokeStyle = '#F00'
+        eve.strokeStyle = c
         eve.stroke()
-//        eve.drawImage(img, 0, 0, 64, 64)
     }
-    img.onload = ()=>{
+    window.onload = ()=>{
         let x0 = cvs.width/2
         let y0 = cvs.height/2
         let d0 = -90.0 * _PI2
-        ctx.translate(x0, y0)
-        ctx.rotate(d0)
-        eve.fillStyle = '#FFF'
+        sfc.translate(x0, y0)
+        sfc.rotate(d0)
+        eve.fillStyle = '#FEE'
         eve.translate(x0, y0)
         eve.rotate(d0)
-        draw_eve()
-//        eve.drawImage(img, 0, 0, 64, 64)
-    }
-    function update_canvas(cmd) {
-        ctx.beginPath()
-        ctx.moveTo(0, 0)
-        switch (cmd[0]) {
-        case 'cs':
-            ctx.fillRect(0,0,st.w,st.h)
-            ctx.fillStroke = st.c
-            ctx.fill()
-            break
-        case 'ht': st.t = 0; break
-        case 'st': st.t = 1; break
-        case 'ct':
-            st.x = st.w/2
-            st.y = st.h/2
-            st.d = 90.0*_PI2
-            break
-        case 'pd': st.p = 1; break
-        case 'pu': st.p = 0; break
-        case 'hd': st.d += (90.0 + cmd[1])*_PI2; break
-        case 'fd':
-            ctx.translate(cmd[1], 0)
-            eve.fillRect(-5,0,5,20)
-            eve.translate(cmd[1], 0)
-            break
-        case 'bk':
-            ctx.translate(-cmd[1], 0)
-            eve.translate(-cmd[1], 0)
-            break
-        case 'rt':
-            let ar = cmd[1] * _PI2
-            ctx.rotate(ar)
-            eve.rotate(ar)
-            break
-        case 'lt':
-            let al = -cmd[1] * _PI2
-            ctx.rotate(al)
-            eve.rotate(al)
-            break
-        case 'pc': st.c = `rgb(${(cmd[1]>>16)&0xff} ${(cmd[1]>>8)&0xff} ${(cmd[1])&0xff})`
-            break
-        case 'pw': ctx.width = cmd[1]; break
-        case 'xy':
-            st.x = (cmd[1]>>16)+st.w/2
-            st.y = (cmd[1]&0xffff)+st.h/2
-            break
-        default: console.log('unknown opcode:' + cmd);
-            eval?.(cmd[0]);                 ///< indirect eval
-        }
-        console.log(JSON.stringify(st))
-        if (st.p) ctx.lineTo(st.x, st.y)
-        else      ctx.moveTo(st.x, st.y)
-        ctx.strokeStyle = st.c
-        ctx.stroke()
-//        ctx.translate(0, st.y)
-//        eve.translate(0, st.y)
+        draw_eve('#F00')
     }
     ///
     /// Forth section
@@ -204,7 +205,10 @@
         case 'us' : usr.innerHTML = v; break
         case 'ss' : ss.innerHTML  = v; break
         case 'mm' : mm.innerHTML  = v; break
-        case 'ui' : update_canvas(v); draw_eve(); break
+        case 'ui' :
+            update_canvas(v)
+            draw_eve('#F00')
+            break
         default: console.log('onmessage.error=>'+e)
         }
     }
