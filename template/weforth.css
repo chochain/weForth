@@ -29,6 +29,18 @@ h3    { color: #fc4; margin: 0; }
 .txt  { display:block; padding:8px; width:auto; font-family:monospace; overflow-y:scroll; }
 .mem  { display:block; padding:8px; width:auto; font-family:monospace; overflow-y:scroll; font-size:0.8em }
 .ss   { padding:8px; color:#484; background-color:#eee; font-family:monospace; width:auto; }
+.ctx {                  /* drawing area i.e. context */
+    position: relative;
+    width:  800px;
+    height: 800px;
+}
+.ctx .sfc {             /* overlapped context surface */
+    position: absolute;
+    left:   0;
+    top:    0;
+    width:  100%;
+    height: 100%;
+}
 .CodeMirror  { width:100%; border:1px solid #444; resize: vertical; overflow:auto; }
 /* title and menu bars */
 cite         { display:block; padding:6px; width:auto; background-color:#ec8; }
