@@ -46,7 +46,10 @@
       </div>
       <div id='gra' class='col'>
         <pre id='mm' class='mem' style='display:none; height=50%'></pre>
-        <canvas id='canvas' width='600' height='800' oncontextmenu='event.preventDefault()'></canvas>
+        <div class='ctx'>
+          <canvas id='canvas' class='sfc' width='800' height='800' oncontextmenu='event.preventDefault()'></canvas>
+          <canvas id='eve' class='sfc' width='800' height='800'></canvas>
+         </div>
       </div>
     <script type='text/javascript'>
     Module = {
@@ -94,72 +97,96 @@
         to_txt(`<pre class="cmd"><em>${htm}</em></pre>`, false)
     }
     const _PI2 = Math.PI/180.0;
-    const ctx  = document.getElementById('canvas').getContext('2d')
-    ctx.width  = 5
-    let eve = {                       // EVE (turtle) graphic context
-        'x': ctx.canvas.width/2,
-        'y': ctx.canvas.height/2,
+    const cvs  = $('#canvas')
+    const ctx  = cvs.getContext('2d')
+    let st = {                        // EVE (turtle) graphic states
         'c': `rgb(0 0 0)`,            // color
-        'd': 90.0 * _PI2,             // heading
         'p': 1,                       // pen 0: up, 1: down
         't': 1,                       // show turtle
-        'w': ctx.canvas.width,
-        'h': ctx.canvas.height
+        'w': cvs.width,
+        'h': cvs.height
     }
+    const eve  = $('#eve').getContext('2d')
+    const img  = new Image(); img.src = './img/eve.jpg'
     function draw_eve() {
-        ctx.arc(eve.x, eve.y, 20, -eve.d-Math.PI/15, -eve.d-Math.PI/6, true)
-        ctx.moveTo(eve.x, eve.y)
-        ctx.arc(eve.x, eve.y, 20, -eve.d+Math.PI/15, -eve.d+Math.PI/6)
-        let x = eve.x + 24*Math.cos(eve.d)
-        let y = eve.y - 24*Math.sin(eve.d)
-        ctx.moveTo(x, y)
-        ctx.arc(x, y, 4, -eve.d, -eve.d+Math.PI*2)
+        eve.beginPath()
+        eve.moveTo(0, 0)
+        eve.arc(0, 0, 20, -Math.PI/15, -Math.PI/6, true) // left shoulder
+        eve.moveTo(0, 0)
+        eve.arc(0, 0, 20, Math.PI/15, Math.PI/6)         // right shoulder
+        eve.moveTo(24, 0)
+        eve.arc(24, 0, 4, 0, Math.PI*2)                  // head
+        eve.strokeStyle = '#F00'
+        eve.stroke()
+//        eve.drawImage(img, 0, 0, 64, 64)
+    }
+    img.onload = ()=>{
+        let x0 = cvs.width/2
+        let y0 = cvs.height/2
+        let d0 = -90.0 * _PI2
+        ctx.translate(x0, y0)
+        ctx.rotate(d0)
+        eve.fillStyle = '#FFF'
+        eve.translate(x0, y0)
+        eve.rotate(d0)
+        draw_eve()
+//        eve.drawImage(img, 0, 0, 64, 64)
     }
     function update_canvas(cmd) {
         ctx.beginPath()
-        ctx.moveTo(eve.x, eve.y)
+        ctx.moveTo(0, 0)
         switch (cmd[0]) {
         case 'cs':
-            ctx.fillRect(0,0,eve.w,eve.h)
-            ctx.fillStroke = eve.c
+            ctx.fillRect(0,0,st.w,st.h)
+            ctx.fillStroke = st.c
             ctx.fill()
             break
-        case 'ht': eve.t = 0; break
-        case 'st': eve.t = 1; break
+        case 'ht': st.t = 0; break
+        case 'st': st.t = 1; break
         case 'ct':
-            eve.x = eve.w/2
-            eve.y = eve.h/2
-            eve.d = 90.0*_PI2
+            st.x = st.w/2
+            st.y = st.h/2
+            st.d = 90.0*_PI2
             break
-        case 'pd': eve.p = 1; break
-        case 'pu': eve.p = 0; break
-        case 'hd': eve.d += (90.0 + cmd[1])*_PI2; break
+        case 'pd': st.p = 1; break
+        case 'pu': st.p = 0; break
+        case 'hd': st.d += (90.0 + cmd[1])*_PI2; break
         case 'fd':
-            eve.x += cmd[1]*Math.cos(eve.d)
-            eve.y -= cmd[1]*Math.sin(eve.d)
+            ctx.translate(cmd[1], 0)
+            eve.fillRect(-5,0,5,20)
+            eve.translate(cmd[1], 0)
             break
         case 'bk':
-            eve.x -= cmd[1]*Math.cos(eve.d)
-            eve.y += cmd[1]*Math.sin(eve.d)
+            ctx.translate(-cmd[1], 0)
+            eve.translate(-cmd[1], 0)
             break
-        case 'rt': eve.d -= cmd[1]*_PI2; break
-        case 'lt': eve.d += cmd[1]*_PI2; break
-        case 'pc': eve.c = `rgb(${(cmd[1]>>16)&0xff} ${(cmd[1]>>8)&0xff} ${(cmd[1])&0xff})`
+        case 'rt':
+            let ar = cmd[1] * _PI2
+            ctx.rotate(ar)
+            eve.rotate(ar)
+            break
+        case 'lt':
+            let al = -cmd[1] * _PI2
+            ctx.rotate(al)
+            eve.rotate(al)
+            break
+        case 'pc': st.c = `rgb(${(cmd[1]>>16)&0xff} ${(cmd[1]>>8)&0xff} ${(cmd[1])&0xff})`
             break
         case 'pw': ctx.width = cmd[1]; break
         case 'xy':
-            eve.x = (cmd[1]>>16)+eve.w/2
-            eve.y = (cmd[1]&0xffff)+eve.h/2
+            st.x = (cmd[1]>>16)+st.w/2
+            st.y = (cmd[1]&0xffff)+st.h/2
             break
         default: console.log('unknown opcode:' + cmd);
             eval?.(cmd[0]);                 ///< indirect eval
         }
-        console.log(JSON.stringify(eve))
-        if (eve.p) ctx.lineTo(eve.x, eve.y)
-        else       ctx.moveTo(eve.x, eve.y)
-        if (eve.t) draw_eve()
-        ctx.strokeStyle = eve.c
+        console.log(JSON.stringify(st))
+        if (st.p) ctx.lineTo(st.x, st.y)
+        else      ctx.moveTo(st.x, st.y)
+        ctx.strokeStyle = st.c
         ctx.stroke()
+//        ctx.translate(0, st.y)
+//        eve.translate(0, st.y)
     }
     ///
     /// Forth section
@@ -177,7 +204,7 @@
         case 'us' : usr.innerHTML = v; break
         case 'ss' : ss.innerHTML  = v; break
         case 'mm' : mm.innerHTML  = v; break
-        case 'ui' : update_canvas(v);  break
+        case 'ui' : update_canvas(v); draw_eve(); break
         default: console.log('onmessage.error=>'+e)
         }
     }
