@@ -1,127 +1,11 @@
 #ifndef __EFORTH_SRC_CEFORTH_H
 #define __EFORTH_SRC_CEFORTH_H
 #include <stdio.h>
-#include <stdint.h>                          // uintxx_t
-#include <exception>                         // try...catch, throw
-#pragma GCC optimize("align-functions=4")    // we need fn alignment
-///
-/// Benchmark: 10K*10K cycles on desktop (3.2G AMD)
-///    RANGE_CHECK     0 cut 100ms
-///    INLINE            cut 545ms
-///
-///@name Conditional compililation options
-///@}
-#define CC_DEBUG        0               /**< debug tracing flag  */
-#define RANGE_CHECK     0               /**< vector range check  */
-#define DO_WASM         __EMSCRIPTEN__  /**< for WASM output     */
-///@}
-///@name Memory block configuation
-///@{
-#define E4_RS_SZ        64
-#define E4_SS_SZ        64
-#define E4_DICT_SZ      1024
-#define E4_PMEM_SZ      (32*1024)
-///@}
-///@name Multi-platform support
-///@{
-#if    _WIN32 || _WIN64
-    #define ENDL "\r\n"
-#else  // !(_WIN32 || _WIN64)
-    #define ENDL endl; fout_cb(fout.str().length(), fout.str().c_str()); fout.str("")
-#endif // _WIN32 || _WIN64
-
-#if    ARDUINO
-    #include <Arduino.h>
-    #define to_string(i)    string(String(i).c_str())
-    #define LOGS(s)         Serial.print(F(s))
-    #define LOG(v)          Serial.print(v)
-    #define LOGX(v)         Serial.print(v, HEX)
-    #if    ESP32
-        #define analogWrite(c,v,mx) ledcWrite((c),(8191/mx)*min((int)(v),mx))
-    #endif // ESP32
-
-#elif  DO_WASM
-    #include <emscripten.h>
-    #define millis()        EM_ASM_INT({ return Date.now(); })
-    #define delay(ms)       EM_ASM({ let t = setTimeout(()=>clearTimeout(t), $0); }, ms)
-    #define yield()
-
-#else  // !ARDUINO && !DO_WASM
-    #include <chrono>
-    #include <thread>
-    #define millis()        chrono::duration_cast<chrono::milliseconds>( \
-                            chrono::steady_clock::now().time_since_epoch()).count()
-    #define delay(ms)       this_thread::sleep_for(chrono::milliseconds(ms))
-    #define yield()         this_thread::yield()
-    #define PROGMEM
-
-#endif // ARDUINO && DO_WASM
-///@}
-///@name Debugging support
-///@{
-#if CC_DEBUG
-#if ARDUINO
-    #define LOG_KV(k, v)    LOGS(k); LOG(v)
-    #define LOG_KX(k, x)    LOGS(k); LOGX(v)
-    #define LOG_HDR(f, s)   LOGS(f); LOGS("("); LOGS(s); LOGS(") => ")
-    #define LOG_DIC(i)      LOGS("dict["); LOG(i); LOGS("] "); \
-                            LOG(dict[i].name); LOGS(" attr="); LOGX(dict[i].attr); \
-                            LOGS("\n")
-    #define LOG_NA()        LOGS("not found\n")
-
-#else  // !ARDUINO
-    #define LOG_KV(k, v)    printf("%s%d", k, v)
-    #define LOG_KX(k, x)    printf("%s%x", k, x)
-    #define LOG_HDR(f, s)   printf("%s(%s) => ", f, s)
-    #define LOG_DIC(i)      printf("dict[%d] %s attr=%x\n", i, dict[i].name, dict[i].attr)
-    #define LOG_NA()        printf("not found\n")
-
-#endif // ARDUINO
-
-#else  // !CC_DEBUG
-    #define LOG_KV(k, v)
-    #define LOG_KX(k, x)
-    #define LOG_HDR(f, s)
-    #define LOG_DIC(i)
-    #define LOG_NA()
-
-#endif // CC_DEBUG
-///@}
+#include <stdint.h>     // uintxx_t
+#include <exception>    // try...catch, throw
+#include "config.h"     // configuation and cross-platform support
 using namespace std;
 ///
-///@name Logical units (instead of physical) for type check and portability
-///@{
-typedef uint32_t        U32;   ///< unsigned 32-bit integer
-typedef int32_t         S32;   ///< signed 32-bit integer
-typedef uint16_t        U16;   ///< unsigned 16-bit integer
-typedef uint8_t         U8;    ///< byte, unsigned character
-typedef uintptr_t       UFP;   ///< function pointer as integer
-
-#ifdef USE_FLOAT
-typedef double          DU2;
-typedef float           DU;
-#define DU0             0.0f
-#define UINT(v)         (fabs(v)))
-
-#else // !USE_FLOAT
-typedef int64_t         DU2;
-typedef int32_t         DU;
-#define DU0             0
-#define UINT(v)         (abs(v))
-
-#endif // USE_FLOAT
-typedef uint16_t        IU;    ///< instruction pointer unit
-///@}
-///@name Inline & Alignment macros
-///@{
-#define INLINE          __attribute__((always_inline))
-#define ALIGN2(sz)      ((sz) + (-(sz) & 0x1))
-#define ALIGN4(sz)      ((sz) + (-(sz) & 0x3))
-#define ALIGN16(sz)     ((sz) + (-(sz) & 0xf))
-#define ALIGN32(sz)     ((sz) + (-(sz) & 0x1f))
-#define ALIGN(sz)       ALIGN2(sz)
-#define STRLEN(s)       (ALIGN(strlen(s)+1))  /** calculate string size with alignment */
-///@}
 /// array class template (so we don't have dependency on C++ STL)
 /// Note:
 ///   * using decorator pattern
@@ -164,58 +48,76 @@ struct List {
 ///
 ///@name Code flag masking options
 ///@{
-#define WORD_NA    -1
-#if DO_WASM                       /** WASM function ptr is index to vtable */
-    #define UDF_ATTR   0x8000     /** user defined word  */
-    #define IMM_ATTR   0x4000     /** immediate word     */
-    #define MSK_ATTR   0x3fffffff /** attribute mask     */
-    #define UDF_FLAG   0x8000     /** colon word flag    */
-#else // !DO_WASM
-    #define UDF_ATTR   0x0001     /** user defined word  */
-    #define IMM_ATTR   0x0002     /** immediate word     */
-    #define MSK_ATTR   ~0x3       /** attribute mask     */
-    #define UDF_FLAG   0x0001
-#endif // DO_WASM
+#define UDF_ATTR   0x0001   /** user defined word  */
+#define IMM_ATTR   0x0002   /** immediate word     */
+#define MSK_ATTR   ~0x3
+#if DO_WASM
+#define UDF_FLAG   0x8000   /** xt/pfa selector    */
+#else
+#define UDF_FLAG   0x0001   /** xt/pfa selector    */
+#endif
 
 #define IS_UDF(w) (dict[w].attr & UDF_ATTR)
 #define IS_IMM(w) (dict[w].attr & IMM_ATTR)
 ///@}
 ///
 ///> Universal functor (no STL) and Code class
+///  Code class on 64-bit systems (expand pfa possible)
+///  +-------------------+-------------------+
+///  |    *name          |       xt          |
+///  +-------------------+----+----+---------+
+///                      |attr|pfa |xxxxxxxxx|
+///                      +----+----+---------+
+///  Code class on 32-bit systems (memory best utilized)
+///  +---------+---------+
+///  |  *name  |   xt    |
+///  +---------+----+----+
+///            |attr|pfa |
+///            +----+----+
+///  Code class on WASM/32-bit (a bit wasteful)
+///  +---------+---------+---------+
+///  |  *name  |   xt    |attr|xxxx|
+///  +---------+----+----+---------+
+///            |pfa |xxxx|
+///            +----+----+
 ///
 typedef void (*FPTR)();     ///< function pointer
 struct Code {
-    static UFP XT0, NM0;
+    static UFP XT0;         ///< function pointer base (in registers hopefully)
     const char *name = 0;   ///< name field
+#if DO_WASM
+    union {
+        FPTR xt = 0;        ///< WASM fptr is just index to vtable
+        IU   pfa;           ///< i.e. no LSBs available
+    };
+    IU attr = 0;            ///< So, attributes need to be separated
+#else // !DO_WASM
     union {                 ///< either a primitive or colon word
         FPTR xt = 0;        ///< lambda pointer (4-byte align, 2 LSBs can be used for attr)
-#if DO_WASM        
-        struct {
-            IU pfa;         ///< offset to pmem space (16-bit for 64K range)
-            IU attr;        ///< WASM xt is index to vtable (so LSBs will be used)
-        };
-#else // !DO_WASM
         struct {
             IU attr;        ///< steal 2 LSBs because xt is 4-byte aligned on 32-bit CPU
             IU pfa;         ///< offset to pmem space (16-bit for 64K range)
         };
-#endif // DO_WASM
     };
-
+#endif // DO_WASM
     static FPTR XT(IU ix)   INLINE { return (FPTR)(XT0 + (UFP)ix); }
     static void exec(IU ix) INLINE { (*XT(ix))(); }
-    
+
     Code(const char *n, FPTR fp, bool im) : name(n), xt(fp) {
-        if (((UFP)xt - 4) < XT0) XT0 = ((UFP)xt - 4);    ///> collect xt base (4 prevent dXT==0)
-        if ((UFP)n  < NM0) NM0 = (UFP)n;                 ///> collect name string base
+        if ((UFP)xt < XT0) XT0 = (UFP)xt; ///> collect xt base
         if (im) attr |= IMM_ATTR;
 #if CC_DEBUG > 1
-        printf("XT0=%lx xt=%lx %s\n", XT0, (UFP)xt, n);
-#endif // CC_DEBUG
+		LOG_KX("XT0=", XT0);  LOG_KX(" xt=", (UFP)xt); 
+		LOG_KX(", nm=", (UFP)n); LOGS(" "); LOGS(n); LOGS("\n");
+#endif // CC_DEBUG > 1
     }
     Code() {}               ///< create a blank struct (for initilization)
     IU   xtoff() INLINE { return (IU)((UFP)xt - XT0); }  ///< xt offset in code space
+#if DO_WASM    
+    void call()  INLINE { (*xt)(); }
+#else  // !DO_WASM    
     void call()  INLINE { (*(FPTR)((UFP)xt & MSK_ATTR))(); }
+#endif // DO_WASM    
 };
 ///
 ///> Add a Word to dictionary
@@ -225,9 +127,12 @@ struct Code {
     Code c(n, []{ g; }, im);	\
     dict.push(c);               \
     }
-#define WORD_NULL  (FPTR)0     /** blank function pointer */
-
 #define CODE(n, g) ADD_CODE(n, g, false)
 #define IMMD(n, g) ADD_CODE(n, g, true)
+
+extern void forth_init();
+extern void forth_vm(const char *cmd, void(*callback)(int, const char*));
+extern int  forth_include(const char *fn);
+;
 
 #endif // __EFORTH_SRC_CEFORTH_H
