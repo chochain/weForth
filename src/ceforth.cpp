@@ -260,8 +260,9 @@ inline DU   POP()      { DU n=top; top=ss.pop(); return n; }
 ///
 ///> IO & debug functions
 ///
-inline void dot_r(int n, int v) { fout << setw(n) << setfill(' ') << v; }
-void spaces(int n) { for (int i = 0; i < n; i++) fout << " "; }
+inline void dot_r(int n, int v) {
+}
+void spaces(int n)  { for (int i = 0; i < n; i++) fout << " "; }
 void s_quote(IU op) {
     const char *s = scan('"')+1;       ///> string skip first blank
     if (compile) {
@@ -310,7 +311,7 @@ void to_s(IU w, U8 *ip) {
     case DODOES:   fout << "does>" ;                    break;
     default:       fout << dict[w].name;                break;
     }
-    fout << setw(-1);        ///> restore output format settings
+    fout << setfill(' ') << setw(-1); ///> restore output format settings
 }
 void see(IU pfa, int dp=1) {
     auto pfa2opcode = [](IU ix) {                  ///> reverse lookup
@@ -391,7 +392,7 @@ void mem_dump(IU p0, DU sz) {
         fout << ENDL;
         yield();
     }
-    fout << setbase(*base);
+    fout << setbase(*base) << setfill(' ');
 }
 ///====================================================================
 ///
@@ -409,7 +410,7 @@ void dict_dump() {
              << ", name=" << setw(8) << (UFP)c.name
              << " "       << c.name << ENDL;
     }
-    fout << setw(-1) << setbase(*base);
+    fout << setbase(*base) << setfill(' ') << setw(-1);
 }
 ///====================================================================
 ///
@@ -524,8 +525,8 @@ void dict_compile() {  ///< compile primitive words into dictionary
     CODE("cr",      fout << ENDL);
     CODE(".",       fout << POP() << " ");
     CODE("u.",      fout << UINT(POP()) << " ");
-    CODE(".r",      DU n = POP(); dot_r(n, POP()));
-    CODE("u.r",     DU n = POP(); dot_r(n, UINT(POP())));
+    CODE(".r",      fout << setbase(*base) << setw(POP()) << POP());
+    CODE("u.r",     fout << setbase(*base) << setw(POP()) << UINT(POP()));
     CODE("type",    POP();                   // string length (not used)
          fout << (const char*)MEM(POP()));   // get string pointer
     CODE("key",     PUSH(next_idiom()[0]));
@@ -659,7 +660,6 @@ void dict_compile() {  ///< compile primitive words into dictionary
     /// @}
     /// @defgroup LOGO ops
     /// @{
-#if DO_LOGO
     CODE("CS",    canvas("cs"));         // clear screen
     CODE("HT",    canvas("ht"));         // hide turtle
     CODE("ST",    canvas("st"));         // show turtle
@@ -680,11 +680,8 @@ void dict_compile() {  ///< compile primitive words into dictionary
          int xy = top | (ss.pop()<<16);
          top = ss.pop();
          canvas("xy", xy));
-    CODE("JS",
-         IU    len  = POP();                        // string length (not used)
-         const char *s = (const char*)MEM(POP());   // get string pointer
-         canvas(s));
-#endif // DO_LOGO
+    CODE("JS",    POP();                   // string length, not used
+         canvas((const char*)MEM(POP()))); // get string pointer
     CODE("bye",   exit(0));
     /// @}
     CODE("boot",  dict.clear(find("boot") + 1); pmem.clear());
@@ -794,7 +791,8 @@ int  main(int ac, char* av[]) {
 #include <emscripten.h>
 extern "C" {
 void forth(int n, char *cmd) {
-    auto rsp_to_con = [](int len, const char *rst) { printf("%s", rst); };
+    auto rsp_to_con =
+        [](int len, const char *rst) { printf("%s", rst); };
     forth_vm(cmd, rsp_to_con);
 }
 int  vm_base()       { return *base;    }
