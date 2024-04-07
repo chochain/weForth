@@ -2,7 +2,7 @@
 
 WebAssembly enpowered eForth on web browsers. Is it faster? Is it more portable? Yes, and Yes.
 
-Well, on my aged laptop, the impression is pretty exciting! It's about 5x faster than pure Javascript implementation on a browser and at 1/2 speed of C/C++ natively compiled code on CPU. It was at 1/4 of native a year ago but as Javascript JIT improves, it now runs faster as well. Not bad at all! On the portability end, though not exactly plug-and-play but some simple alteration turned my C code web-eabled. Of course, WASM has not integrated with the front-end well enough, updating DOM is a different feat.
+Well, on my aged laptop, the impression is pretty exciting! It's about 5x faster than pure Javascript implementation on a browser and at 1/2 speed of C/C++ natively compiled code on CPU. It was at 1/4 of native a year ago but as Javascript JIT improves, it now runs faster as well. Not bad at all! On the portability end, though not exactly plug-and-play but some simple alteration turned my C code web-enabled. Of course, WASM has yet to integrate with the front-end well enough, so updating DOM is a different feat if we want to venture beyond being a terminal app.
 
 Regardless, it brought me warm smiles seeing eForth run in a browser. Better yet, it's straight from C/C++ source code. Other popular scripting languages such as Python, Ruby are trending toward WASM/WASI implementation as well. However, depending solely on JIT without built-in compiler as Forth does, the interpreter-in-an-interpreter design will likely cap the top-end performance (i.e. stuck at 1/10~1/5 of native, so far).
 
@@ -16,9 +16,9 @@ With WASM, the interoperability between different languages become a thing of th
 ### To Compile into a single wasm file (make sure python3 and Emscripten are installed)
 
     make one
+    Note: -O2 works OK, -O3 emscripten spits wrong code
     
 try it here <a href="https://chochain.github.io/weForth/ref/ceforth.html" target="_blank">ceforth.html</a>
-Note: -O2 works OK, -O3 emscripten spits wrong code
 
 ### To Compile into wasm and one Web Worker thread (multi-threaded)
 
@@ -38,8 +38,7 @@ Client-side Browser
 ### To Debug the WASM file (dump all functions, check with wasm-objdump in WABT kit)
 
     make debug
-    
-read tests/ceforth.wasm.txt (really long)
+    read tests/ceforth.wasm.txt (really long)
 
 ### Benchmark (on my aged IBM X230)
 Simple 1K*10K tests
