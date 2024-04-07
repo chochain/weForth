@@ -1,13 +1,14 @@
 ﻿<html>
   <head>    
-  <title>weForth v1.2</title>
+  <title>weForth v4.2</title>
   <style>
     h2    { color: #c44; margin: 0; }
     h3    { color: #fc4; margin: 0; }
     .tic  { width:100%; text-align:center; background-color:#eee; margin:2px; padding: 5px 0 5px 0; }
     .tac  { width:90%; text-align:right; color:#484; margin:4px; }
+    .toe  { width:90%; text-wrap:auto; color:#484; margin:4px; }
     .txt  { width:50%; height:100%; margin:4px; display:flex; flex-direction:column; overflow-x:scroll; display:block }
-    .sep  { width:4px; height:100%; border:1px solid gray; cursor:col-resize; }
+    .sep  { width:4px; height:100%; border:0px; cursor:col-resize; }
     .cmd  { color:#48f; margin: 2px; }
     .CodeMirror { width:100%; border:1px solid #444; height:auto; }
   </style>
@@ -21,7 +22,7 @@
         <pre class='tic'>ss</pre>
         <pre id='ss' class='tac'></pre>
         <pre class='tic'>dict</pre>
-        <pre id='dc' class='tac'></pre>
+        <pre id='dc' class='toe'></pre>
       </div>
       <div style='display:flex; flex-direction:row; width:85%; height:100%'>
         <pre id='txt' class='txt'></pre>
@@ -98,7 +99,7 @@
         let div = document.getElementById('dc')
         div.innerHTML = ''
         for (let i = len - 1; i >= 0; --i) {
-            div.innerHTML += dict(i) + '<br/>'
+            if (dict(i)[0]!='_') div.innerHTML += dict(i) + '  '
         }
     }
     function to_txt(t, br=true) {
