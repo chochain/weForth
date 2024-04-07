@@ -1,8 +1,9 @@
-EM = em++ -O2 # -O3 does not work
+EM = em++ -Wall -O0 # -O3 does not work
 CC = g++
 
-SRC = \
-	src/ceforth.cpp
+SRC = ./src/ceforth.cpp
+
+EXP = _main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top
 
 HTML = \
 	template/weforth.html \
@@ -17,17 +18,22 @@ all: one two
 
 one: $(SRC)
 	echo "WASM: eForth single-threaded"
-	$(EM) -o tests/ceforth.html $^ --shell-file template/ceforth.html -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+	$(EM) -o tests/ceforth.html $^ \
+		--shell-file template/ceforth.html \
+		-sEXPORTED_FUNCTIONS=$(EXP) \
+		-sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
 two: $(SRC)
 	echo "WASM: eForth + one worker thread"
 	cp $(HTML) ./tests
-	$(EM) -o tests/weforth.js $^ -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+	$(EM) -o tests/weforth.js $^ \
+		-sEXPORTED_FUNCTIONS=$(EXP) \
+		-sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
 debug: $(SRC)
 	echo "WASM: create WASM objdump file"
 	cp $(HTML) ./tests
-	$(EM) -o tests/ceforth.html $^ --shell-file template/ceforth.html -sEXPORT_ALL=1 -sLINKABLE=1 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+	$(EM) -Wall -o tests/ceforth.html $^ --shell-file template/ceforth.html -sEXPORT_ALL=1 -sLINKABLE=1 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 	wasm-objdump -x tests/ceforth.wasm > tests/ceforth.wasm.txt -O0
 
 sdl: tests/sdl2.cpp
