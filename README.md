@@ -16,13 +16,15 @@ With WASM, the interoperability between different languages become a thing of th
 ### To Compile into a single wasm file (make sure python3 and Emscripten are installed)
 
     make one
-    try it here <a href="https://chochain.github.io/weForth/ref/ceforth.html" target="_blank">ceforth.html</a>
-    Note: -O2 works OK, -O3 emscripten spits wrong code
+    
+try it here <a href="https://chochain.github.io/weForth/ref/ceforth.html" target="_blank">ceforth.html</a>
+Note: -O2 works OK, -O3 emscripten spits wrong code
 
 ### To Compile into wasm and one Web Worker thread (multi-threaded)
 
     make two
-    try it here <a href="https://chochain.github.io/weForth/ref/weforth.html" target="_blank">weforth.html</a>
+    
+try it here <a href="https://chochain.github.io/weForth/ref/weforth.html" target="_blank">weforth.html</a>
 
 ### To Run on your own box
 Server-side
@@ -36,17 +38,18 @@ Client-side Browser
 ### To Debug the WASM file (dump all functions, check with wasm-objdump in WABT kit)
 
     make debug
-    read tests/ceforth.wasm.txt (really long)
+    
+read tests/ceforth.wasm.txt (really long)
 
 ### Benchmark (on my aged IBM X230)
-* Simple 1K*10K tests
+Simple 1K*10K tests
   
     : xx 9999 FOR 34 DROP NEXT ;
     : yy 999 FOR xx NEXT ;
     : zz MS NEGATE yy MS + ;
     zz
 
-* CPU = Intel i5-3470 @ 3.2GHz
+CPU = Intel i5-3470 @ 3.2GHz
   
     FF.a = FireFox v120, FF.a1 = FF.a + 1 worker
     FF.b = FireFox v122, FF.b1 = FF.b + 1 worker
@@ -68,14 +71,14 @@ Client-side Browser
 |weForth  |1.4  |EM.b / C  |-O0|FF.b1|516 |259|
 |         |     |          |-O2|FF.b1|163 |168|
 
-* Note1: eForth.js uses JS straight, can do floating-points
-* Note2: uEforth v7 uses Asm.js, build Forth up with JS "assembly".
-* Note3: weForth v1 uses token indirected threaded
-* Note4: weForth+switch(op), is 2x slower than just function pointers.
-* Note5: weForth v1.2 without yield in nest() speeds up 3x.
-* Note6: WASM -O3 => err functions (wa.*) not found
-* Note7: FireFox v122 is vastly faster than v120
-* Note8: Chrome is about 10% slower than FireFox
+    Note1: eForth.js uses JS straight, can do floating-points
+    Note2: uEforth v7 uses Asm.js, build Forth up with JS "assembly".
+    Note3: weForth v1 uses token indirected threaded
+    Note4: weForth+switch(op), is 2x slower than just function pointers.
+    Note5: weForth v1.2 without yield in nest() speeds up 3x.
+    Note6: WASM -O3 => err functions (wa.*) not found
+    Note7: FireFox v122 is vastly faster than v120
+    Note8: Chrome is about 10% slower than FireFox
 
 ### SDL2
 install sdl2, image, sound, and fonts
