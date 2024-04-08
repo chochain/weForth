@@ -65,7 +65,7 @@ Simple 10M tests
 |         |     |          |-O2|FF.a1|410 |165|
 |weForth  |1.4  |EM.b / C  |-O0|FF.b |451 |267|
 |         |     |          |-O2|FF.b |181 |170|
-|weForth  |4.2  |EM.b / C  |-O0|FF.b |348 |300|
+|weForth  |4.1  |EM.b / C  |-O0|FF.b |348 |300|
 |         |     |          |-O2|FF.b |154 |164|
 |         |     |          |-O2|FF.b1|160 |164|
 
@@ -83,22 +83,18 @@ Simple 10M tests
     Note7: FireFox v122 is vastly faster than v120
     Note8: Chrome is about 10% slower than FireFox
 
-### SDL2
-install sdl2, image, sound, and fonts
+### SDL2 - Experimental on Linux
+Install sdl2, image, sound, and fonts
 
     sudo apt install libsdl2-dev libsdl2-2.0-0 -y;
     sudo apt install libjpeg-dev libwebp-dev libtiff5-dev libsdl2-image-dev libsdl2-image-2.0-0 -y;
     sudo apt install libmikmod-dev libfishsound1-dev libsmpeg-dev liboggz2-dev libflac-dev libfluidsynth-dev libsdl2-mixer-dev libsdl2-mixer-2.0-0 -y;
     sudo apt install libfreetype6-dev libsdl2-ttf-dev libsdl2-ttf-2.0-0 -y;
     
-compile to host exe
-
-    make exe
-    ./tests/sdl2
-    
-compile to WASM
+Build
 
     make sdl
+    ./tests/sdl2 to tests native on CPU
     enter http://localhost:8000/tests/sdl2.html into the browser
 
 ### TODO
