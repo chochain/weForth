@@ -658,6 +658,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
          U8 *fn = MEM(POP());               // file name
          forth_include((const char*)fn));   // include file
     /// @}
+#ifdef DO_LOGO
     /// @defgroup LOGO ops
     /// @{
     CODE("CS",    canvas("cs"));         // clear screen
@@ -682,6 +683,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
          canvas("xy", xy));
     CODE("JS",    POP();                   // string length, not used
          canvas((const char*)MEM(POP()))); // get string pointer
+#endif // DO_LOGO
     CODE("bye",   exit(0));
     /// @}
     CODE("boot",  dict.clear(find("boot") + 1); pmem.clear());
@@ -756,15 +758,15 @@ void forth_vm(const char *cmd, void(*callback)(int, const char*)) {
         forth_core(idiom);     ///> single command to Forth core
     }
 #if DO_WASM    
-    if (!compile) ss_dump();   /// * dump stack and display ok prompt
-#else
     if (!compile) fout << "ok" << ENDL;
+#else
+    if (!compile) ss_dump();   /// * dump stack and display ok prompt
 #endif  // DO_WASM
 }
 ///====================================================================
 ///> WASM specific code
 ///
-const char* APP_VERSION = "weForth v4.2";
+const char* APP_VERSION = "weForth v4.1";
 ///
 ///> Memory statistics - for heap, stack, external memory debugging
 ///
@@ -788,6 +790,7 @@ int  main(int ac, char* av[]) {
 ///
 /// WASM/Emscripten ccall interfaces
 ///
+#if DO_WASM
 #include <emscripten.h>
 extern "C" {
 void forth(int n, char *cmd) {
@@ -802,4 +805,4 @@ DU   *vm_ss()        { return &ss[0];   }
 char *vm_dict(int i) { return (char*)dict[i].name; }
 char *vm_mem()       { return (char*)&pmem[0]; }
 }
-
+#endif // DO_WSAM
