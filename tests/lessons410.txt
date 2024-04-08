@@ -1,8 +1,13 @@
+
 cr .( example 1.      the universal greeting )
 
 decimal
 
 : hello cr ." hello, world!" ;
+
+( type 'hello' and a return on you keyboard to execute)
+
+hello
 
 cr .( example 2.      the big f )
 
@@ -10,9 +15,7 @@ cr .( example 2.      the big f )
 : post  cr ." *    " ;
 : f     bar post bar post post post ;
 
-( type 'f' and a return on your keyboard, and you will see a large
-f character displayed on the screen )
-
+f
 
 cr .( example 3.      fig, forth interest group )
 
@@ -30,13 +33,9 @@ cr .( example 3.      fig, forth interest group )
 : bigg  triad4 sides post right triad1 sides triad4 ;
 : fig  f bigi bigg ;
 
+fig
 
 cr .( example 4.      repeated patterns )
-(
-for     [ index -- ]            set up loop given the index.
-next    [ -- ]                  decrement index by 1.  if index<0, exit.                          if index=limit, exit loop; otherwise
-                                otherwise repeat after for.
-r@      [ -- index ]            return the current loop index. )
 
 variable width                  ( number of asterisks to print )
 
@@ -69,14 +68,12 @@ variable width                  ( number of asterisks to print )
 
 ( try the following instructions: )
 
-        3 10 rectangle
-        5 18 parallelogram
-        12 triangle  
-
+3 10 rectangle
+5 18 parallelogram
+12 triangle  
 
 cr .( example 5.      the theory that jack built )
 ( this example shows you how to build a hiararchical structure in forth)
-
 decimal
 
 : the           ." the " ;
@@ -113,25 +110,8 @@ decimal
 : rest                                  ( pause for user interaction )
         ." . "                          ( print a period )
         10 spaces                       ( followed by 10 spaces )
-(        key drop                        ( wait the user to press a key )
         cr cr ;
 
-(
-key     [ -- char ]             wait for a keystroke, and return the
-                                ascii code of the key pressed.
-drop    [ n -- ]                discard the number.
-space   [ -- ]                  display a blank.
-spaces  [ n -- ]                display n blanks.
-if      [ f -- ]                if the flag is 0, skip the following
-                                instructions up to else or then.  if
-                                flag is not 0, execute the following
-                                instructions up to else and skip to
-                                then.
-else    [ -- ]                  skip the following instructions
-                                up to then.
-then    [ -- ]                  terminate an if-else-then structure
-                                or an if-then structure.
-)
 : cloaked cloak saved based hiding lay rest ;
 : THEORY
         cr this theory rest
@@ -149,10 +129,12 @@ then    [ -- ]                  terminate an if-else-then structure
                 cr ." wrecked " the summary based hiding
                 cr ." and demolished " the theory rest
         ;
+
 THEORY
 
-( type theory to start)
+( type 'forget hello' to remove words from dictionary)
 
+forget hello
 
 cr .( example 6.      help )
 ( how to use forth interpreter to carry on a dialog )
@@ -219,63 +201,45 @@ cr .( example 6.      help )
         question
         ;
 
-: help help ;
-: h help ;
-: H help ;
-
 ( type 'help' to start )
 
+: H help ;
 
 cr .( example 7.  money exchange )
-
-( the first example we will use to demonstrate how numbers are
-used in forth is a money exchange program, which converts money
-represented in different currencies.  let's start with the
-following currency exchange table:
-
-        33.55 nt        1 dollar
-        7.73 hk         1 dollar
-        9.47 rmb        1 dollar
-        1 ounce gold    285 dollars
-        1 ounce silver  4.95 dollars )
-
+( let's start with the following currency exchange table: )
+(    33.55 nt        1 dollar         )
+(    7.73 hk         1 dollar         )
+(    9.47 rmb        1 dollar         )
+(        1 ounce gold    285 dollars  )
+(        1 ounce silver  4.95 dollars )
 decimal
 
-: nt    ( nnt -- $ )    100 3355 */  ;
-: $nt   ( $ -- nnt )    3355 100 */  ;
-: rmb   ( nrmb -- $ )   100 947 */  ;
-: $rmb  ( $ -- njmp )   947 100 */  ;
-: hk    ( nhk -- $ )    100 773 */  ;
-: $hk   ( $ -- $ )      773 100 */  ;
-: gold  ( nounce -- $ ) 285 *  ;
-: $gold ( $ -- nounce ) 285 /  ;
-: silver ( nounce -- $ ) 495 100 */  ;
+: nt      ( nnt -- $ )    100 3355 */  ;
+: $nt     ( $ -- nnt )    3355 100 */  ;
+: rmb     ( nrmb -- $ )   100 947 */  ;
+: $rmb    ( $ -- njmp )   947 100 */  ;
+: hk      ( nhk -- $ )    100 773 */  ;
+: $hk     ( $ -- $ )      773 100 */  ;
+: gold    ( nounce -- $ ) 285 *  ;
+: $gold   ( $ -- nounce ) 285 /  ;
+: silver  ( nounce -- $ ) 495 100 */  ;
 : $silver ( $ -- nounce ) 100 495 */  ;
-: ounce ( n -- n, a word to improve syntax )  ;
+: ounce   ( n -- n, a word to improve syntax )  ;
 : dollars ( n -- )      . ;
 
-( with this set of money exchange words, we can do some tests:
+( with this set of money exchange words, we can do some tests: )
+        5 ounce gold . cr
+        10 ounce silver . cr
+        100 $nt . cr
+        20 $rmb . cr
 
-        5 ounce gold .
-        10 ounce silver .
-        100 $nt .
-        20 $rmb .
-
-if you have many different currency bills in your wallet, you
-can add then all up in dollars:
-
+( you can add many different currency bills then all up in dollars: )
         1000 nt 500 hk + .s
         320 rmb + .s
-        dollars ( print out total worth in dollars )
-
+( print out total worth in dollars )
+        dollars cr
 
 cr .( example 8. temperature conversion )
-
-( converting temperature readings between celcius and farenheit
-is also an interesting problem.  the difference between temperature
-conversion and money exchange is that the two temperature scales
-have an offset besides the scaling factor. )
-
 : f>c ( nfarenheit -- ncelcius )
         32 -
         10 18 */
@@ -286,30 +250,13 @@ have an offset besides the scaling factor. )
         32 +
         ;
 
-( try these commands
-
-90 f>c .        shows the temperature in a hot summer day and
-0 c>f .         shows the temperature in a cold winter night. 
-
-in the above examples, we use the following forth arithmatic
-operators:
-
-+       [ n1 n2 -- n1+n2 ]      add n1 and n2 and leave sum on stack.
--       [ n1 n2 -- n1-n2 ]      subtract n2 from n1 and leave differrence
-                                on stack.
-*       [ n1 n2 -- n1*n2 ]      multiply n1 and n2 and leave product
-                                on stack.
-/       [ n1 n2 -- n1/n2 ]      divide n1 by n2 and leave quotient on
-                                stack.
-*/      [ n1 n2 n3 -- n1*n2/n3] multiply n1 and n2, divide the product
-                                by n3 and leave quotient on the stack.
-.s      [ ... -- ... ]          show the topmost 4 numbers on stack.
-)
-
+( try these commands )
+90 f>c . cr
+0  c>f . cr
 
 cr .( example 9.  weather reporting. )
-
 : weather ( nfarenheit -- )
+        cr
         dup     55 <
         if      ." too cold!" drop
         else    85 <
@@ -319,18 +266,12 @@ cr .( example 9.  weather reporting. )
         then
         ;
 
-
-( you can type the following instructions and get some responses from the
-computer:
-
-        90 weather too hot!
-        70 weather about right.
-        32 weather too cold.
-)
-
+( you can type the following instructions )
+        90 weather
+        70 weather
+        32 weather
 
 cr .( example 10.  print the multiplication table )
-
 : onerow ( nrow -- )
         cr
         dup 3 .r 4 spaces
@@ -359,18 +300,18 @@ cr .( example 11.  calendars )
 ( print weekly calendars for any month in any year. )
 decimal
 
-variable julian                         ( 0 is 1/1/1950, good until 2050 )
-variable leap                           ( 1 for a leap year, 0 otherwise. )
-( 1461 constant 4years                  ( number of days in 4 years )
+variable julian         ( 0 is 1/1/1950, good until 2050 )
+variable leap           ( 1 for a leap year, 0 otherwise. )
+( 1461 constant 4years  number of days in 4 years )
 
 : year ( year --, compute julian date and leap year )
         dup
-        1949 - 1461 4 */mod             ( days since 1/1/1949 )
-        365 - julian !                  ( 0 for 1/1/1950 )
-        3 =                             ( modulus 3 for a leap year )
-        if 1 else 0 then                ( leap year )
+        1949 - 1461 4 */mod   ( days since 1/1/1949 )
+        365 - julian !        ( 0 for 1/1/1950 )
+        3 =                   ( modulus 3 for a leap year )
+        if 1 else 0 then      ( leap year )
         leap !
-        2000 =                          ( 2000 is not a leap year )
+        2000 =                ( 2000 is not a leap year )
         if 0 leap ! then
         ;
 
@@ -378,45 +319,45 @@ variable leap                           ( 1 for a leap year, 0 otherwise. )
         dup 1 =
         if drop 0 
         else dup 2 =
-        	if drop 31 
-        	else dup 3 =
-        		if drop 59 leap @ + 
-			else
-        			4 - 30624 1000 */
-        			90 + leap @ +                   ( apr. 1 to dec. 1 )
-			then   ( 59/60 for mar. 1 )
-		then            ( 31 for feb. 1 )
-	then             ( 0 for jan. 1 )
+            if drop 31 
+            else dup 3 =
+                if drop 59 leap @ + 
+            else
+                    4 - 30624 1000 */
+                    90 + leap @ +       ( apr. 1 to dec. 1 )
+            then   ( 59/60 for mar. 1 )
+        then       ( 31 for feb. 1 )
+    then           ( 0 for jan. 1 )
         ;
 
-: stars 60 for 42 emit next ;           ( form the boarder )
+: stars 60 for 42 emit next ;    ( form the boarder )
 
-: header ( -- )                         ( print title bar )
+: header ( -- )                  ( print title bar )
         cr stars cr 
         ."      sun     mon     tue     wed     thu     fri     sat"
-        cr stars cr                     ( print weekdays )
+        cr stars cr              ( print weekdays )
         ;
 
-: blanks ( month -- )                   ( skip days not in this month )
-        first julian @ +                ( julian date of 1st of month )
-        7 mod 8 * spaces ;              ( skip colums if not sunday   )
+: blanks ( month -- )            ( skip days not in this month )
+        first julian @ +         ( julian date of 1st of month )
+        7 mod 8 * spaces ;       ( skip colums if not sunday   )
 
-: days ( month -- )                     ( print days in a month )
-        dup first                       ( days of 1st this month )
-        swap 1 + first                  ( days of 1st next month )
-        over - 1 -                      ( loop to print the days )
-        1 swap                          ( first day count -- )
+: days ( month -- )              ( print days in a month )
+        dup first                ( days of 1st this month )
+        swap 1 + first           ( days of 1st next month )
+        over - 1 -               ( loop to print the days )
+        1 swap                   ( first day count -- )
         for  2dup + 1 -
-                julian @ + 7 mod        ( which day in the week? )
-                if else cr then         ( start a new line if sunday )
-                dup  8 u.r              ( print day in 8 column field )
+                julian @ + 7 mod ( which day in the week? )
+                if else cr then  ( start a new line if sunday )
+                dup  8 u.r       ( print day in 8 column field )
                 1 +
         next
-        2drop ;                         ( discard 1st day in this month )
+        2drop ;                  ( discard 1st day in this month )
 
-: month ( n -- )                        ( print a month calendar )
-        header dup blanks               ( print header )
-        days cr stars cr ;              ( print days   )
+: month ( n -- )                 ( print a month calendar )
+        header dup blanks        ( print header )
+        days cr stars cr ;       ( print days   )
 
 : january       year 1 month ;
 : february      year 2 month ;
@@ -434,94 +375,58 @@ variable leap                           ( 1 for a leap year, 0 otherwise. )
 ( to print the calender of may 2021, type: )
         2021 may
 
-
+( clear up words : )
+forget question
 
 cr .( example 12.      sines and cosines )
 
-( sines and cosines of angles are among the most often encountered
-transdential functions, useful in drawing circles and many other
-different applications.  they are usually computed using floating
-numbers for accuracy and dynamic range.  however, for graphics
-applications in digital systems, single integers in the range from
--32768 to 32767 are sufficient for most purposes.  we shall
-study the computation of sines and cosines using the single
-integers.
-
-the value of sine or cosine of an angle lies between -1.0 and +1.0.
-we choose to use the integer 10000 in decimal to represent 1.0
-in the computation so that the sines and cosines can be represented
-with enough precision for most applications.  pi is therefore
-31416, and 90 degree angle is represented by 15708.  angles
-are first reduced in to the range from -90 to +90 degrees,
-and then converted to radians in the ranges from -15708 to
-+15708.  from the radians we compute the values of sine and
-cosine.
-
-the sines and cosines thus computed are accurate to 1 part in
-10000.  this algorithm was first published by john bumgarner
-in forth dimensions, volume iv, no. 1, p. 7. )
-
 31416 constant pi
 10000 constant 10k
-variable xs                             ( square of scaled angle )
+variable xs                      ( square of scaled angle )
 
 : kn ( n1 n2 -- n3, n3=10000-n1*x*x/n2 where x is the angle )
-        xs @ swap /                     ( x*x/n2 )
-        negate 10k */                 	( -n1*x*x/n2 )
-        10k +                         	( 10000-n1*x*x/n2 )
+        xs @ swap /              ( x*x/n2 )
+        negate 10k */            ( -n1*x*x/n2 )
+        10k +                    ( 10000-n1*x*x/n2 )
         ;
 : (sin) ( x -- sine*10k, x in radian*10k )
-        dup dup 10k */                	( x*x scaled by 10k )
-        xs !                            ( save it in xs )
-        10k 72 kn                     	( last term )
-        42 kn 20 kn 6 kn                ( terms 3, 2, and 1 )
-        10k */                        	( times x )
+        dup dup 10k */           ( x*x scaled by 10k )
+        xs !                     ( save it in xs )
+        10k 72 kn                ( last term )
+        42 kn 20 kn 6 kn         ( terms 3, 2, and 1 )
+        10k */                   ( times x )
         ;
 : (cos) ( x -- cosine*10k, x in radian*10k )
-        dup 10k */ xs !               	( compute and save x*x )
-        10k 56 kn 30 kn 12 kn 2 kn    	( serial expansion )
+        dup 10k */ xs !          ( compute and save x*x )
+        10k 56 kn 30 kn 12 kn 2 kn ( serial expansion )
         ;
 : sin_ ( degree -- sine*10k )
-        pi 180 */                    	( convert to radian )
-        (sin)                           ( compute sine )
+        pi 180 */                ( convert to radian )
+        (sin)                    ( compute sine )
         ;
 : cos_ ( degree -- cosine*10k )
         pi 180 */
         (cos)
         ;
 : sin ( degree -- sin )
-	360 mod dup 0< if 360 + then    ( mod may be negative )
-	dup  46 < if sin_ else
-	dup 136 < if 90 - cos_ else 
-	dup 226 < if 180 - sin_ negate else 
-	dup 316 < if 270 - cos_ negate else
-	360 - sin_ then then then then ;
-: cos 	90 + sin ;
+    360 mod dup 0< if 360 + then ( mod may be negative )
+    dup  46 < if sin_ else
+    dup 136 < if 90 - cos_ else 
+    dup 226 < if 180 - sin_ negate else 
+    dup 316 < if 270 - cos_ negate else
+    360 - sin_ then then then then ;
+: cos     90 + sin ;
 
-( to test the routines, type:
-
-        90 sin .                         9999 
-        45 sin .                         7070 
-        30 sin .                         5000 
-         0 sin .                            0 
-        90 cos .                            0 
-        45 cos .                         7071 
-         0 cos .                         10000 )
-
+( to test the routines, type: )
+        90 sin . cr
+        45 sin . cr
+        30 sin . cr
+         0 sin . cr
+        90 cos . cr
+        45 cos . cr
+         0 cos . cr
 
 cr .( example 13.      square root )
-
-( there are many ways to take the square root of an integer.  the
-special routine here was first discovered by wil baden.  wil
-used this routine as a programming challenge while attending
-a forml conference in taiwan, 1984.
-
-this algorithm is based on the fact that the square of n+1 is equal
-to the sum of the square of n plus 2n+1.  you start with an 0 on
-the stack and add to it 1, 3, 5, 7, etc., until the sum is greater
-than the integer you wished to take the root.  that number when
-you stopped is the square root.
-)
 
 : sqrt ( n -- root )
         1600000000 over <               ( largest square it can handle)
@@ -539,35 +444,29 @@ you stopped is the square root.
         r> drop
         ;
 
+( to test the routines, type: )
+16    sqrt . cr
+10000 sqrt . cr
 
 cr .( example 14.      radix for number conversions )
 
 decimal
 
-( : decimal       10 base! ; )
-( : hex           16 base! ; )
-: octal         8 base!  ;
-: binary        2 base!  ;
+: octal         8 base !  ;
+: binary        2 base !  ;
 
-( try converting numbers among different radices:
-
+( try converting numbers among different radices: )
         decimal 12345 hex  .
         hex abcd decimal  .
         decimal 100 binary  .
         binary 101010101010 decimal  .
-
-real programmers impress on novices by carrying a hp calculator
-which can convert numbers between decimal and hexadecimal.  a
-forth computer has this calculator built in, besides other functions.
-)
-
 
 cr .( example 15.      ascii character table )
 
 : character ( n -- )
         dup emit hex dup 3 .r
         octal dup 4 .r
-        decimal 3 .r
+        decimal 4 .r
         2 spaces
         ;
 
@@ -585,13 +484,9 @@ cr .( example 15.      ascii character table )
         next
         drop ;
 
+table
 
 cr .( example 16.      random numbers )
-
-( random numbers are often used in computer simulations and computer
-games.  this random number generator was published in leo brodie's
-'starting forth'.
-)
 
 variable rnd                            ( seed )
 here rnd !                              ( initialize seed )
@@ -607,15 +502,10 @@ here rnd !                              ( initialize seed )
         65536 /                         ( discard lower part )
         ;                               ( in fact divide by 65536 )
 
-( to test the routine, type
-
-        100 choose .
-        100 choose .
-        100 choose .
-
-and varify that the results are randomly distributed betweem 0 and
-99 . )
-
+( to test the routine, type )
+        100 choose . cr
+        100 choose . cr
+        100 choose . cr
 
 cr .( example 17.      guess a number )
 ( example 16 must be loaded.)
@@ -624,15 +514,15 @@ variable myNumber
 variable yourNumber
 
 : limit ( n -- )
-	yourNumber !
-	cr ." Now, type you guess as:"
-	cr ." xxxx guess"
-	cr ." where xxxx is your guess."
-	yourNumber @ choose myNumber !
+    yourNumber !
+    cr ." Now, type you guess as:"
+    cr ." xxxx guess"
+    cr ." where xxxx is your guess."
+    yourNumber @ choose myNumber !
         ;
 
 : guess ( n1 -- , allow player to guess, exit when the guess is correct )
-	myNumber @ 2dup =                  ( equal? )
+    myNumber @ 2dup =                  ( equal? )
         if      2drop           ( discard both numbers )
                 cr ." correct!!!"
                 exit
@@ -648,15 +538,10 @@ variable yourNumber
         cr ." of a number between 0 and any limit you want."
         cr ." (it should be smaller than 32000.)"
         cr ." then you have to guess what it is."
-	cr
-	cr ." Set up the limit by typing:"
-	cr ." xxxx limit "
-	cr ." where xxxx is a number smaller than 32000."
+    cr
+    cr ." Set up the limit by typing:"
+    cr ." xxxx limit "
+    cr ." where xxxx is a number smaller than 32000."
         ;
 
-( type 'greet' to start the game and the computer will entertain
-  you for a while.  Use Forth interpreter for interaction with you.
- )
 ( greet )
-
-

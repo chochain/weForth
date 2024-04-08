@@ -12,9 +12,9 @@
     .cmd  { color:#48f; margin: 2px; }
     .CodeMirror { width:100%; border:1px solid #444; height:auto; }
   </style>
-  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/codemirror.min.css'></link>
-  <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/codemirror.min.js'></script>
-  <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/mode/forth/forth.min.js'></script>
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css'></link>
+  <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js'></script>
+  <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/forth/forth.min.js'></script>
   </head>
   <body>
     <div style='display:flex; font-size:18px; font-family:monospace; width:100%; height:100%'>
@@ -29,8 +29,7 @@
         <div id='sep' class='sep'></div>
         <div id='edt' class='txt'>
           <div style='display:flex; width=100%'>
-            <button style='width:10%' onclick='clear_txt()'>clear</button>
-            <input id='tib' style='width:90%' value=''
+            <input id='tib' style='width:100%' value=''
                onkeydown='if (13===event.keyCode) forth_eval()'/>
           </div>
           <textarea id='cm'>
@@ -51,7 +50,7 @@
     let cm  = CodeMirror.fromTextArea(document.getElementById('cm'), {
         lineNumbers: true,
         styleActiveLine: true,
-        mode: 'forth'
+        mode: 'forth',
     })
     cm.setSize("100%","100%")
     cm.on('copy', (doc)=>{
@@ -111,29 +110,29 @@
         txt.innerHTML += br ? t + '<br/>' : t
         txt.scrollTop = txt.scrollHeight
     }
-    function clear_txt() { txt.innerHTML='' }
     ///
-    /// WASM ===============================================================
+    /// WASM ==========================================================
     ///      
     var Module = {                              ///< WASM global object
         print: to_txt                           ///< assign print function
-//        print: (()=>{ return (rsp)=>to_txt(rsp) })() /// long form
     }
     ///
     /// Forth outer interpreter
     ///
     function forth_eval() {
         let cmd=tib.value.replace(/:/g,'<br/>:')
+        if (cmd=='clear') { txt.innerHTML=''; return }  /// client-side
         if (cmd.indexOf('<br/>')==0) cmd.replace('<br/>','')
         to_txt('<pre class="cmd"><em>'+cmd+'</em></pre>', false)
+
         try {
             var forth = Module.cwrap('forth', null, ['number', 'string'])
-            forth(0, tib.value)                  /// * call Forth in C/C++
+            forth(0, tib.value)  /// * call Forth in C/C++
             show_ss()
             show_dict()
         }
         catch(e) { console.log(e.toString()+'\n') }
-        finally  {                               /// * clear input buffer
+        finally  {               /// * clear input buffer
             tib.value=''; tib.style.backgroundColor='white'
         }
     }
