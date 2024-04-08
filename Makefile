@@ -1,4 +1,4 @@
-EM = em++ -Wall -O0 # -O3 does not work
+EM = em++ -Wall -O2 # -O3 does not work
 CC = g++
 
 SRC = ./src/ceforth.cpp
@@ -26,7 +26,7 @@ one: $(SRC)
 two: $(SRC)
 	echo "WASM: eForth + one worker thread"
 	cp $(HTML) ./tests
-	$(EM) -o tests/weforth.js $^ \
+	$(EM) -DDO_LOGO -o tests/weforth.js $^ \
 		-sEXPORTED_FUNCTIONS=$(EXP) \
 		-sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
