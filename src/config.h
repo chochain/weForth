@@ -14,7 +14,6 @@
 #define RANGE_CHECK     0               /**< vector range check     */
 #define USE_FLOAT       0               /**< support floating point */
 #define DO_WASM         __EMSCRIPTEN__  /**< for WASM output        */
-#define DO_LOGO         1
 ///@}
 ///@name Memory block configuation
 ///@{
@@ -49,7 +48,6 @@ typedef uint16_t        IU;    ///< instruction pointer unit
 ///@}
 ///@name Inline & Alignment macros
 ///@{
-#pragma GCC optimize("align-functions=4")    // we need fn alignment
 #define INLINE          __attribute__((always_inline))
 #define ALIGN2(sz)      ((sz) + (-(sz) & 0x1))
 #define ALIGN4(sz)      ((sz) + (-(sz) & 0x3))
