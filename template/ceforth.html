@@ -6,7 +6,7 @@
     h3    { color: #fc4; margin: 0; }
     .tic  { width:100%; text-align:center; background-color:#eee; margin:2px; padding: 5px 0 5px 0; }
     .tac  { width:90%; text-align:right; color:#484; margin:4px; }
-    .toe  { width:90%; text-wrap:auto; color:#484; margin:4px; }
+    .toe  { width:90%; text-align:left; text-wrap:auto; color:#484; margin:4px; }
     .txt  { width:50%; height:100%; margin:4px; display:flex; flex-direction:column; overflow-x:scroll; display:block }
     .sep  { width:4px; height:100%; border:0px; cursor:col-resize; }
     .cmd  { color:#48f; margin: 2px; }
@@ -19,10 +19,10 @@
   <body>
     <div style='display:flex; font-size:18px; font-family:monospace; width:100%; height:100%'>
       <div style='display:flex; flex-direction:column; width:15%; height:100%'>
-        <pre class='tic'>ss</pre>
+        <pre class='tic'>Data Stack</pre>
         <pre id='ss' class='tac'></pre>
-        <pre class='tic'>dict</pre>
-        <pre id='dc' class='toe'></pre>
+        <pre class='tic'>User Dict</pre>
+        <pre id='dc' class='tac'></pre>
       </div>
       <div style='display:flex; flex-direction:row; width:85%; height:100%'>
         <pre id='txt' class='txt'></pre>
@@ -33,7 +33,7 @@
             <input id='tib' style='width:90%' value=''
                onkeydown='if (13===event.keyCode) forth_eval()'/>
           </div>
-          <textarea id='cm'>copy and paste lesson402.txt here...</textarea>
+          <textarea id='cm'>\ open tests/lesson410.txt and copy content here</textarea>
         </div>
       </div>
     </div>
@@ -99,7 +99,8 @@
         let div = document.getElementById('dc')
         div.innerHTML = ''
         for (let i = len - 1; i >= 0; --i) {
-            if (dict(i)[0]!='_') div.innerHTML += dict(i) + '  '
+            if (dict(i)=='boot') break          /// * only colon 
+            div.innerHTML += dict(i) + '<br/>'
         }
     }
     function to_txt(t, br=true) {
