@@ -629,10 +629,10 @@ void dict_compile() {  ///< compile primitive words into dictionary
          IU w = find(word()); if (!w) return;
          IU b = find("boot")+1;
          if (w > b) {
-             dict.clear(w);
              pmem.clear(dict[w].pfa - STRLEN(dict[w].name));
+             dict.clear(w);
          }
-         else { dict.clear(b); pmem.clear(); }
+         else { dict.clear(b); pmem.clear(sizeof(DU)); }
     );
     /// @}
     /// @defgroup OS ops
@@ -673,7 +673,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
 #endif // DO_LOGO
     CODE("bye",   exit(0));
     /// @}
-    CODE("boot",  dict.clear(find("boot") + 1); pmem.clear());
+    CODE("boot",  dict.clear(find("boot") + 1); pmem.clear(sizeof(DU)));
 }
 ///====================================================================
 ///
