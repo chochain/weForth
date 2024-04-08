@@ -1,38 +1,48 @@
-EM = em++
+EM = em++ -Wall -O2 # -O3 does not work
 CC = g++
 
-FLST = \
+SRC = ./src/ceforth.cpp
+
+EXP = _main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top
+
+HTML = \
 	template/weforth.html \
 	template/weforth.css \
 	template/file_io.js \
 	template/weforth_helper.js \
 	template/weforth_worker.js
 
-one: src/ceforth.cpp template/ceforth.html
-	echo "WASM: eForth single-threaded"
-	$(EM) -o tests/ceforth.html src/ceforth.cpp --shell-file template/ceforth.html -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap -O2
-
-two: src/ceforth.cpp $(FLST)
-	echo "WASM: eForth + one worker thread"
-	cp $(FLST) ./tests
-	$(EM) -o tests/weforth.js src/ceforth.cpp -sEXPORTED_FUNCTIONS=_main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top -sEXPORTED_RUNTIME_METHODS=ccall,cwrap -O2
-
-debug: src/ceforth.cpp $(FLST)
-	echo "WASM: create WASM objdump file"
-	$(EM) -o tests/ceforth.html src/ceforth.cpp --shell-file template/ceforth.html -sEXPORT_ALL=1 -sLINKABLE=1 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
-	wasm-objdump -x tests/ceforth.wasm > tests/ceforth.wasm.txt
-
 all: one two
 	echo "cmd: python3 -m http.server to start local web server"
 	echo "cmd: enter http://localhost:8000/tests/ceforth.html or weforth.html to test"
 
+one: $(SRC)
+	echo "WASM: eForth single-threaded"
+	$(EM) -o tests/ceforth.html $^ \
+		--shell-file template/ceforth.html \
+		-sEXPORTED_FUNCTIONS=$(EXP) \
+		-sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+
+two: $(SRC)
+	echo "WASM: eForth + one worker thread"
+	cp $(HTML) ./tests
+	$(EM) -DDO_LOGO -o tests/weforth.js $^ \
+		-sEXPORTED_FUNCTIONS=$(EXP) \
+		-sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+
+debug: $(SRC)
+	echo "WASM: create WASM objdump file"
+	cp $(HTML) ./tests
+	$(EM) -Wall -o tests/ceforth.html $^ --shell-file template/ceforth.html -sEXPORT_ALL=1 -sLINKABLE=1 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+	wasm-objdump -x tests/ceforth.wasm > tests/ceforth.wasm.txt -O0
+
 sdl: tests/sdl2.cpp
-	$(EM) -o tests/sdl2.js tests/sdl2.cpp -sSINGLE_FILE -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS='["png"]' -sUSE_SDL_TTF=2 -sUSE_SDL_GFX=2 --preload-file tests/assets
-	$(CC) -o tests/sdl2 tests/sdl2.cpp `sdl2-config --cflags --libs` -lSDL2_image -lSDL2_ttf -lSDL2_gfx
+	$(EM) -o tests/sdl2.js $< -sSINGLE_FILE -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS='["png"]' -sUSE_SDL_TTF=2 -sUSE_SDL_GFX=2 --preload-file tests/assets
+	$(CC) -o tests/sdl2 $< `sdl2-config --cflags --libs` -lSDL2_image -lSDL2_ttf -lSDL2_gfx
 
 gfx: tests/gfx.c
-	$(EM) -o tests/gfx.js tests/gfx.c -sSINGLE_FILE -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS='["png"]' -sUSE_SDL_TTF=2 -sUSE_SDL_GFX=2 --preload-file tests/assets
-	$(CC) -o tests/gfx tests/gfx.c `sdl2-config --cflags --libs` -lSDL2_gfx
+	$(EM) -o tests/gfx.js $< -sSINGLE_FILE -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS='["png"]' -sUSE_SDL_TTF=2 -sUSE_SDL_GFX=2 --preload-file tests/assets
+	$(CC) -o tests/gfx $< `sdl2-config --cflags --libs` -lSDL2_gfx
 
 gl: tests/gl.c
-	$(CC) -o tests/gl tests/gl.c `sdl2-config --cflags --libs` -lGL
+	$(CC) -o tests/gl $< `sdl2-config --cflags --libs` -lGL

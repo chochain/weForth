@@ -1,0 +1,8 @@
+# Google App Engine generated folder
+appengine-generated/
+/tests/*.html
+/tests/*.data
+/tests/*.js
+/tests/*.css
+/tests/*.wasm
+/Debug/

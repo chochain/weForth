@@ -48,7 +48,7 @@ var _forth_voc = {
     '>r'      : [ 'br', '( a -- )',     'Push TOS to return stack' ],
     '?'       : [ 'mm', '( w -- )',     'Display contents in variable w' ],
     '?do'     : [ 'br', 'todo', 'todo' ],
-    '?dup'    : [ 'au', 'todo', 'todo' ],
+    '?dup'    : [ 'ss', '( w -- w w)',  'Duplicate w if not zero' ],
     '@'       : [ 'mm', '( w -- a )',   'Return contents of a variable' ],
     'abort'   : [ 'os', '( -- )',       'Clear rs, ss' ],
     'abs'     : [ 'au', '( a -- b )',   'Return absolute of TOS' ],

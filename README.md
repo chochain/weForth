@@ -2,89 +2,105 @@
 
 WebAssembly enpowered eForth on web browsers. Is it faster? Is it more portable? Yes, and Yes.
 
-Well, on my aged laptop, the impression is pretty exciting! It's about 2x faster than pure Javascript implementation on a browser and at 1/4 speed of C/C++ natively compiled code on CPU. On the portability end, though not exactly plug-and-play but some simple alteration turned my C code web-eabled. Of course, WASM has not integrated with the front-end well enough, updating DOM is a different feat.
+Well, on my aged laptop, the impression is pretty exciting! It's at least 5x faster than pure Javascript implementation on a browser and at 1/2 speed of C/C++ natively compiled code on CPU. It was at 1/4 of native a year ago but as Javascript JIT improves, it now runs faster as well. Not bad at all! On the portability end, though not exactly plug-and-play but some simple alteration turned my C code web-enabled. Of course, WASM has yet to integrate with the front-end well enough, so updating DOM is a different feat if we want to venture beyond being a terminal app.
 
-Regardless, it brought me warm smiles seeing eForth run in a browser. Better yet, it's straight from C/C++ source code. Other popular scripting languages such as Python, Ruby are trending toward WASM/WASI implementation as well. However, depending solely on JIT without built-in compiler as Forth does, the interpreter-in-an-interpreter design will likely cap the top-end performance (i.e. stuck at 5%~10% of native, so far).
+Regardless, it brought me warm smiles seeing eForth run in a browser. Better yet, it's straight from C/C++ source code. Other popular scripting languages such as Python, Ruby are trending toward WASM/WASI implementation as well. However, depending solely on JIT without built-in compiler as Forth does, the interpreter-in-an-interpreter design will likely cap the top-end performance (i.e. stuck at 1/5~1/10 of native, so far).
 
 With WASM, the interoperability between different languages become a thing of the near future. If Forth can compile word directly into WASM opcodes, engage WASI to access OS and peripherals, hookup the graphic front-end (i.g. SDL or WebGL), weForth can become a worthy scripting alternative for Web.
 
 ### Features
-* Javascript access to ss, dict, and VM memory (via WebAssembly.Memory)
-* Forth in Web Worker threads (multi-VMs possible)
-* IDE-style interactive front-end (cloud possible, i.g. JupyterLab)
+   * Javascript access to ss, dict, and VM memory (via WebAssembly.Memory)
+   * Forth in Web Worker threads (multi-VMs possible)
+   * IDE-style interactive front-end (cloud possible, i.g. JupyterLab)
 
 ### To Compile into a single wasm file (make sure python3 and Emscripten are installed)
-  > \> make one<br/>
-  > try it here <a href="https://chochain.github.io/weforth/html/ceforth.html" target="_blank">ceforth.html</a><br/>
-  > Note: -O2 works OK, -O3 emscripten spits wrong code
+
+    make one
+    Note: -O2 works OK, -O3 emscripten spits wrong code
+    
+try it here <a href="https://chochain.github.io/weForth/ref/ceforth.html" target="_blank">ceforth.html</a>
 
 ### To Compile into wasm and one Web Worker thread (multi-threaded)
-  > \> make two<br/>
-  > try it here <a href="https://chochain.github.io/weforth/html/weforth.html" target="_blank">weforth.html</a>
+
+    make two
+    
+try it here <a href="https://chochain.github.io/weForth/ref/weforth.html" target="_blank">weforth.html</a>
 
 ### To Run on your own box
-* Server-side
-  > \> python3 -m http.server
-* Client-side Browser
-  > \> http://localhost:8000/tests/ceforth.html or weforth.html
+Server-side
+
+    python3 -m http.server
+    
+Client-side Browser
+
+    http://localhost:8000/tests/ceforth.html or weforth.html
 
 ### To Debug the WASM file (dump all functions, check with wasm-objdump in WABT kit)
-  > \> make debug<br/>
-  > read tests/ceforth.wasm.txt (really long)
 
-### Benchmark (on my aged IBM X230)
-* Simple 1K*10K tests
-  > : xx 9999 FOR 34 DROP NEXT ;<br/>
-  > : yy 999 FOR xx NEXT ;<br/>
-  > : zz MS NEGATE yy MS + ;<br/>
-  > zz
+    make debug
+    read tests/ceforth.wasm.txt (really long)
 
-* CPU = Intel i5-3470 @ 3.2GHz
-  > FF.a = FireFox v120, FF.a1 = FF.a + 1 worker<br/>
-  > FF.b = FireFox v122, FF.b1 = FF.b + 1 worker<br/>
-  > EM.a = Emscripten v3.1.51<br/>
-  > EM.b = Emscripten v3.1.53
+### Benchmark (on my aged IBM X230 w Intel i5-3470@3.2GHz)
+Simple 10M tests
+  
+    : xx 9999 FOR 34 DROP NEXT ;
+    : yy 999 FOR xx NEXT ;
+    : zz MS NEGATE yy MS + ;
+    zz
 
 |implementation|version|source code|optimization|platform|run time(ms)|code size(KB)|
 |--|--|--|--|--|--|--|
-|ceforth  |8.0  |C         |-O0|CPU  |266 |111|
-|         |     |          |-O2|CPU  |106 |83 |
-|eForth.js|6.0  |JavaScript|   |FF.a |756 |20 |
-|         |     |          |   |FF.b |1059|20 |
+|eforth   |4.2  |g++  / C  |-O0|CPU  |1830|186|
+|         |     |          |-O2|CPU  |85  |106|
+|         |     |          |-O3|CPU  |87  |114|
+|eforth   |4.2  |EM.b / C  |-O0|FF.b |4250|273|
+|         |     |          |-O2|FF.b |215 |160|
+|         |     |          |-O3|FF.b |222 |176|
+|eForth.js|pre6 |JavaScript|   |FF.a |756 |20 |
+|         |pre6 |          |   |FF.b |1059|20 |
+|         |4.2  |          |   |FF.b |1459|20 |
 |uEforth  |7.0.2|Asm.js    |   |FF.a |814 |29 |
-|         |7.0.7|          |   |FF.b |302 |29 |
+|         |7.0.7|          |   |FF.b |387 |29 |
 |weForth  |1.2  |EM.a / C  |-O0|FF.a1|943 |254|
 |         |     |          |-O2|FF.a1|410 |165|
-|weForth  |1.4  |EM.b / C  |-O0|FF.b |515 |259|
-|         |     |          |-O2|FF.b |161 |168|
-|weForth  |1.4  |EM.b / C  |-O0|FF.b1|516 |259|
-|         |     |          |-O2|FF.b1|163 |168|
+|weForth  |1.4  |EM.b / C  |-O0|FF.b |451 |267|
+|         |     |          |-O2|FF.b |181 |170|
+|weForth  |4.1  |EM.b / C  |-O0|FF.b |348 |300|
+|         |     |          |-O2|FF.b |154 |164|
+|         |     |          |-O2|FF.b1|160 |164|
 
-* Note1: eForth.js uses JS straight, can do floating-points
-* Note2: uEforth v7 uses Asm.js, build Forth up with JS "assembly".
-* Note3: weForth v1 uses token indirected threaded
-* Note4: weForth+switch(op), is 2x slower than just function pointers.
-* Note5: weForth v1.2 without yield in nest() speeds up 3x.
-* Note6: WASM -O3 => err functions (wa.*) not found
-* Note7: FireFox v122 is vastly faster than v120
-* Note8: Chrome is about 10% slower than FireFox
+    FF.a = FireFox v120, FF.a1 = FF.a + 1 worker
+    FF.b = FireFox v122, FF.b1 = FF.b + 1 worker
+    EM.a = Emscripten v3.1.51
+    EM.b = Emscripten v3.1.53
 
-### SDL2
-* install sdl2, image, sound, and fonts
-  > sudo apt install libsdl2-dev libsdl2-2.0-0 -y;<br/>
-  > sudo apt install libjpeg-dev libwebp-dev libtiff5-dev libsdl2-image-dev libsdl2-image-2.0-0 -y;<br/>
-  > sudo apt install libmikmod-dev libfishsound1-dev libsmpeg-dev liboggz2-dev libflac-dev libfluidsynth-dev libsdl2-mixer-dev libsdl2-mixer-2.0-0 -y;<br/>
-  > sudo apt install libfreetype6-dev libsdl2-ttf-dev libsdl2-ttf-2.0-0 -y;
-* compile to host exe
-  > \> make exe<br/>
-  > ./tests/sdl2
-* compile to WASM
-  > \> make sdl<br/>
-  > enter http://localhost:8000/tests/sdl2.html into the browser
+    Note1: eForth.js uses JS straight, can do floating-points
+    Note2: uEforth v7 uses Asm.js, build Forth up with JS "assembly".
+    Note3: weForth v1 uses token indirected threaded
+    Note4: weForth+switch(op), is 2x slower than just function pointers.
+    Note5: weForth v1.2 without yield in nest() speeds up 3x.
+    Note6: WASM -O3 => err functions (wa.*) not found
+    Note7: FireFox v122 is vastly faster than v120
+    Note8: Chrome is about 10% slower than FireFox
+
+### SDL2 - Experimental on Linux
+Install sdl2, image, sound, and fonts
+
+    sudo apt install libsdl2-dev libsdl2-2.0-0 -y;
+    sudo apt install libjpeg-dev libwebp-dev libtiff5-dev libsdl2-image-dev libsdl2-image-2.0-0 -y;
+    sudo apt install libmikmod-dev libfishsound1-dev libsmpeg-dev liboggz2-dev libflac-dev libfluidsynth-dev libsdl2-mixer-dev libsdl2-mixer-2.0-0 -y;
+    sudo apt install libfreetype6-dev libsdl2-ttf-dev libsdl2-ttf-2.0-0 -y;
+    
+Build
+
+    make sdl
+    ./tests/sdl2 to tests native on CPU
+    enter http://localhost:8000/tests/sdl2.html into the browser
 
 ### TODO
 * review wasmtime (CLI), perf+hotspot (profiling)
-* Forth CPU visualizer (with SDL)
+* review DragonRuby/mRuby (SDL)
+* review R3, Forth CPU visualizer (SDL)
 * GraFORTH spec.
   + File system (FS/IndexedDB)
   + Editor

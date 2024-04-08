@@ -8,8 +8,9 @@
       <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
       <script type='text/javascript'>
         var Module = {
-          canvas: (function() { return document.getElementById('canvas'); })()
-        };
+            //canvas: (function() { return document.getElementById('canvas'); })()
+            canvas: (()=>document.getElementById('canvas'))()
+        }
       </script>
       <script src="sdl2.js"></script>
     </center>
