@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['qf_236',['qf',['../structCode.html#adbb2a02dc74b39dbd732ac9a7670ccf1',1,'Code']]]
+  ['ss_199',['ss',['../ceforth_8cpp.html#a7dca0eae5111fa9214a2e2598f5a96b0',1,'ceforth.cpp']]]
 ];

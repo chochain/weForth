@@ -1,0 +1,145 @@
+\hypertarget{structCode}{}\doxysection{Code Struct Reference}
+\label{structCode}\index{Code@{Code}}
+
+
+{\ttfamily \#include $<$ceforth.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structCode_a32e2c5dc256be0a5b664627dcd652730}{Code}} (const char $\ast$n, \mbox{\hyperlink{ceforth_8h_ad49a4a3795be934579ff11f1296c1050}{F\+P\+TR}} fp, bool im)
+\item 
+void \mbox{\hyperlink{structCode_a125b94d3a52d36e5ad7db6c5f39a8743}{call}} () \mbox{\hyperlink{config_8h_a2eb6f9e0395b47b8d5e3eeae4fe0c116}{I\+N\+L\+I\+NE}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{ceforth_8h_ad49a4a3795be934579ff11f1296c1050}{F\+P\+TR}} \mbox{\hyperlink{structCode_ad735a0bfc1345c6d5ee006bc400c627c}{XT}} (\mbox{\hyperlink{config_8h_aff5e3e5f0579f9bce7aeaeac9d89d33a}{IU}} ix) \mbox{\hyperlink{config_8h_a2eb6f9e0395b47b8d5e3eeae4fe0c116}{I\+N\+L\+I\+NE}}
+\item 
+static void \mbox{\hyperlink{structCode_a536838b5cf43b6a613e398fdd5236589}{exec}} (\mbox{\hyperlink{config_8h_aff5e3e5f0579f9bce7aeaeac9d89d33a}{IU}} ix) \mbox{\hyperlink{config_8h_a2eb6f9e0395b47b8d5e3eeae4fe0c116}{I\+N\+L\+I\+NE}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Data Fields}
+\begin{DoxyCompactItemize}
+\item 
+const char $\ast$ \mbox{\hyperlink{structCode_a07d7947d980fb65c8297aac767549dfe}{name}} = 0
+\begin{DoxyCompactList}\small\item\em name field \end{DoxyCompactList}\item 
+\begin{tabbing}
+xx\=xx\=xx\=xx\=xx\=xx\=xx\=xx\=xx\=\kill
+union \{\\
+\>\mbox{\hyperlink{ceforth_8h_ad49a4a3795be934579ff11f1296c1050}{FPTR}} \mbox{\hyperlink{structCode_adc43e6aecf68d2d068ae75decdb0ded7}{xt}} = 0\\
+\>\>{\em $<$ either a primitive or colon word }\\
+\>struct \{\\
+\>\>\mbox{\hyperlink{config_8h_aff5e3e5f0579f9bce7aeaeac9d89d33a}{IU}} \mbox{\hyperlink{structCode_aaf3023800839f76152f31297ae46201a}{attr}}\\
+\>\>\>{\em steal 2 LSBs because xt is 4-\/byte aligned on 32-\/bit CPU }\\
+\>\>\mbox{\hyperlink{config_8h_aff5e3e5f0579f9bce7aeaeac9d89d33a}{IU}} \mbox{\hyperlink{structCode_ac20d8e5f76d7f8c601d9b5168005669c}{pfa}}\\
+\>\>\>{\em offset to pmem space (16-\/bit for 64K range) }\\
+\>\} \\
+\}; \\
+
+\end{tabbing}\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{config_8h_a34c9e39f868b60a2945e499befe08091}{U\+FP}} \mbox{\hyperlink{structCode_a7b5d258f3dc3b41f55432cd37a9d9348}{X\+T0}} = $\sim$0
+\begin{DoxyCompactList}\small\item\em function pointer base (in registers hopefully) \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{structCode_a32e2c5dc256be0a5b664627dcd652730}\label{structCode_a32e2c5dc256be0a5b664627dcd652730}} 
+\index{Code@{Code}!Code@{Code}}
+\index{Code@{Code}!Code@{Code}}
+\doxysubsubsection{\texorpdfstring{Code()}{Code()}}
+{\footnotesize\ttfamily Code\+::\+Code (\begin{DoxyParamCaption}\item[{const char $\ast$}]{n,  }\item[{\mbox{\hyperlink{ceforth_8h_ad49a4a3795be934579ff11f1296c1050}{F\+P\+TR}}}]{fp,  }\item[{bool}]{im }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\begin{quote}
+collect xt base \end{quote}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{structCode_ad735a0bfc1345c6d5ee006bc400c627c}\label{structCode_ad735a0bfc1345c6d5ee006bc400c627c}} 
+\index{Code@{Code}!XT@{XT}}
+\index{XT@{XT}!Code@{Code}}
+\doxysubsubsection{\texorpdfstring{XT()}{XT()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ceforth_8h_ad49a4a3795be934579ff11f1296c1050}{F\+P\+TR}} Code\+::\+XT (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{config_8h_aff5e3e5f0579f9bce7aeaeac9d89d33a}{IU}}}]{ix }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+\mbox{\Hypertarget{structCode_a536838b5cf43b6a613e398fdd5236589}\label{structCode_a536838b5cf43b6a613e398fdd5236589}} 
+\index{Code@{Code}!exec@{exec}}
+\index{exec@{exec}!Code@{Code}}
+\doxysubsubsection{\texorpdfstring{exec()}{exec()}}
+{\footnotesize\ttfamily static void Code\+::exec (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{config_8h_aff5e3e5f0579f9bce7aeaeac9d89d33a}{IU}}}]{ix }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+\mbox{\Hypertarget{structCode_a125b94d3a52d36e5ad7db6c5f39a8743}\label{structCode_a125b94d3a52d36e5ad7db6c5f39a8743}} 
+\index{Code@{Code}!call@{call}}
+\index{call@{call}!Code@{Code}}
+\doxysubsubsection{\texorpdfstring{call()}{call()}}
+{\footnotesize\ttfamily void Code\+::call (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\doxysubsection{Field Documentation}
+\mbox{\Hypertarget{structCode_a7b5d258f3dc3b41f55432cd37a9d9348}\label{structCode_a7b5d258f3dc3b41f55432cd37a9d9348}} 
+\index{Code@{Code}!XT0@{XT0}}
+\index{XT0@{XT0}!Code@{Code}}
+\doxysubsubsection{\texorpdfstring{XT0}{XT0}}
+{\footnotesize\ttfamily \mbox{\hyperlink{config_8h_a34c9e39f868b60a2945e499befe08091}{U\+FP}} Code\+::\+X\+T0 = $\sim$0\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+function pointer base (in registers hopefully) 
+
+init base of xt pointers (before calling C\+O\+DE macros)
+
+====================================================================
+
+\begin{quote}
+e\+Forth dictionary assembler \end{quote}
+Note\+: sequenced by enum forth\+\_\+opcode as following \mbox{\Hypertarget{structCode_a07d7947d980fb65c8297aac767549dfe}\label{structCode_a07d7947d980fb65c8297aac767549dfe}} 
+\index{Code@{Code}!name@{name}}
+\index{name@{name}!Code@{Code}}
+\doxysubsubsection{\texorpdfstring{name}{name}}
+{\footnotesize\ttfamily const char$\ast$ Code\+::name = 0}
+
+
+
+name field 
+
+\mbox{\Hypertarget{structCode_adc43e6aecf68d2d068ae75decdb0ded7}\label{structCode_adc43e6aecf68d2d068ae75decdb0ded7}} 
+\index{Code@{Code}!xt@{xt}}
+\index{xt@{xt}!Code@{Code}}
+\doxysubsubsection{\texorpdfstring{xt}{xt}}
+{\footnotesize\ttfamily \mbox{\hyperlink{ceforth_8h_ad49a4a3795be934579ff11f1296c1050}{F\+P\+TR}} Code\+::xt = 0}
+
+
+
+$<$ either a primitive or colon word 
+
+lambda pointer (4-\/byte align, 2 L\+S\+Bs can be used for attr) \mbox{\Hypertarget{structCode_aaf3023800839f76152f31297ae46201a}\label{structCode_aaf3023800839f76152f31297ae46201a}} 
+\index{Code@{Code}!attr@{attr}}
+\index{attr@{attr}!Code@{Code}}
+\doxysubsubsection{\texorpdfstring{attr}{attr}}
+{\footnotesize\ttfamily \mbox{\hyperlink{config_8h_aff5e3e5f0579f9bce7aeaeac9d89d33a}{IU}} Code\+::attr}
+
+
+
+steal 2 L\+S\+Bs because xt is 4-\/byte aligned on 32-\/bit C\+PU 
+
+\mbox{\Hypertarget{structCode_ac20d8e5f76d7f8c601d9b5168005669c}\label{structCode_ac20d8e5f76d7f8c601d9b5168005669c}} 
+\index{Code@{Code}!pfa@{pfa}}
+\index{pfa@{pfa}!Code@{Code}}
+\doxysubsubsection{\texorpdfstring{pfa}{pfa}}
+{\footnotesize\ttfamily \mbox{\hyperlink{config_8h_aff5e3e5f0579f9bce7aeaeac9d89d33a}{IU}} Code\+::pfa}
+
+
+
+offset to pmem space (16-\/bit for 64K range) 
+
+\mbox{\Hypertarget{structCode_aa9f313ed0326e7c0cae6f4763d825202}\label{structCode_aa9f313ed0326e7c0cae6f4763d825202}} 
+\doxysubsubsection{\texorpdfstring{"@1}{@1}}
+{\footnotesize\ttfamily union \{ ... \} }
+
+
+
+The documentation for this struct was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+src/\mbox{\hyperlink{ceforth_8h}{ceforth.\+h}}\item 
+src/\mbox{\hyperlink{ceforth_8cpp}{ceforth.\+cpp}}\end{DoxyCompactItemize}

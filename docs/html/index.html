@@ -87,8 +87,8 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>WebAssembly enpowered eForth on web browsers. Is it faster? Is it more portable? Yes, and Yes.</p>
-<p>Well, on my aged laptop, the impression is pretty exciting! It's about 2x faster than pure Javascript implementation on a browser and at 1/4 speed of C/C++ natively compiled code on CPU. On the portability end, though not exactly plug-and-play but some simple alteration turned my C code web-eabled. Of course, WASM has not integrated with the front-end well enough, updating DOM is a different feat.</p>
-<p>Regardless, it brought me warm smiles seeing eForth run in a browser. Better yet, it's straight from C/C++ source code. Other popular scripting languages such as Python, Ruby are trending toward WASM/WASI implementation as well. However, depending solely on JIT without built-in compiler as Forth does, the interpreter-in-an-interpreter design will likely cap the top-end performance (i.e. stuck at 5%~10% of native, so far).</p>
+<p>Well, on my aged laptop, the impression is pretty exciting! It's at least 5x faster than pure Javascript implementation on a browser and at 1/2 speed of C/C++ natively compiled code on CPU. It was at 1/4 of native a year ago but as Javascript JIT improves, it now runs faster as well. Not bad at all! On the portability end, though not exactly plug-and-play but some simple alteration turned my C code web-enabled. Of course, WASM has yet to integrate with the front-end well enough, so updating DOM is a different feat if we want to venture beyond being a terminal app.</p>
+<p>Regardless, it brought me warm smiles seeing eForth run in a browser. Better yet, it's straight from C/C++ source code. Other popular scripting languages such as Python, Ruby are trending toward WASM/WASI implementation as well. However, depending solely on JIT without built-in compiler as Forth does, the interpreter-in-an-interpreter design will likely cap the top-end performance (i.e. stuck at 1/5~1/10 of native, so far).</p>
 <p>With WASM, the interoperability between different languages become a thing of the near future. If Forth can compile word directly into WASM opcodes, engage WASI to access OS and peripherals, hookup the graphic front-end (i.g. SDL or WebGL), weForth can become a worthy scripting alternative for Web.</p>
 <h2>Features</h2>
 <ul>
@@ -97,111 +97,89 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <li>IDE-style interactive front-end (cloud possible, i.g. JupyterLab)</li>
 </ul>
 <h2>To Compile into a single wasm file (make sure python3 and Emscripten are installed)</h2>
-<blockquote class="doxtable">
-<p>&gt; make one<br  />
- try it here <a href="https://chochain.github.io/weforth/html/ceforth.html" target="_blank">ceforth.html</a><br  />
- Note: -O2 works OK, -O3 emscripten spits wrong code </p>
-</blockquote>
+<pre class="fragment">make one
+Note: -O2 works OK, -O3 emscripten spits wrong code
+</pre><p>try it here <a href="https://chochain.github.io/weForth/ref/ceforth.html" target="_blank">ceforth.html</a></p>
 <h2>To Compile into wasm and one Web Worker thread (multi-threaded)</h2>
-<blockquote class="doxtable">
-<p>&gt; make two<br  />
- try it here <a href="https://chochain.github.io/weforth/html/weforth.html" target="_blank">weforth.html</a> </p>
-</blockquote>
+<pre class="fragment">make two
+</pre><p>try it here <a href="https://chochain.github.io/weForth/ref/weforth.html" target="_blank">weforth.html</a></p>
 <h2>To Run on your own box</h2>
-<ul>
-<li>Server-side <blockquote class="doxtable">
-<p>&gt; python3 -m http.server </p>
-</blockquote>
-</li>
-<li>Client-side Browser <blockquote class="doxtable">
-<p>&gt; <a href="http://localhost:8000/tests/ceforth.html">http://localhost:8000/tests/ceforth.html</a> or weforth.html </p>
-</blockquote>
-</li>
-</ul>
-<h2>To Debug the WASM file (dump all functions, check with wasm-objdump in WABT kit)</h2>
-<blockquote class="doxtable">
-<p>&gt; make debug<br  />
- read tests/ceforth.wasm.txt (really long) </p>
-</blockquote>
-<h2>Benchmark (on my aged IBM X230)</h2>
-<ul>
-<li>Simple 1K*10K tests <blockquote class="doxtable">
-<p>: xx 9999 FOR 34 DROP NEXT ;<br  />
- : yy 999 FOR xx NEXT ;<br  />
- : zz MS NEGATE yy MS + ;<br  />
- zz </p>
-</blockquote>
-</li>
-<li>CPU = Intel i5-3470 @ 3.2GHz <blockquote class="doxtable">
-<p>FF.a = FireFox v120, FF.a1 = FF.a + 1 worker<br  />
- FF.b = FireFox v122, FF.b1 = FF.b + 1 worker<br  />
- EM.a = Emscripten v3.1.51<br  />
- EM.b = Emscripten v3.1.53 </p>
-</blockquote>
-</li>
-</ul>
-<table class="markdownTable">
+<p>Server-side </p><pre class="fragment">python3 -m http.server
+</pre><p>Client-side Browser </p><pre class="fragment">http://localhost:8000/tests/ceforth.html or weforth.html
+</pre><h2>To Debug the WASM file (dump all functions, check with wasm-objdump in WABT kit)</h2>
+<pre class="fragment">make debug
+read tests/ceforth.wasm.txt (really long)
+</pre><h2>Benchmark (on my aged IBM X230 w Intel <a href="#" onclick="location.href='mai'+'lto:'+'i5-'+'34'+'70@'+'3.'+'2GH'+'z'; return false;">i5-34<span style="display: none;">.nosp@m.</span>70@3<span style="display: none;">.nosp@m.</span>.2GHz</a>)</h2>
+<p>Simple 10M tests </p><pre class="fragment">: xx 9999 FOR 34 DROP NEXT ;
+: yy 999 FOR xx NEXT ;
+: zz MS NEGATE yy MS + ;
+zz
+</pre><table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">implementation </th><th class="markdownTableHeadNone">version </th><th class="markdownTableHeadNone">source code </th><th class="markdownTableHeadNone">optimization </th><th class="markdownTableHeadNone">platform </th><th class="markdownTableHeadNone">run time(ms) </th><th class="markdownTableHeadNone">code size(KB)  </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">ceforth </td><td class="markdownTableBodyNone">8.0 </td><td class="markdownTableBodyNone">C </td><td class="markdownTableBodyNone">-O0 </td><td class="markdownTableBodyNone">CPU </td><td class="markdownTableBodyNone">266 </td><td class="markdownTableBodyNone">111  </td></tr>
+<td class="markdownTableBodyNone">eforth </td><td class="markdownTableBodyNone">4.2 </td><td class="markdownTableBodyNone">g++ / C </td><td class="markdownTableBodyNone">-O0 </td><td class="markdownTableBodyNone">CPU </td><td class="markdownTableBodyNone">1830 </td><td class="markdownTableBodyNone">186  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">-O2 </td><td class="markdownTableBodyNone">CPU </td><td class="markdownTableBodyNone">106 </td><td class="markdownTableBodyNone">83  </td></tr>
+<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">-O2 </td><td class="markdownTableBodyNone">CPU </td><td class="markdownTableBodyNone">85 </td><td class="markdownTableBodyNone">106  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">eForth.js </td><td class="markdownTableBodyNone">6.0 </td><td class="markdownTableBodyNone">JavaScript </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">FF.a </td><td class="markdownTableBodyNone">756 </td><td class="markdownTableBodyNone">20  </td></tr>
+<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">-O3 </td><td class="markdownTableBodyNone">CPU </td><td class="markdownTableBodyNone">87 </td><td class="markdownTableBodyNone">114  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">FF.b </td><td class="markdownTableBodyNone">1059 </td><td class="markdownTableBodyNone">20  </td></tr>
+<td class="markdownTableBodyNone">eforth </td><td class="markdownTableBodyNone">4.2 </td><td class="markdownTableBodyNone">EM.b / C </td><td class="markdownTableBodyNone">-O0 </td><td class="markdownTableBodyNone">FF.b </td><td class="markdownTableBodyNone">4250 </td><td class="markdownTableBodyNone">273  </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">-O2 </td><td class="markdownTableBodyNone">FF.b </td><td class="markdownTableBodyNone">215 </td><td class="markdownTableBodyNone">160  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">-O3 </td><td class="markdownTableBodyNone">FF.b </td><td class="markdownTableBodyNone">222 </td><td class="markdownTableBodyNone">176  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">eForth.js </td><td class="markdownTableBodyNone">pre6 </td><td class="markdownTableBodyNone">JavaScript </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">FF.a </td><td class="markdownTableBodyNone">756 </td><td class="markdownTableBodyNone">20  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">pre6 </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">FF.b </td><td class="markdownTableBodyNone">1059 </td><td class="markdownTableBodyNone">20  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">4.2 </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">FF.b </td><td class="markdownTableBodyNone">1459 </td><td class="markdownTableBodyNone">20  </td></tr>
+<tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone">uEforth </td><td class="markdownTableBodyNone">7.0.2 </td><td class="markdownTableBodyNone">Asm.js </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">FF.a </td><td class="markdownTableBodyNone">814 </td><td class="markdownTableBodyNone">29  </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">7.0.7 </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">FF.b </td><td class="markdownTableBodyNone">302 </td><td class="markdownTableBodyNone">29  </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">7.0.7 </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">FF.b </td><td class="markdownTableBodyNone">387 </td><td class="markdownTableBodyNone">29  </td></tr>
+<tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone">weForth </td><td class="markdownTableBodyNone">1.2 </td><td class="markdownTableBodyNone">EM.a / C </td><td class="markdownTableBodyNone">-O0 </td><td class="markdownTableBodyNone">FF.a1 </td><td class="markdownTableBodyNone">943 </td><td class="markdownTableBodyNone">254  </td></tr>
-<tr class="markdownTableRowEven">
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">-O2 </td><td class="markdownTableBodyNone">FF.a1 </td><td class="markdownTableBodyNone">410 </td><td class="markdownTableBodyNone">165  </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">weForth </td><td class="markdownTableBodyNone">1.4 </td><td class="markdownTableBodyNone">EM.b / C </td><td class="markdownTableBodyNone">-O0 </td><td class="markdownTableBodyNone">FF.b </td><td class="markdownTableBodyNone">515 </td><td class="markdownTableBodyNone">259  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">-O2 </td><td class="markdownTableBodyNone">FF.b </td><td class="markdownTableBodyNone">161 </td><td class="markdownTableBodyNone">168  </td></tr>
+<td class="markdownTableBodyNone">weForth </td><td class="markdownTableBodyNone">1.4 </td><td class="markdownTableBodyNone">EM.b / C </td><td class="markdownTableBodyNone">-O0 </td><td class="markdownTableBodyNone">FF.b </td><td class="markdownTableBodyNone">451 </td><td class="markdownTableBodyNone">267  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">weForth </td><td class="markdownTableBodyNone">1.4 </td><td class="markdownTableBodyNone">EM.b / C </td><td class="markdownTableBodyNone">-O0 </td><td class="markdownTableBodyNone">FF.b1 </td><td class="markdownTableBodyNone">516 </td><td class="markdownTableBodyNone">259  </td></tr>
+<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">-O2 </td><td class="markdownTableBodyNone">FF.b </td><td class="markdownTableBodyNone">181 </td><td class="markdownTableBodyNone">170  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">-O2 </td><td class="markdownTableBodyNone">FF.b1 </td><td class="markdownTableBodyNone">163 </td><td class="markdownTableBodyNone">168  </td></tr>
+<td class="markdownTableBodyNone">weForth </td><td class="markdownTableBodyNone">4.1 </td><td class="markdownTableBodyNone">EM.b / C </td><td class="markdownTableBodyNone">-O0 </td><td class="markdownTableBodyNone">FF.b </td><td class="markdownTableBodyNone">348 </td><td class="markdownTableBodyNone">300  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">-O2 </td><td class="markdownTableBodyNone">FF.b </td><td class="markdownTableBodyNone">154 </td><td class="markdownTableBodyNone">164  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">-O2 </td><td class="markdownTableBodyNone">FF.b1 </td><td class="markdownTableBodyNone">160 </td><td class="markdownTableBodyNone">164  </td></tr>
 </table>
-<ul>
-<li>Note1: eForth.js uses JS straight, can do floating-points</li>
-<li>Note2: uEforth v7 uses Asm.js, build Forth up with JS "assembly".</li>
-<li>Note3: weForth v1 uses token indirected threaded</li>
-<li>Note4: weForth+switch(op), is 2x slower than just function pointers.</li>
-<li>Note5: weForth v1.2 without yield in <a class="el" href="ceforth_8cpp.html#ad846502b6abc77557b95ffb1d08699cc">nest()</a> speeds up 3x.</li>
-<li>Note6: WASM -O3 =&gt; err functions (wa.*) not found</li>
-<li>Note7: FireFox v122 is vastly faster than v120</li>
-<li>Note8: Chrome is about 10% slower than FireFox</li>
-</ul>
-<h2>SDL2</h2>
-<ul>
-<li>install sdl2, image, sound, and fonts <blockquote class="doxtable">
-<p>sudo apt install libsdl2-dev libsdl2-2.0-0 -y;<br  />
- sudo apt install libjpeg-dev libwebp-dev libtiff5-dev libsdl2-image-dev libsdl2-image-2.0-0 -y;<br  />
- sudo apt install libmikmod-dev libfishsound1-dev libsmpeg-dev liboggz2-dev libflac-dev libfluidsynth-dev libsdl2-mixer-dev libsdl2-mixer-2.0-0 -y;<br  />
- sudo apt install libfreetype6-dev libsdl2-ttf-dev libsdl2-ttf-2.0-0 -y; </p>
-</blockquote>
-</li>
-<li>compile to host exe <blockquote class="doxtable">
-<p>&gt; make exe<br  />
- ./tests/sdl2 </p>
-</blockquote>
-</li>
-<li>compile to WASM <blockquote class="doxtable">
-<p>&gt; make sdl<br  />
- enter <a href="http://localhost:8000/tests/sdl2.html">http://localhost:8000/tests/sdl2.html</a> into the browser </p>
-</blockquote>
-</li>
-</ul>
-<h2>TODO</h2>
+<pre class="fragment">FF.a = FireFox v120, FF.a1 = FF.a + 1 worker
+FF.b = FireFox v122, FF.b1 = FF.b + 1 worker
+EM.a = Emscripten v3.1.51
+EM.b = Emscripten v3.1.53
+
+Note1: eForth.js uses JS straight, can do floating-points
+Note2: uEforth v7 uses Asm.js, build Forth up with JS "assembly".
+Note3: weForth v1 uses token indirected threaded
+Note4: weForth+switch(op), is 2x slower than just function pointers.
+Note5: weForth v1.2 without yield in nest() speeds up 3x.
+Note6: WASM -O3 =&gt; err functions (wa.*) not found
+Note7: FireFox v122 is vastly faster than v120
+Note8: Chrome is about 10% slower than FireFox
+</pre><h2>SDL2 - Experimental on Linux</h2>
+<p>Install sdl2, image, sound, and fonts </p><pre class="fragment">sudo apt install libsdl2-dev libsdl2-2.0-0 -y;
+sudo apt install libjpeg-dev libwebp-dev libtiff5-dev libsdl2-image-dev libsdl2-image-2.0-0 -y;
+sudo apt install libmikmod-dev libfishsound1-dev libsmpeg-dev liboggz2-dev libflac-dev libfluidsynth-dev libsdl2-mixer-dev libsdl2-mixer-2.0-0 -y;
+sudo apt install libfreetype6-dev libsdl2-ttf-dev libsdl2-ttf-2.0-0 -y;
+</pre><p>Build </p><pre class="fragment">make sdl
+./tests/sdl2 to tests native on CPU
+enter http://localhost:8000/tests/sdl2.html into the browser
+</pre><h2>TODO</h2>
 <ul>
 <li>review wasmtime (CLI), perf+hotspot (profiling)</li>
-<li>Forth CPU visualizer (with SDL)</li>
+<li>review DragonRuby/mRuby (SDL)</li>
+<li>review R3, Forth CPU visualizer (SDL)</li>
 <li>GraFORTH spec.<ul>
 <li>File system (FS/IndexedDB)</li>
 <li>Editor</li>

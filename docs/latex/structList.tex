@@ -1,0 +1,138 @@
+\hypertarget{structList}{}\doxysection{List$<$ T, N $>$ Struct Template Reference}
+\label{structList}\index{List$<$ T, N $>$@{List$<$ T, N $>$}}
+
+
+{\ttfamily \#include $<$ceforth.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structList_ab11a34474cd717924277a0599b3b115b}{List}} ()
+\item 
+\mbox{\hyperlink{structList}{List}} \& \mbox{\hyperlink{structList_a2ea4a216746ee7d80205e207cb4cd77b}{operator=}} (T $\ast$a) \mbox{\hyperlink{config_8h_a2eb6f9e0395b47b8d5e3eeae4fe0c116}{I\+N\+L\+I\+NE}}
+\item 
+T \& \mbox{\hyperlink{structList_abd5038592bb12cc55678697cf7b852ec}{operator\mbox{[}$\,$\mbox{]}}} (int i) \mbox{\hyperlink{config_8h_a2eb6f9e0395b47b8d5e3eeae4fe0c116}{I\+N\+L\+I\+NE}}
+\item 
+T \mbox{\hyperlink{structList_a5413f7d02e0a1a1b13d5a4e349998952}{pop}} () \mbox{\hyperlink{config_8h_a2eb6f9e0395b47b8d5e3eeae4fe0c116}{I\+N\+L\+I\+NE}}
+\item 
+void \mbox{\hyperlink{structList_ae1a2707d8afeec376bf24dc0470ee99a}{push}} (T $\ast$a, int n) \mbox{\hyperlink{config_8h_a2eb6f9e0395b47b8d5e3eeae4fe0c116}{I\+N\+L\+I\+NE}}
+\item 
+void \mbox{\hyperlink{structList_ab00f8273e8e396ab2a22ec2f21d23fa9}{merge}} (\mbox{\hyperlink{structList}{List}} \&a) \mbox{\hyperlink{config_8h_a2eb6f9e0395b47b8d5e3eeae4fe0c116}{I\+N\+L\+I\+NE}}
+\item 
+void \mbox{\hyperlink{structList_a68090086900aafd3042af299ba7a8bda}{clear}} (int i=0) \mbox{\hyperlink{config_8h_a2eb6f9e0395b47b8d5e3eeae4fe0c116}{I\+N\+L\+I\+NE}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Data Fields}
+\begin{DoxyCompactItemize}
+\item 
+T $\ast$ \mbox{\hyperlink{structList_a579cae793c8856db82c099d3028d99ea}{v}}
+\begin{DoxyCompactList}\small\item\em fixed-\/size array storage \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{structList_aa38ea8f117ca62c54fe9d17ed032c0e1}{idx}} = 0
+\begin{DoxyCompactList}\small\item\em current index of array \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{structList_a40ca45ede64112e5a85ed33b2cf3e875}{max}} = 0
+\begin{DoxyCompactList}\small\item\em high watermark for debugging \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\subsubsection*{template$<$class T, int N$>$\newline
+struct List$<$ T, N $>$}
+
+array class template (so we don\textquotesingle{}t have dependency on C++ S\+TL) Note\+:
+\begin{DoxyItemize}
+\item using decorator pattern
+\item this is similar to vector class but much simplified 
+\end{DoxyItemize}
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{structList_ab11a34474cd717924277a0599b3b115b}\label{structList_ab11a34474cd717924277a0599b3b115b}} 
+\index{List$<$ T, N $>$@{List$<$ T, N $>$}!List@{List}}
+\index{List@{List}!List$<$ T, N $>$@{List$<$ T, N $>$}}
+\doxysubsubsection{\texorpdfstring{List()}{List()}}
+{\footnotesize\ttfamily template$<$class T , int N$>$ \\
+\mbox{\hyperlink{structList}{List}}$<$ T, N $>$\+::\mbox{\hyperlink{structList}{List}} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+$<$ dynamically allocate array storage
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{structList_a2ea4a216746ee7d80205e207cb4cd77b}\label{structList_a2ea4a216746ee7d80205e207cb4cd77b}} 
+\index{List$<$ T, N $>$@{List$<$ T, N $>$}!operator=@{operator=}}
+\index{operator=@{operator=}!List$<$ T, N $>$@{List$<$ T, N $>$}}
+\doxysubsubsection{\texorpdfstring{operator=()}{operator=()}}
+{\footnotesize\ttfamily template$<$class T , int N$>$ \\
+\mbox{\hyperlink{structList}{List}}\& \mbox{\hyperlink{structList}{List}}$<$ T, N $>$\+::operator= (\begin{DoxyParamCaption}\item[{T $\ast$}]{a }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{structList_abd5038592bb12cc55678697cf7b852ec}\label{structList_abd5038592bb12cc55678697cf7b852ec}} 
+\index{List$<$ T, N $>$@{List$<$ T, N $>$}!operator\mbox{[}\mbox{]}@{operator[]}}
+\index{operator\mbox{[}\mbox{]}@{operator[]}!List$<$ T, N $>$@{List$<$ T, N $>$}}
+\doxysubsubsection{\texorpdfstring{operator[]()}{operator[]()}}
+{\footnotesize\ttfamily template$<$class T , int N$>$ \\
+T\& \mbox{\hyperlink{structList}{List}}$<$ T, N $>$\+::operator\mbox{[}$\,$\mbox{]} (\begin{DoxyParamCaption}\item[{int}]{i }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{structList_a5413f7d02e0a1a1b13d5a4e349998952}\label{structList_a5413f7d02e0a1a1b13d5a4e349998952}} 
+\index{List$<$ T, N $>$@{List$<$ T, N $>$}!pop@{pop}}
+\index{pop@{pop}!List$<$ T, N $>$@{List$<$ T, N $>$}}
+\doxysubsubsection{\texorpdfstring{pop()}{pop()}}
+{\footnotesize\ttfamily template$<$class T , int N$>$ \\
+T \mbox{\hyperlink{structList}{List}}$<$ T, N $>$\+::pop (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{structList_ae1a2707d8afeec376bf24dc0470ee99a}\label{structList_ae1a2707d8afeec376bf24dc0470ee99a}} 
+\index{List$<$ T, N $>$@{List$<$ T, N $>$}!push@{push}}
+\index{push@{push}!List$<$ T, N $>$@{List$<$ T, N $>$}}
+\doxysubsubsection{\texorpdfstring{push()}{push()}}
+{\footnotesize\ttfamily template$<$class T , int N$>$ \\
+void \mbox{\hyperlink{structList}{List}}$<$ T, N $>$\+::push (\begin{DoxyParamCaption}\item[{T $\ast$}]{a,  }\item[{int}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{structList_ab00f8273e8e396ab2a22ec2f21d23fa9}\label{structList_ab00f8273e8e396ab2a22ec2f21d23fa9}} 
+\index{List$<$ T, N $>$@{List$<$ T, N $>$}!merge@{merge}}
+\index{merge@{merge}!List$<$ T, N $>$@{List$<$ T, N $>$}}
+\doxysubsubsection{\texorpdfstring{merge()}{merge()}}
+{\footnotesize\ttfamily template$<$class T , int N$>$ \\
+void \mbox{\hyperlink{structList}{List}}$<$ T, N $>$\+::merge (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structList}{List}}$<$ T, N $>$ \&}]{a }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{structList_a68090086900aafd3042af299ba7a8bda}\label{structList_a68090086900aafd3042af299ba7a8bda}} 
+\index{List$<$ T, N $>$@{List$<$ T, N $>$}!clear@{clear}}
+\index{clear@{clear}!List$<$ T, N $>$@{List$<$ T, N $>$}}
+\doxysubsubsection{\texorpdfstring{clear()}{clear()}}
+{\footnotesize\ttfamily template$<$class T , int N$>$ \\
+void \mbox{\hyperlink{structList}{List}}$<$ T, N $>$\+::clear (\begin{DoxyParamCaption}\item[{int}]{i = {\ttfamily 0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\doxysubsection{Field Documentation}
+\mbox{\Hypertarget{structList_a579cae793c8856db82c099d3028d99ea}\label{structList_a579cae793c8856db82c099d3028d99ea}} 
+\index{List$<$ T, N $>$@{List$<$ T, N $>$}!v@{v}}
+\index{v@{v}!List$<$ T, N $>$@{List$<$ T, N $>$}}
+\doxysubsubsection{\texorpdfstring{v}{v}}
+{\footnotesize\ttfamily template$<$class T , int N$>$ \\
+T$\ast$ \mbox{\hyperlink{structList}{List}}$<$ T, N $>$\+::v}
+
+
+
+fixed-\/size array storage 
+
+\mbox{\Hypertarget{structList_aa38ea8f117ca62c54fe9d17ed032c0e1}\label{structList_aa38ea8f117ca62c54fe9d17ed032c0e1}} 
+\index{List$<$ T, N $>$@{List$<$ T, N $>$}!idx@{idx}}
+\index{idx@{idx}!List$<$ T, N $>$@{List$<$ T, N $>$}}
+\doxysubsubsection{\texorpdfstring{idx}{idx}}
+{\footnotesize\ttfamily template$<$class T , int N$>$ \\
+int \mbox{\hyperlink{structList}{List}}$<$ T, N $>$\+::idx = 0}
+
+
+
+current index of array 
+
+\mbox{\Hypertarget{structList_a40ca45ede64112e5a85ed33b2cf3e875}\label{structList_a40ca45ede64112e5a85ed33b2cf3e875}} 
+\index{List$<$ T, N $>$@{List$<$ T, N $>$}!max@{max}}
+\index{max@{max}!List$<$ T, N $>$@{List$<$ T, N $>$}}
+\doxysubsubsection{\texorpdfstring{max}{max}}
+{\footnotesize\ttfamily template$<$class T , int N$>$ \\
+int \mbox{\hyperlink{structList}{List}}$<$ T, N $>$\+::max = 0}
+
+
+
+high watermark for debugging 
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/\mbox{\hyperlink{ceforth_8h}{ceforth.\+h}}\end{DoxyCompactItemize}

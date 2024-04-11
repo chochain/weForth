@@ -1,6 +1,9 @@
 var searchData=
 [
-  ['parse_5fnumber_200',['parse_number',['../ceforth_8cpp.html#af4d8edffd9e7bdec7cabac4227a9a4f1',1,'ceforth.cpp']]],
-  ['pop_201',['pop',['../structList.html#a5413f7d02e0a1a1b13d5a4e349998952',1,'List::pop()'],['../structForthList.html#ae9bc4fd8409dbfd022340a37c6dc5bfd',1,'ForthList::pop()'],['../ceforth_8cpp.html#ac84ee2b65e9f8a8a435a447462c6d6a0',1,'POP():&#160;ceforth.cpp'],['../ceForth__403_8cpp.html#ac9c76201d1930e75c9196dd2c01ce308',1,'POP():&#160;ceForth_403.cpp']]],
-  ['push_202',['push',['../structList.html#ae1a2707d8afeec376bf24dc0470ee99a',1,'List::push()'],['../structForthList.html#a120c0151294a5aac544ada7fe2400b5f',1,'ForthList::push()'],['../ceforth_8cpp.html#a5fdde0871776510df64f500650209b27',1,'PUSH():&#160;ceforth.cpp']]]
+  ['s_5fquote_171',['s_quote',['../ceforth_8cpp.html#a168711010d4425c759bc859f985e08b1',1,'ceforth.cpp']]],
+  ['scan_172',['scan',['../ceforth_8cpp.html#a6f241997f1fbe0bb5ddde7d646f96a4c',1,'ceforth.cpp']]],
+  ['see_173',['see',['../ceforth_8cpp.html#a45ed1ce5ef60542473e2c95c6c11141d',1,'ceforth.cpp']]],
+  ['spaces_174',['spaces',['../ceforth_8cpp.html#a59a029cd22163e0e580d06b4bc9b93e3',1,'ceforth.cpp']]],
+  ['ss_5fdump_175',['ss_dump',['../ceforth_8cpp.html#ab1af80f82e78f51b4aa81f0784c84459',1,'ceforth.cpp']]],
+  ['streq_176',['streq',['../ceforth_8cpp.html#ad769113a37bbd859bc138a05705bd6cf',1,'ceforth.cpp']]]
 ];

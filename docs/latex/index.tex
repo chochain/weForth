@@ -1,0 +1,158 @@
+Web\+Assembly enpowered e\+Forth on web browsers. Is it faster? Is it more portable? Yes, and Yes.
+
+Well, on my aged laptop, the impression is pretty exciting! It\textquotesingle{}s at least 5x faster than pure Javascript implementation on a browser and at 1/2 speed of C/\+C++ natively compiled code on C\+PU. It was at 1/4 of native a year ago but as Javascript J\+IT improves, it now runs faster as well. Not bad at all! On the portability end, though not exactly plug-\/and-\/play but some simple alteration turned my C code web-\/enabled. Of course, W\+A\+SM has yet to integrate with the front-\/end well enough, so updating D\+OM is a different feat if we want to venture beyond being a terminal app.
+
+Regardless, it brought me warm smiles seeing e\+Forth run in a browser. Better yet, it\textquotesingle{}s straight from C/\+C++ source code. Other popular scripting languages such as Python, Ruby are trending toward W\+A\+S\+M/\+W\+A\+SI implementation as well. However, depending solely on J\+IT without built-\/in compiler as Forth does, the interpreter-\/in-\/an-\/interpreter design will likely cap the top-\/end performance (i.\+e. stuck at 1/5$\sim$1/10 of native, so far).
+
+With W\+A\+SM, the interoperability between different languages become a thing of the near future. If Forth can compile word directly into W\+A\+SM opcodes, engage W\+A\+SI to access OS and peripherals, hookup the graphic front-\/end (i.\+g. S\+DL or Web\+GL), we\+Forth can become a worthy scripting alternative for Web.
+
+\doxysubsection*{Features}
+
+
+\begin{DoxyItemize}
+\item Javascript access to ss, dict, and VM memory (via Web\+Assembly.\+Memory)
+\item Forth in Web Worker threads (multi-\/\+V\+Ms possible)
+\item I\+D\+E-\/style interactive front-\/end (cloud possible, i.\+g. Jupyter\+Lab)
+\end{DoxyItemize}
+
+\doxysubsection*{To Compile into a single wasm file (make sure python3 and Emscripten are installed)}
+
+\begin{DoxyVerb}make one
+Note: -O2 works OK, -O3 emscripten spits wrong code
+\end{DoxyVerb}
+
+
+try it here \href{https://chochain.github.io/weForth/ref/ceforth.html}{\texttt{ ceforth.\+html}}
+
+\doxysubsection*{To Compile into wasm and one Web Worker thread (multi-\/threaded)}
+
+\begin{DoxyVerb}make two
+\end{DoxyVerb}
+
+
+try it here \href{https://chochain.github.io/weForth/ref/weforth.html}{\texttt{ weforth.\+html}}
+
+\doxysubsection*{To Run on your own box}
+
+Server-\/side \begin{DoxyVerb}python3 -m http.server
+\end{DoxyVerb}
+
+
+Client-\/side Browser \begin{DoxyVerb}http://localhost:8000/tests/ceforth.html or weforth.html
+\end{DoxyVerb}
+
+
+\doxysubsection*{To Debug the W\+A\+SM file (dump all functions, check with wasm-\/objdump in W\+A\+BT kit)}
+
+\begin{DoxyVerb}make debug
+read tests/ceforth.wasm.txt (really long)
+\end{DoxyVerb}
+
+
+\doxysubsection*{Benchmark (on my aged I\+BM X230 w Intel \href{mailto:i5-3470@3.2GHz}{\texttt{ i5-\/3470@3.\+2\+G\+Hz}})}
+
+Simple 10M tests \begin{DoxyVerb}: xx 9999 FOR 34 DROP NEXT ;
+: yy 999 FOR xx NEXT ;
+: zz MS NEGATE yy MS + ;
+zz
+\end{DoxyVerb}
+
+
+\tabulinesep=1mm
+\begin{longtabu}spread 0pt [c]{*{7}{|X[-1]}|}
+\hline
+\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ implementation }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ version }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ source code }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ optimization }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ platform }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ run time(ms) }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ code size(\+K\+B)  }\\\cline{1-7}
+\endfirsthead
+\hline
+\endfoot
+\hline
+\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ implementation }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ version }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ source code }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ optimization }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ platform }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ run time(ms) }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ code size(\+K\+B)  }\\\cline{1-7}
+\endhead
+eforth &4.\+2 &g++ / C &-\/O0 &C\+PU &1830 &186  \\\cline{1-7}
+&&&-\/O2 &C\+PU &85 &106  \\\cline{1-7}
+&&&-\/O3 &C\+PU &87 &114  \\\cline{1-7}
+eforth &4.\+2 &E\+M.\+b / C &-\/O0 &F\+F.\+b &4250 &273  \\\cline{1-7}
+&&&-\/O2 &F\+F.\+b &215 &160  \\\cline{1-7}
+&&&-\/O3 &F\+F.\+b &222 &176  \\\cline{1-7}
+e\+Forth.\+js &pre6 &Java\+Script &&F\+F.\+a &756 &20  \\\cline{1-7}
+&pre6 &&&F\+F.\+b &1059 &20  \\\cline{1-7}
+&4.\+2 &&&F\+F.\+b &1459 &20  \\\cline{1-7}
+u\+Eforth &7.\+0.\+2 &Asm.\+js &&F\+F.\+a &814 &29  \\\cline{1-7}
+&7.\+0.\+7 &&&F\+F.\+b &387 &29  \\\cline{1-7}
+we\+Forth &1.\+2 &E\+M.\+a / C &-\/O0 &F\+F.\+a1 &943 &254  \\\cline{1-7}
+&&&-\/O2 &F\+F.\+a1 &410 &165  \\\cline{1-7}
+we\+Forth &1.\+4 &E\+M.\+b / C &-\/O0 &F\+F.\+b &451 &267  \\\cline{1-7}
+&&&-\/O2 &F\+F.\+b &181 &170  \\\cline{1-7}
+we\+Forth &4.\+1 &E\+M.\+b / C &-\/O0 &F\+F.\+b &348 &300  \\\cline{1-7}
+&&&-\/O2 &F\+F.\+b &154 &164  \\\cline{1-7}
+&&&-\/O2 &F\+F.\+b1 &160 &164  \\\cline{1-7}
+\end{longtabu}
+\begin{DoxyVerb}FF.a = FireFox v120, FF.a1 = FF.a + 1 worker
+FF.b = FireFox v122, FF.b1 = FF.b + 1 worker
+EM.a = Emscripten v3.1.51
+EM.b = Emscripten v3.1.53
+
+Note1: eForth.js uses JS straight, can do floating-points
+Note2: uEforth v7 uses Asm.js, build Forth up with JS "assembly".
+Note3: weForth v1 uses token indirected threaded
+Note4: weForth+switch(op), is 2x slower than just function pointers.
+Note5: weForth v1.2 without yield in nest() speeds up 3x.
+Note6: WASM -O3 => err functions (wa.*) not found
+Note7: FireFox v122 is vastly faster than v120
+Note8: Chrome is about 10% slower than FireFox
+\end{DoxyVerb}
+
+
+\doxysubsection*{S\+D\+L2 -\/ Experimental on Linux}
+
+Install sdl2, image, sound, and fonts \begin{DoxyVerb}sudo apt install libsdl2-dev libsdl2-2.0-0 -y;
+sudo apt install libjpeg-dev libwebp-dev libtiff5-dev libsdl2-image-dev libsdl2-image-2.0-0 -y;
+sudo apt install libmikmod-dev libfishsound1-dev libsmpeg-dev liboggz2-dev libflac-dev libfluidsynth-dev libsdl2-mixer-dev libsdl2-mixer-2.0-0 -y;
+sudo apt install libfreetype6-dev libsdl2-ttf-dev libsdl2-ttf-2.0-0 -y;
+\end{DoxyVerb}
+
+
+Build \begin{DoxyVerb}make sdl
+./tests/sdl2 to tests native on CPU
+enter http://localhost:8000/tests/sdl2.html into the browser
+\end{DoxyVerb}
+
+
+\doxysubsection*{T\+O\+DO}
+
+
+\begin{DoxyItemize}
+\item review wasmtime (C\+LI), perf+hotspot (profiling)
+\item review Dragon\+Ruby/m\+Ruby (S\+DL)
+\item review R3, Forth C\+PU visualizer (S\+DL)
+\item Gra\+F\+O\+R\+TH spec.
+\begin{DoxyItemize}
+\item File system (F\+S/\+Indexed\+DB)
+\item Editor
+\item 2D graphic (S\+D\+L\+\_\+gfx, S\+D\+L\+\_\+image)
+\item Character graphic (S\+D\+L\+\_\+ttf or H\+T\+M\+L5)
+\item 3D graphic (GL)
+\item Music (S\+D\+L\+\_\+media)
+\end{DoxyItemize}
+\item Robotic Simulation Engine (raylib)
+\begin{DoxyItemize}
+\item C\+SG Object (with optional motion trail) \href{https://opencsg.org/}{\texttt{ Open\+C\+SG}}, \href{https://gts.sourceforge.net/}{\texttt{ G\+TS}}
+\item Collision (with directional distance sensing)
+\end{DoxyItemize}
+\item add network system (S\+D\+\_\+net)
+\item inter-\/\+VM communication
+\item use W\+A\+SM stack as ss
+\item macro-\/assembler
+\end{DoxyItemize}
+
+\doxysubsection*{References}
+
+
+\begin{DoxyItemize}
+\item S\+D\+L2
+\begin{DoxyItemize}
+\item Read first \href{https://lyceum-allotments.github.io/2016/06/emscripten-and-sdl-2-tutorial-part-1/}{\texttt{ https\+://lyceum-\/allotments.\+github.\+io/2016/06/emscripten-\/and-\/sdl-\/2-\/tutorial-\/part-\/1/}}
+\item Lazy\+Foo for S\+D\+L2 \href{https://lazyfoo.net/tutorials/SDL/}{\texttt{ https\+://lazyfoo.\+net/tutorials/\+S\+D\+L/}}
+\item raylib vs S\+D\+L2 \href{https://gist.github.com/raysan5/17392498d40e2cb281f5d09c0a4bf798}{\texttt{ https\+://gist.\+github.\+com/raysan5/17392498d40e2cb281f5d09c0a4bf798}} 
+\end{DoxyItemize}
+\end{DoxyItemize}

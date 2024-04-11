@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['operator_3c_3c_196',['operator&lt;&lt;',['../structForthList.html#ad9b1de8d0d49b65c458c9e9cbfc1c8f6',1,'ForthList']]],
-  ['operator_3d_197',['operator=',['../structList.html#a2ea4a216746ee7d80205e207cb4cd77b',1,'List']]],
-  ['operator_5b_5d_198',['operator[]',['../structList.html#abd5038592bb12cc55678697cf7b852ec',1,'List::operator[]()'],['../structForthList.html#a1d505bcdd6e49a2b67425fc6b2e7b899',1,'ForthList::operator[]()']]],
-  ['outer_199',['outer',['../ceForth__403_8cpp.html#aa092eeb4438ed729e9992fc5dead37be',1,'ceForth_403.cpp']]]
+  ['parse_5fnumber_168',['parse_number',['../ceforth_8cpp.html#af4d8edffd9e7bdec7cabac4227a9a4f1',1,'ceforth.cpp']]],
+  ['pop_169',['pop',['../structList.html#a5413f7d02e0a1a1b13d5a4e349998952',1,'List::pop()'],['../ceforth_8cpp.html#ac84ee2b65e9f8a8a435a447462c6d6a0',1,'POP():&#160;ceforth.cpp']]],
+  ['push_170',['push',['../structList.html#ae1a2707d8afeec376bf24dc0470ee99a',1,'List::push()'],['../ceforth_8cpp.html#a5fdde0871776510df64f500650209b27',1,'PUSH():&#160;ceforth.cpp']]]
 ];

@@ -1,6 +1,8 @@
 var searchData=
 [
-  ['find_185',['find',['../ceforth_8cpp.html#ab42584b29d61d209a6db8ac142e5168b',1,'find(const char *s):&#160;ceforth.cpp'],['../ceforth_8cpp.html#a8d8af608ff18dd41e9bb6b0e4c3f3a22',1,'find(string &amp;s):&#160;ceforth.cpp'],['../ceForth__403_8cpp.html#ada75a1cac437ea2327a847b34aaca829',1,'find(string s):&#160;ceForth_403.cpp']]],
-  ['forth_186',['forth',['../ceForth__403_8cpp.html#a3633b5f7243178aa548bd2b9ffba1443',1,'ceForth_403.cpp']]],
-  ['forth_5fload_187',['forth_load',['../ceforth_8cpp.html#ae7c3c169da745d94f496db8fc26e1e4b',1,'ceforth.cpp']]]
+  ['find_155',['find',['../ceforth_8cpp.html#a9101adddcefa40443edb8cfd578f5fc2',1,'ceforth.cpp']]],
+  ['forth_5fcore_156',['forth_core',['../ceforth_8cpp.html#a23c9400f2dbf91290602937ec3a6f283',1,'ceforth.cpp']]],
+  ['forth_5finclude_157',['forth_include',['../ceforth_8cpp.html#ac0fd47776c33f55abe0077eb4d77ce0c',1,'forth_include(const char *fn):&#160;ceforth.cpp'],['../ceforth_8h.html#ac0fd47776c33f55abe0077eb4d77ce0c',1,'forth_include(const char *fn):&#160;ceforth.cpp']]],
+  ['forth_5finit_158',['forth_init',['../ceforth_8cpp.html#a7f66d1cf6a56ed50c9abd5331ed2073e',1,'forth_init():&#160;ceforth.cpp'],['../ceforth_8h.html#a7f66d1cf6a56ed50c9abd5331ed2073e',1,'forth_init():&#160;ceforth.cpp']]],
+  ['forth_5fvm_159',['forth_vm',['../ceforth_8cpp.html#a8c87f3590669c015f51863d357c405ff',1,'forth_vm(const char *cmd, void(*callback)(int, const char *)):&#160;ceforth.cpp'],['../ceforth_8h.html#a8c87f3590669c015f51863d357c405ff',1,'forth_vm(const char *cmd, void(*callback)(int, const char *)):&#160;ceforth.cpp']]]
 ];

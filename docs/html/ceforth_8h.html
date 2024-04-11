@@ -85,7 +85,8 @@ $(document).ready(function(){initNavTree('ceforth_8h.html',''); initResizable();
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#define-members">Macros</a> &#124;
-<a href="#typedef-members">Typedefs</a>  </div>
+<a href="#typedef-members">Typedefs</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">ceforth.h File Reference</div>  </div>
 </div><!--header-->
@@ -93,7 +94,7 @@ $(document).ready(function(){initNavTree('ceforth_8h.html',''); initResizable();
 <div class="textblock"><code>#include &lt;stdio.h&gt;</code><br />
 <code>#include &lt;stdint.h&gt;</code><br />
 <code>#include &lt;exception&gt;</code><br />
-<code>#include &lt;Arduino.h&gt;</code><br />
+<code>#include &quot;<a class="el" href="config_8h_source.html">config.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for ceforth.h:</div>
 <div class="dyncontent">
@@ -103,7 +104,8 @@ Include dependency graph for ceforth.h:</div>
 <area shape="rect" title=" " alt="" coords="5,80,72,107"/>
 <area shape="rect" title=" " alt="" coords="97,80,167,107"/>
 <area shape="rect" title=" " alt="" coords="191,80,278,107"/>
-<area shape="rect" title=" " alt="" coords="302,80,386,107"/>
+<area shape="rect" href="config_8h.html" title=" " alt="" coords="302,80,375,107"/>
+<area shape="rect" title=" " alt="" coords="297,155,381,181"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -122,86 +124,29 @@ This graph shows which files directly or indirectly include this file:</div>
 Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structList.html">List&lt; T, N &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structCode.html">Code</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">.cpp - <a class="el" href="structCode.html" title=".cpp - Code class implementation">Code</a> class implementation  <a href="structCode.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structCode.html">Code</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:a8150f027b39e6dde27a7d73c34fe5356"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a8150f027b39e6dde27a7d73c34fe5356">CC_DEBUG</a>&#160;&#160;&#160;0</td></tr>
-<tr class="separator:a8150f027b39e6dde27a7d73c34fe5356"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0c7f096b34080fdfa0a4d55e6cd8ca8a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a0c7f096b34080fdfa0a4d55e6cd8ca8a">RANGE_CHECK</a>&#160;&#160;&#160;0</td></tr>
-<tr class="separator:a0c7f096b34080fdfa0a4d55e6cd8ca8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab6d791a7c6dd6df90bf98aa8d74a0e82"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#ab6d791a7c6dd6df90bf98aa8d74a0e82">DO_WASM</a>&#160;&#160;&#160;__EMSCRIPTEN__</td></tr>
-<tr class="separator:ab6d791a7c6dd6df90bf98aa8d74a0e82"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a63360857d379d2ff485bb343e52184ac"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a63360857d379d2ff485bb343e52184ac">ADD_CODE</a>(n,  g,  im)</td></tr>
 <tr class="separator:a63360857d379d2ff485bb343e52184ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaa832ce7111efb00b4100ae5094fb58d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#aaa832ce7111efb00b4100ae5094fb58d">WORD_NULL</a>&#160;&#160;&#160;(<a class="el" href="ceforth_8h.html#ad49a4a3795be934579ff11f1296c1050">FPTR</a>)0     /** blank function pointer */</td></tr>
-<tr class="separator:aaa832ce7111efb00b4100ae5094fb58d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac58d1e15f0f77a1be59e0392d69347c2"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#ac58d1e15f0f77a1be59e0392d69347c2">CODE</a>(n,  g)&#160;&#160;&#160;<a class="el" href="ceforth_8h.html#a63360857d379d2ff485bb343e52184ac">ADD_CODE</a>(n, g, false)</td></tr>
 <tr class="separator:ac58d1e15f0f77a1be59e0392d69347c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad6dfd75ba82a34385031a82feecc9a01"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#ad6dfd75ba82a34385031a82feecc9a01">IMMD</a>(n,  g)&#160;&#160;&#160;<a class="el" href="ceforth_8h.html#a63360857d379d2ff485bb343e52184ac">ADD_CODE</a>(n, g, true)</td></tr>
 <tr class="separator:ad6dfd75ba82a34385031a82feecc9a01"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Memory block configuation</div></td></tr>
-<tr class="memitem:a5f69a406901fcf08ab5615294d7f334a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a5f69a406901fcf08ab5615294d7f334a">E4_RS_SZ</a>&#160;&#160;&#160;64</td></tr>
-<tr class="separator:a5f69a406901fcf08ab5615294d7f334a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af9fc7bdce59a3dac7fa463f733c888cf"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#af9fc7bdce59a3dac7fa463f733c888cf">E4_SS_SZ</a>&#160;&#160;&#160;64</td></tr>
-<tr class="separator:af9fc7bdce59a3dac7fa463f733c888cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3663378c5ef858dd03bc28732c610758"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a3663378c5ef858dd03bc28732c610758">E4_DICT_SZ</a>&#160;&#160;&#160;1024</td></tr>
-<tr class="separator:a3663378c5ef858dd03bc28732c610758"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0a0ff68a63bb8a53d930d405fe8624f8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a0a0ff68a63bb8a53d930d405fe8624f8">E4_PMEM_SZ</a>&#160;&#160;&#160;(32*1024)</td></tr>
-<tr class="separator:a0a0ff68a63bb8a53d930d405fe8624f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Multi-platform support</div></td></tr>
-<tr class="memitem:a90dc3f3ee970394e0080300526390a84"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a90dc3f3ee970394e0080300526390a84">ENDL</a>&#160;&#160;&#160;endl; <a class="el" href="ceforth_8cpp.html#ae601152c2463f358fc585f95817fb315">fout_cb</a>(fout.str().length(), fout.str().c_str()); fout.str(&quot;&quot;)</td></tr>
-<tr class="separator:a90dc3f3ee970394e0080300526390a84"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1832a8b24c5256b9b96404f71211874b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a1832a8b24c5256b9b96404f71211874b">to_string</a>(i)&#160;&#160;&#160;string(String(i).c_str())</td></tr>
-<tr class="separator:a1832a8b24c5256b9b96404f71211874b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a23c9be2739d1f57d5e53c91a5644ef84"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a23c9be2739d1f57d5e53c91a5644ef84">LOGS</a>(s)&#160;&#160;&#160;Serial.print(F(s))</td></tr>
-<tr class="separator:a23c9be2739d1f57d5e53c91a5644ef84"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abb62e552165265104f181c31c7ab1027"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#abb62e552165265104f181c31c7ab1027">LOG</a>(v)&#160;&#160;&#160;Serial.print(v)</td></tr>
-<tr class="separator:abb62e552165265104f181c31c7ab1027"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afc1872935fccc09c4b32c1e3d27f5ce8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#afc1872935fccc09c4b32c1e3d27f5ce8">LOGX</a>(v)&#160;&#160;&#160;Serial.print(v, HEX)</td></tr>
-<tr class="separator:afc1872935fccc09c4b32c1e3d27f5ce8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Debugging support</div></td></tr>
-<tr class="memitem:a3df0d3a48723355a845d4cbf48500db8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a3df0d3a48723355a845d4cbf48500db8">LOG_KV</a>(k,  v)</td></tr>
-<tr class="separator:a3df0d3a48723355a845d4cbf48500db8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a14694ee4ae482f0c98e7e4c5ed6a357f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a14694ee4ae482f0c98e7e4c5ed6a357f">LOG_KX</a>(k,  x)</td></tr>
-<tr class="separator:a14694ee4ae482f0c98e7e4c5ed6a357f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a614a580b75287a31ba63b87bce8b8b0d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a614a580b75287a31ba63b87bce8b8b0d">LOG_HDR</a>(f,  s)</td></tr>
-<tr class="separator:a614a580b75287a31ba63b87bce8b8b0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af89696433a0c4452c18ae316957216c4"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#af89696433a0c4452c18ae316957216c4">LOG_DIC</a>(i)</td></tr>
-<tr class="separator:af89696433a0c4452c18ae316957216c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af5c0a2edb9d8e2c7cef48f9cab2afa9a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#af5c0a2edb9d8e2c7cef48f9cab2afa9a">LOG_NA</a>()</td></tr>
-<tr class="separator:af5c0a2edb9d8e2c7cef48f9cab2afa9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Inline &amp; Alignment macros</div></td></tr>
-<tr class="memitem:a2eb6f9e0395b47b8d5e3eeae4fe0c116"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a2eb6f9e0395b47b8d5e3eeae4fe0c116">INLINE</a>&#160;&#160;&#160;__attribute__((always_inline))</td></tr>
-<tr class="separator:a2eb6f9e0395b47b8d5e3eeae4fe0c116"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7e57896edccce561d980ab169d3b5ff7"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a7e57896edccce561d980ab169d3b5ff7">ALIGN2</a>(sz)&#160;&#160;&#160;((sz) + (-(sz) &amp; 0x1))</td></tr>
-<tr class="separator:a7e57896edccce561d980ab169d3b5ff7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a056d3f5d159b253ad746e0111a6b40c8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a056d3f5d159b253ad746e0111a6b40c8">ALIGN4</a>(sz)&#160;&#160;&#160;((sz) + (-(sz) &amp; 0x3))</td></tr>
-<tr class="separator:a056d3f5d159b253ad746e0111a6b40c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af1c36bda5eb7e9eb12cc52d52c491db5"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#af1c36bda5eb7e9eb12cc52d52c491db5">ALIGN16</a>(sz)&#160;&#160;&#160;((sz) + (-(sz) &amp; 0xf))</td></tr>
-<tr class="separator:af1c36bda5eb7e9eb12cc52d52c491db5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a49d9ff52840ffdf8640600c6d625f4eb"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a49d9ff52840ffdf8640600c6d625f4eb">ALIGN32</a>(sz)&#160;&#160;&#160;((sz) + (-(sz) &amp; 0x1f))</td></tr>
-<tr class="separator:a49d9ff52840ffdf8640600c6d625f4eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a53ee12f4dd53b3aa1de7e6aa2e3d61fe"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a53ee12f4dd53b3aa1de7e6aa2e3d61fe">ALIGN</a>(sz)&#160;&#160;&#160;<a class="el" href="ceforth_8h.html#a7e57896edccce561d980ab169d3b5ff7">ALIGN2</a>(sz)</td></tr>
-<tr class="separator:a53ee12f4dd53b3aa1de7e6aa2e3d61fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a916ffefe1fc74532d08102cca55d8e34"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a916ffefe1fc74532d08102cca55d8e34">STRLEN</a>(s)&#160;&#160;&#160;(<a class="el" href="ceforth_8h.html#a53ee12f4dd53b3aa1de7e6aa2e3d61fe">ALIGN</a>(strlen(s)+1))  /** calculate string size with alignment */</td></tr>
-<tr class="separator:a916ffefe1fc74532d08102cca55d8e34"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Code flag masking options</div></td></tr>
-<tr class="memitem:a68991d1b5c5a8dcf5b67dadc9a52a882"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a68991d1b5c5a8dcf5b67dadc9a52a882">WORD_NA</a>&#160;&#160;&#160;-1</td></tr>
-<tr class="separator:a68991d1b5c5a8dcf5b67dadc9a52a882"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abeabbd500492ac2075ceb932a454da34"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#abeabbd500492ac2075ceb932a454da34">UDF_ATTR</a>&#160;&#160;&#160;0x0001     /** user defined word  */</td></tr>
+<tr class="memitem:abeabbd500492ac2075ceb932a454da34"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#abeabbd500492ac2075ceb932a454da34">UDF_ATTR</a>&#160;&#160;&#160;0x0001   /** user defined <a class="el" href="ceforth_8cpp.html#af629538f3b0c84bcc653fb92698c4f05">word</a>  */</td></tr>
 <tr class="separator:abeabbd500492ac2075ceb932a454da34"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8495127a64408f521294349c5526476e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a8495127a64408f521294349c5526476e">IMM_ATTR</a>&#160;&#160;&#160;0x0002     /** immediate word     */</td></tr>
+<tr class="memitem:a8495127a64408f521294349c5526476e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a8495127a64408f521294349c5526476e">IMM_ATTR</a>&#160;&#160;&#160;0x0002   /** immediate <a class="el" href="ceforth_8cpp.html#af629538f3b0c84bcc653fb92698c4f05">word</a>     */</td></tr>
 <tr class="separator:a8495127a64408f521294349c5526476e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a14bbb4ecc3200a3c711b21e08cce8fa9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a14bbb4ecc3200a3c711b21e08cce8fa9">MSK_ATTR</a>&#160;&#160;&#160;~0x3       /** attribute mask     */</td></tr>
+<tr class="memitem:a14bbb4ecc3200a3c711b21e08cce8fa9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a14bbb4ecc3200a3c711b21e08cce8fa9">MSK_ATTR</a>&#160;&#160;&#160;~0x3</td></tr>
 <tr class="separator:a14bbb4ecc3200a3c711b21e08cce8fa9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2cb5a16a51f8ed950ee79452bc14fed4"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a2cb5a16a51f8ed950ee79452bc14fed4">UDF_FLAG</a>&#160;&#160;&#160;0x0001</td></tr>
+<tr class="memitem:a2cb5a16a51f8ed950ee79452bc14fed4"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a2cb5a16a51f8ed950ee79452bc14fed4">UDF_FLAG</a>&#160;&#160;&#160;0x0001   /** xt/pfa selector    */</td></tr>
 <tr class="separator:a2cb5a16a51f8ed950ee79452bc14fed4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a533242fce93eeff8d467f57b23192a27"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a533242fce93eeff8d467f57b23192a27">IS_UDF</a>(w)&#160;&#160;&#160;(<a class="el" href="ceForth__403_8cpp.html#a19809bf672fbc19ef62d024f889a73c4">dict</a>[w].attr &amp; <a class="el" href="ceforth_8h.html#abeabbd500492ac2075ceb932a454da34">UDF_ATTR</a>)</td></tr>
+<tr class="memitem:a533242fce93eeff8d467f57b23192a27"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a533242fce93eeff8d467f57b23192a27">IS_UDF</a>(w)&#160;&#160;&#160;(<a class="el" href="ceforth_8cpp.html#aa086a2419b6fa4292fe7a96ade49cfd4">dict</a>[w].attr &amp; <a class="el" href="ceforth_8h.html#abeabbd500492ac2075ceb932a454da34">UDF_ATTR</a>)</td></tr>
 <tr class="separator:a533242fce93eeff8d467f57b23192a27"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad59eb14dcff82995aba75fff6e6919ee"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#ad59eb14dcff82995aba75fff6e6919ee">IS_IMM</a>(w)&#160;&#160;&#160;(<a class="el" href="ceForth__403_8cpp.html#a19809bf672fbc19ef62d024f889a73c4">dict</a>[w].attr &amp; <a class="el" href="ceforth_8h.html#a8495127a64408f521294349c5526476e">IMM_ATTR</a>)</td></tr>
+<tr class="memitem:ad59eb14dcff82995aba75fff6e6919ee"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#ad59eb14dcff82995aba75fff6e6919ee">IS_IMM</a>(w)&#160;&#160;&#160;(<a class="el" href="ceforth_8cpp.html#aa086a2419b6fa4292fe7a96ade49cfd4">dict</a>[w].attr &amp; <a class="el" href="ceforth_8h.html#a8495127a64408f521294349c5526476e">IMM_ATTR</a>)</td></tr>
 <tr class="separator:ad59eb14dcff82995aba75fff6e6919ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
@@ -210,513 +155,16 @@ Typedefs</h2></td></tr>
 <tr class="memdesc:ad49a4a3795be934579ff11f1296c1050"><td class="mdescLeft">&#160;</td><td class="mdescRight">function pointer  <a href="ceforth_8h.html#ad49a4a3795be934579ff11f1296c1050">More...</a><br /></td></tr>
 <tr class="separator:ad49a4a3795be934579ff11f1296c1050"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="member-group"></a>
-Logical units (instead of physical) for type check and portability</h2></td></tr>
-<tr class="memitem:ab09a231138adc0fb73bfb9ba7144b797"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#ab09a231138adc0fb73bfb9ba7144b797">DU0</a>&#160;&#160;&#160;0</td></tr>
-<tr class="separator:ab09a231138adc0fb73bfb9ba7144b797"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b3b4f9835caaf6be7bfa7f843bbec05"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a7b3b4f9835caaf6be7bfa7f843bbec05">UINT</a>(v)&#160;&#160;&#160;(abs(v))</td></tr>
-<tr class="separator:a7b3b4f9835caaf6be7bfa7f843bbec05"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a696390429f2f3b644bde8d0322a24124"><td class="memItemLeft" align="right" valign="top">typedef uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a696390429f2f3b644bde8d0322a24124">U32</a></td></tr>
-<tr class="memdesc:a696390429f2f3b644bde8d0322a24124"><td class="mdescLeft">&#160;</td><td class="mdescRight">unsigned 32-bit integer  <a href="ceforth_8h.html#a696390429f2f3b644bde8d0322a24124">More...</a><br /></td></tr>
-<tr class="separator:a696390429f2f3b644bde8d0322a24124"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a39c786017723555afb9e8b85accec0de"><td class="memItemLeft" align="right" valign="top">typedef int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a39c786017723555afb9e8b85accec0de">S32</a></td></tr>
-<tr class="memdesc:a39c786017723555afb9e8b85accec0de"><td class="mdescLeft">&#160;</td><td class="mdescRight">signed 32-bit integer  <a href="ceforth_8h.html#a39c786017723555afb9e8b85accec0de">More...</a><br /></td></tr>
-<tr class="separator:a39c786017723555afb9e8b85accec0de"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0a0a322d5fa4a546d293a77ba8b4a71f"><td class="memItemLeft" align="right" valign="top">typedef uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a0a0a322d5fa4a546d293a77ba8b4a71f">U16</a></td></tr>
-<tr class="memdesc:a0a0a322d5fa4a546d293a77ba8b4a71f"><td class="mdescLeft">&#160;</td><td class="mdescRight">unsigned 16-bit integer  <a href="ceforth_8h.html#a0a0a322d5fa4a546d293a77ba8b4a71f">More...</a><br /></td></tr>
-<tr class="separator:a0a0a322d5fa4a546d293a77ba8b4a71f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa63ef7b996d5487ce35a5a66601f3e73"><td class="memItemLeft" align="right" valign="top">typedef uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#aa63ef7b996d5487ce35a5a66601f3e73">U8</a></td></tr>
-<tr class="memdesc:aa63ef7b996d5487ce35a5a66601f3e73"><td class="mdescLeft">&#160;</td><td class="mdescRight">byte, unsigned character  <a href="ceforth_8h.html#aa63ef7b996d5487ce35a5a66601f3e73">More...</a><br /></td></tr>
-<tr class="separator:aa63ef7b996d5487ce35a5a66601f3e73"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a34c9e39f868b60a2945e499befe08091"><td class="memItemLeft" align="right" valign="top">typedef uintptr_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a34c9e39f868b60a2945e499befe08091">UFP</a></td></tr>
-<tr class="memdesc:a34c9e39f868b60a2945e499befe08091"><td class="mdescLeft">&#160;</td><td class="mdescRight">function pointer as integer  <a href="ceforth_8h.html#a34c9e39f868b60a2945e499befe08091">More...</a><br /></td></tr>
-<tr class="separator:a34c9e39f868b60a2945e499befe08091"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acdee6bf4ab3aa323dd7343fd2348095b"><td class="memItemLeft" align="right" valign="top">typedef int64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#acdee6bf4ab3aa323dd7343fd2348095b">DU2</a></td></tr>
-<tr class="separator:acdee6bf4ab3aa323dd7343fd2348095b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa37b071e9b75686518ba19bfc6526b04"><td class="memItemLeft" align="right" valign="top">typedef int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#aa37b071e9b75686518ba19bfc6526b04">DU</a></td></tr>
-<tr class="separator:aa37b071e9b75686518ba19bfc6526b04"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aff5e3e5f0579f9bce7aeaeac9d89d33a"><td class="memItemLeft" align="right" valign="top">typedef uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#aff5e3e5f0579f9bce7aeaeac9d89d33a">IU</a></td></tr>
-<tr class="memdesc:aff5e3e5f0579f9bce7aeaeac9d89d33a"><td class="mdescLeft">&#160;</td><td class="mdescRight">instruction pointer unit  <a href="ceforth_8h.html#aff5e3e5f0579f9bce7aeaeac9d89d33a">More...</a><br /></td></tr>
-<tr class="separator:aff5e3e5f0579f9bce7aeaeac9d89d33a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a7f66d1cf6a56ed50c9abd5331ed2073e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a7f66d1cf6a56ed50c9abd5331ed2073e">forth_init</a> ()</td></tr>
+<tr class="separator:a7f66d1cf6a56ed50c9abd5331ed2073e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c87f3590669c015f51863d357c405ff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a8c87f3590669c015f51863d357c405ff">forth_vm</a> (const char *cmd, void(*callback)(int, const char *))</td></tr>
+<tr class="separator:a8c87f3590669c015f51863d357c405ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac0fd47776c33f55abe0077eb4d77ce0c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#ac0fd47776c33f55abe0077eb4d77ce0c">forth_include</a> (const char *fn)</td></tr>
+<tr class="separator:ac0fd47776c33f55abe0077eb4d77ce0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Macro Definition Documentation</h2>
-<a id="a8150f027b39e6dde27a7d73c34fe5356"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8150f027b39e6dde27a7d73c34fe5356">&#9670;&nbsp;</a></span>CC_DEBUG</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define CC_DEBUG&#160;&#160;&#160;0</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>debug tracing flag <br  />
- </p>
-
-</div>
-</div>
-<a id="a0c7f096b34080fdfa0a4d55e6cd8ca8a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0c7f096b34080fdfa0a4d55e6cd8ca8a">&#9670;&nbsp;</a></span>RANGE_CHECK</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define RANGE_CHECK&#160;&#160;&#160;0</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>vector range check <br  />
- </p>
-
-</div>
-</div>
-<a id="ab6d791a7c6dd6df90bf98aa8d74a0e82"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab6d791a7c6dd6df90bf98aa8d74a0e82">&#9670;&nbsp;</a></span>DO_WASM</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define DO_WASM&#160;&#160;&#160;__EMSCRIPTEN__</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>for WASM output <br  />
- </p>
-
-</div>
-</div>
-<a id="a5f69a406901fcf08ab5615294d7f334a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5f69a406901fcf08ab5615294d7f334a">&#9670;&nbsp;</a></span>E4_RS_SZ</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define E4_RS_SZ&#160;&#160;&#160;64</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="af9fc7bdce59a3dac7fa463f733c888cf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af9fc7bdce59a3dac7fa463f733c888cf">&#9670;&nbsp;</a></span>E4_SS_SZ</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define E4_SS_SZ&#160;&#160;&#160;64</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a3663378c5ef858dd03bc28732c610758"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3663378c5ef858dd03bc28732c610758">&#9670;&nbsp;</a></span>E4_DICT_SZ</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define E4_DICT_SZ&#160;&#160;&#160;1024</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a0a0ff68a63bb8a53d930d405fe8624f8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0a0ff68a63bb8a53d930d405fe8624f8">&#9670;&nbsp;</a></span>E4_PMEM_SZ</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define E4_PMEM_SZ&#160;&#160;&#160;(32*1024)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a90dc3f3ee970394e0080300526390a84"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a90dc3f3ee970394e0080300526390a84">&#9670;&nbsp;</a></span>ENDL</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define ENDL&#160;&#160;&#160;endl; <a class="el" href="ceforth_8cpp.html#ae601152c2463f358fc585f95817fb315">fout_cb</a>(fout.str().length(), fout.str().c_str()); fout.str(&quot;&quot;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a1832a8b24c5256b9b96404f71211874b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1832a8b24c5256b9b96404f71211874b">&#9670;&nbsp;</a></span>to_string</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define to_string</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">i</td><td>)</td>
-          <td>&#160;&#160;&#160;string(String(i).c_str())</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a23c9be2739d1f57d5e53c91a5644ef84"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a23c9be2739d1f57d5e53c91a5644ef84">&#9670;&nbsp;</a></span>LOGS</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define LOGS</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">s</td><td>)</td>
-          <td>&#160;&#160;&#160;Serial.print(F(s))</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="abb62e552165265104f181c31c7ab1027"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abb62e552165265104f181c31c7ab1027">&#9670;&nbsp;</a></span>LOG</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define LOG</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">v</td><td>)</td>
-          <td>&#160;&#160;&#160;Serial.print(v)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="afc1872935fccc09c4b32c1e3d27f5ce8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afc1872935fccc09c4b32c1e3d27f5ce8">&#9670;&nbsp;</a></span>LOGX</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define LOGX</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">v</td><td>)</td>
-          <td>&#160;&#160;&#160;Serial.print(v, HEX)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a3df0d3a48723355a845d4cbf48500db8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3df0d3a48723355a845d4cbf48500db8">&#9670;&nbsp;</a></span>LOG_KV</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define LOG_KV</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">k, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">v&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a14694ee4ae482f0c98e7e4c5ed6a357f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a14694ee4ae482f0c98e7e4c5ed6a357f">&#9670;&nbsp;</a></span>LOG_KX</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define LOG_KX</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">k, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">x&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a614a580b75287a31ba63b87bce8b8b0d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a614a580b75287a31ba63b87bce8b8b0d">&#9670;&nbsp;</a></span>LOG_HDR</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define LOG_HDR</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">f, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">s&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="af89696433a0c4452c18ae316957216c4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af89696433a0c4452c18ae316957216c4">&#9670;&nbsp;</a></span>LOG_DIC</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define LOG_DIC</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">i</td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="af5c0a2edb9d8e2c7cef48f9cab2afa9a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af5c0a2edb9d8e2c7cef48f9cab2afa9a">&#9670;&nbsp;</a></span>LOG_NA</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define LOG_NA</td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="ab09a231138adc0fb73bfb9ba7144b797"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab09a231138adc0fb73bfb9ba7144b797">&#9670;&nbsp;</a></span>DU0</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define DU0&#160;&#160;&#160;0</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a7b3b4f9835caaf6be7bfa7f843bbec05"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7b3b4f9835caaf6be7bfa7f843bbec05">&#9670;&nbsp;</a></span>UINT</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define UINT</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">v</td><td>)</td>
-          <td>&#160;&#160;&#160;(abs(v))</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a2eb6f9e0395b47b8d5e3eeae4fe0c116"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2eb6f9e0395b47b8d5e3eeae4fe0c116">&#9670;&nbsp;</a></span>INLINE</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define INLINE&#160;&#160;&#160;__attribute__((always_inline))</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a7e57896edccce561d980ab169d3b5ff7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7e57896edccce561d980ab169d3b5ff7">&#9670;&nbsp;</a></span>ALIGN2</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define ALIGN2</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">sz</td><td>)</td>
-          <td>&#160;&#160;&#160;((sz) + (-(sz) &amp; 0x1))</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a056d3f5d159b253ad746e0111a6b40c8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a056d3f5d159b253ad746e0111a6b40c8">&#9670;&nbsp;</a></span>ALIGN4</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define ALIGN4</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">sz</td><td>)</td>
-          <td>&#160;&#160;&#160;((sz) + (-(sz) &amp; 0x3))</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="af1c36bda5eb7e9eb12cc52d52c491db5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af1c36bda5eb7e9eb12cc52d52c491db5">&#9670;&nbsp;</a></span>ALIGN16</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define ALIGN16</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">sz</td><td>)</td>
-          <td>&#160;&#160;&#160;((sz) + (-(sz) &amp; 0xf))</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a49d9ff52840ffdf8640600c6d625f4eb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a49d9ff52840ffdf8640600c6d625f4eb">&#9670;&nbsp;</a></span>ALIGN32</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define ALIGN32</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">sz</td><td>)</td>
-          <td>&#160;&#160;&#160;((sz) + (-(sz) &amp; 0x1f))</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a53ee12f4dd53b3aa1de7e6aa2e3d61fe"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a53ee12f4dd53b3aa1de7e6aa2e3d61fe">&#9670;&nbsp;</a></span>ALIGN</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define ALIGN</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">sz</td><td>)</td>
-          <td>&#160;&#160;&#160;<a class="el" href="ceforth_8h.html#a7e57896edccce561d980ab169d3b5ff7">ALIGN2</a>(sz)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a916ffefe1fc74532d08102cca55d8e34"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a916ffefe1fc74532d08102cca55d8e34">&#9670;&nbsp;</a></span>STRLEN</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define STRLEN</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">s</td><td>)</td>
-          <td>&#160;&#160;&#160;(<a class="el" href="ceforth_8h.html#a53ee12f4dd53b3aa1de7e6aa2e3d61fe">ALIGN</a>(strlen(s)+1))  /** calculate string size with alignment */</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a68991d1b5c5a8dcf5b67dadc9a52a882"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a68991d1b5c5a8dcf5b67dadc9a52a882">&#9670;&nbsp;</a></span>WORD_NA</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define WORD_NA&#160;&#160;&#160;-1</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
 <a id="abeabbd500492ac2075ceb932a454da34"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#abeabbd500492ac2075ceb932a454da34">&#9670;&nbsp;</a></span>UDF_ATTR</h2>
 
@@ -724,11 +172,10 @@ Logical units (instead of physical) for type check and portability</h2></td></tr
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define UDF_ATTR&#160;&#160;&#160;0x0001     /** user defined word  */</td>
+          <td class="memname">#define UDF_ATTR&#160;&#160;&#160;0x0001   /** user defined <a class="el" href="ceforth_8cpp.html#af629538f3b0c84bcc653fb92698c4f05">word</a>  */</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>WASM function ptr is index to vtable </p>
 
 </div>
 </div>
@@ -739,7 +186,7 @@ Logical units (instead of physical) for type check and portability</h2></td></tr
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define IMM_ATTR&#160;&#160;&#160;0x0002     /** immediate word     */</td>
+          <td class="memname">#define IMM_ATTR&#160;&#160;&#160;0x0002   /** immediate <a class="el" href="ceforth_8cpp.html#af629538f3b0c84bcc653fb92698c4f05">word</a>     */</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -753,7 +200,7 @@ Logical units (instead of physical) for type check and portability</h2></td></tr
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define MSK_ATTR&#160;&#160;&#160;~0x3       /** attribute mask     */</td>
+          <td class="memname">#define MSK_ATTR&#160;&#160;&#160;~0x3</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -767,7 +214,7 @@ Logical units (instead of physical) for type check and portability</h2></td></tr
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define UDF_FLAG&#160;&#160;&#160;0x0001</td>
+          <td class="memname">#define UDF_FLAG&#160;&#160;&#160;0x0001   /** xt/pfa selector    */</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -785,7 +232,7 @@ Logical units (instead of physical) for type check and portability</h2></td></tr
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">w</td><td>)</td>
-          <td>&#160;&#160;&#160;(<a class="el" href="ceForth__403_8cpp.html#a19809bf672fbc19ef62d024f889a73c4">dict</a>[w].attr &amp; <a class="el" href="ceforth_8h.html#abeabbd500492ac2075ceb932a454da34">UDF_ATTR</a>)</td>
+          <td>&#160;&#160;&#160;(<a class="el" href="ceforth_8cpp.html#aa086a2419b6fa4292fe7a96ade49cfd4">dict</a>[w].attr &amp; <a class="el" href="ceforth_8h.html#abeabbd500492ac2075ceb932a454da34">UDF_ATTR</a>)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -803,7 +250,7 @@ Logical units (instead of physical) for type check and portability</h2></td></tr
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">w</td><td>)</td>
-          <td>&#160;&#160;&#160;(<a class="el" href="ceForth__403_8cpp.html#a19809bf672fbc19ef62d024f889a73c4">dict</a>[w].attr &amp; <a class="el" href="ceforth_8h.html#a8495127a64408f521294349c5526476e">IMM_ATTR</a>)</td>
+          <td>&#160;&#160;&#160;(<a class="el" href="ceforth_8cpp.html#aa086a2419b6fa4292fe7a96ade49cfd4">dict</a>[w].attr &amp; <a class="el" href="ceforth_8h.html#a8495127a64408f521294349c5526476e">IMM_ATTR</a>)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -849,20 +296,6 @@ Logical units (instead of physical) for type check and portability</h2></td></tr
 <p>Add a Word to dictionary </p>
 </blockquote>
 <p>Note: a lambda without capture can degenerate into a function pointer </p>
-
-</div>
-</div>
-<a id="aaa832ce7111efb00b4100ae5094fb58d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaa832ce7111efb00b4100ae5094fb58d">&#9670;&nbsp;</a></span>WORD_NULL</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define WORD_NULL&#160;&#160;&#160;(<a class="el" href="ceforth_8h.html#ad49a4a3795be934579ff11f1296c1050">FPTR</a>)0     /** blank function pointer */</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
 
 </div>
 </div>
@@ -923,130 +356,6 @@ Logical units (instead of physical) for type check and portability</h2></td></tr
 </div>
 </div>
 <h2 class="groupheader">Typedef Documentation</h2>
-<a id="a696390429f2f3b644bde8d0322a24124"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a696390429f2f3b644bde8d0322a24124">&#9670;&nbsp;</a></span>U32</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef uint32_t <a class="el" href="ceforth_8h.html#a696390429f2f3b644bde8d0322a24124">U32</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>unsigned 32-bit integer </p>
-
-</div>
-</div>
-<a id="a39c786017723555afb9e8b85accec0de"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a39c786017723555afb9e8b85accec0de">&#9670;&nbsp;</a></span>S32</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef int32_t <a class="el" href="ceforth_8h.html#a39c786017723555afb9e8b85accec0de">S32</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>signed 32-bit integer </p>
-
-</div>
-</div>
-<a id="a0a0a322d5fa4a546d293a77ba8b4a71f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0a0a322d5fa4a546d293a77ba8b4a71f">&#9670;&nbsp;</a></span>U16</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef uint16_t <a class="el" href="ceforth_8h.html#a0a0a322d5fa4a546d293a77ba8b4a71f">U16</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>unsigned 16-bit integer </p>
-
-</div>
-</div>
-<a id="aa63ef7b996d5487ce35a5a66601f3e73"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa63ef7b996d5487ce35a5a66601f3e73">&#9670;&nbsp;</a></span>U8</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef uint8_t <a class="el" href="ceforth_8h.html#aa63ef7b996d5487ce35a5a66601f3e73">U8</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>byte, unsigned character </p>
-
-</div>
-</div>
-<a id="a34c9e39f868b60a2945e499befe08091"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a34c9e39f868b60a2945e499befe08091">&#9670;&nbsp;</a></span>UFP</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef uintptr_t <a class="el" href="ceforth_8h.html#a34c9e39f868b60a2945e499befe08091">UFP</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>function pointer as integer </p>
-
-</div>
-</div>
-<a id="acdee6bf4ab3aa323dd7343fd2348095b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acdee6bf4ab3aa323dd7343fd2348095b">&#9670;&nbsp;</a></span>DU2</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef int64_t <a class="el" href="ceforth_8h.html#acdee6bf4ab3aa323dd7343fd2348095b">DU2</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="aa37b071e9b75686518ba19bfc6526b04"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa37b071e9b75686518ba19bfc6526b04">&#9670;&nbsp;</a></span>DU</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef int32_t <a class="el" href="ceforth_8h.html#aa37b071e9b75686518ba19bfc6526b04">DU</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="aff5e3e5f0579f9bce7aeaeac9d89d33a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aff5e3e5f0579f9bce7aeaeac9d89d33a">&#9670;&nbsp;</a></span>IU</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef uint16_t <a class="el" href="ceforth_8h.html#aff5e3e5f0579f9bce7aeaeac9d89d33a">IU</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>instruction pointer unit </p>
-
-</div>
-</div>
 <a id="ad49a4a3795be934579ff11f1296c1050"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad49a4a3795be934579ff11f1296c1050">&#9670;&nbsp;</a></span>FPTR</h2>
 
@@ -1061,8 +370,102 @@ Logical units (instead of physical) for type check and portability</h2></td></tr
 
 <p>function pointer </p>
 <blockquote class="doxtable">
-<p>Universal functor (no STL) and <a class="el" href="structCode.html" title=".cpp - Code class implementation">Code</a> class </p>
+<p>Universal functor (no STL) and <a class="el" href="structCode.html">Code</a> class </p>
 </blockquote>
+<p><a class="el" href="structCode.html">Code</a> class on 64-bit systems (expand pfa possible) +----------------&mdash;+----------------&mdash;+ | *name | xt | +----------------&mdash;+-&mdash;+-&mdash;+------&mdash;+ |attr|pfa |xxxxxxxxx| +-&mdash;+-&mdash;+------&mdash;+ <a class="el" href="structCode.html">Code</a> class on 32-bit systems (memory best utilized) +------&mdash;+------&mdash;+ | *name | xt | +------&mdash;+-&mdash;+-&mdash;+ |attr|pfa | +-&mdash;+-&mdash;+ <a class="el" href="structCode.html">Code</a> class on WASM/32-bit (a bit wasteful) +------&mdash;+------&mdash;+------&mdash;+ | *name | xt |attr|xxxx| +------&mdash;+-&mdash;+-&mdash;+------&mdash;+ |pfa |xxxx| +-&mdash;+-&mdash;+ </p>
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="a7f66d1cf6a56ed50c9abd5331ed2073e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7f66d1cf6a56ed50c9abd5331ed2073e">&#9670;&nbsp;</a></span>forth_init()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void forth_init </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>====================================================================</p>
+<p>Forth VM external command processor </p>
+<blockquote class="doxtable">
+<p>check dictionary initilized </p>
+</blockquote>
+<blockquote class="doxtable">
+<p>compile dictionary </p>
+</blockquote>
+
+</div>
+</div>
+<a id="a8c87f3590669c015f51863d357c405ff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8c87f3590669c015f51863d357c405ff">&#9670;&nbsp;</a></span>forth_vm()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void forth_vm </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>cmd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void(*)(int, const char *)&#160;</td>
+          <td class="paramname"><em>callback</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<blockquote class="doxtable">
+<p>clear input stream error bit if any </p>
+</blockquote>
+<blockquote class="doxtable">
+<p>feed user command into input stream </p>
+</blockquote>
+<blockquote class="doxtable">
+<p>setup callback function </p>
+</blockquote>
+<blockquote class="doxtable">
+<p>clean output buffer, ready for next run </p>
+</blockquote>
+<blockquote class="doxtable">
+<p>outer interpreter loop </p>
+</blockquote>
+<blockquote class="doxtable">
+<p>single command to Forth core </p>
+</blockquote>
+<ul>
+<li>dump stack and display ok prompt</li>
+</ul>
+
+</div>
+</div>
+<a id="ac0fd47776c33f55abe0077eb4d77ce0c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac0fd47776c33f55abe0077eb4d77ce0c">&#9670;&nbsp;</a></span>forth_include()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int forth_include </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>fn</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>

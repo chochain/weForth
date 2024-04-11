@@ -1,0 +1,361 @@
+\hypertarget{config_8h}{}\doxysection{src/config.h File Reference}
+\label{config_8h}\index{src/config.h@{src/config.h}}
+{\ttfamily \#include $<$Arduino.\+h$>$}\newline
+Include dependency graph for config.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=152pt]{config_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=169pt]{config_8h__dep__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{config_8h_a8150f027b39e6dde27a7d73c34fe5356}{C\+C\+\_\+\+D\+E\+B\+UG}}~1
+\item 
+\#define \mbox{\hyperlink{config_8h_a0c7f096b34080fdfa0a4d55e6cd8ca8a}{R\+A\+N\+G\+E\+\_\+\+C\+H\+E\+CK}}~0
+\item 
+\#define \mbox{\hyperlink{config_8h_a5a03415e5a2d7bdc6ce680c47ddc156a}{U\+S\+E\+\_\+\+F\+L\+O\+AT}}~0
+\item 
+\#define \mbox{\hyperlink{config_8h_ab6d791a7c6dd6df90bf98aa8d74a0e82}{D\+O\+\_\+\+W\+A\+SM}}~\+\_\+\+\_\+\+E\+M\+S\+C\+R\+I\+P\+T\+E\+N\+\_\+\+\_\+
+\end{DoxyCompactItemize}
+\begin{Indent}\textbf{ Memory block configuation}\par
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{config_8h_a5f69a406901fcf08ab5615294d7f334a}{E4\+\_\+\+R\+S\+\_\+\+SZ}}~32
+\item 
+\#define \mbox{\hyperlink{config_8h_af9fc7bdce59a3dac7fa463f733c888cf}{E4\+\_\+\+S\+S\+\_\+\+SZ}}~16
+\item 
+\#define \mbox{\hyperlink{config_8h_a3663378c5ef858dd03bc28732c610758}{E4\+\_\+\+D\+I\+C\+T\+\_\+\+SZ}}~400
+\item 
+\#define \mbox{\hyperlink{config_8h_a0a0ff68a63bb8a53d930d405fe8624f8}{E4\+\_\+\+P\+M\+E\+M\+\_\+\+SZ}}~(32$\ast$1024)
+\end{DoxyCompactItemize}
+\end{Indent}
+\begin{Indent}\textbf{ Inline \& Alignment macros}\par
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{config_8h_a2eb6f9e0395b47b8d5e3eeae4fe0c116}{I\+N\+L\+I\+NE}}~\+\_\+\+\_\+attribute\+\_\+\+\_\+((always\+\_\+inline))
+\item 
+\#define \mbox{\hyperlink{config_8h_a7e57896edccce561d980ab169d3b5ff7}{A\+L\+I\+G\+N2}}(sz)~((sz) + (-\/(sz) \& 0x1))
+\item 
+\#define \mbox{\hyperlink{config_8h_a056d3f5d159b253ad746e0111a6b40c8}{A\+L\+I\+G\+N4}}(sz)~((sz) + (-\/(sz) \& 0x3))
+\item 
+\#define \mbox{\hyperlink{config_8h_af1c36bda5eb7e9eb12cc52d52c491db5}{A\+L\+I\+G\+N16}}(sz)~((sz) + (-\/(sz) \& 0xf))
+\item 
+\#define \mbox{\hyperlink{config_8h_a49d9ff52840ffdf8640600c6d625f4eb}{A\+L\+I\+G\+N32}}(sz)~((sz) + (-\/(sz) \& 0x1f))
+\item 
+\#define \mbox{\hyperlink{config_8h_a53ee12f4dd53b3aa1de7e6aa2e3d61fe}{A\+L\+I\+GN}}(sz)~\mbox{\hyperlink{config_8h_a7e57896edccce561d980ab169d3b5ff7}{A\+L\+I\+G\+N2}}(sz)
+\item 
+\#define \mbox{\hyperlink{config_8h_a916ffefe1fc74532d08102cca55d8e34}{S\+T\+R\+L\+EN}}(s)~(\mbox{\hyperlink{config_8h_a53ee12f4dd53b3aa1de7e6aa2e3d61fe}{A\+L\+I\+GN}}(strlen(s)+1))  /$\ast$$\ast$ calculate string size with alignment $\ast$/
+\end{DoxyCompactItemize}
+\end{Indent}
+\begin{Indent}\textbf{ Multi-\/platform support}\par
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{config_8h_a90dc3f3ee970394e0080300526390a84}{E\+N\+DL}}~endl; \mbox{\hyperlink{ceforth_8cpp_ae601152c2463f358fc585f95817fb315}{fout\+\_\+cb}}(fout.\+str().length(), fout.\+str().c\+\_\+str()); fout.\+str(\char`\"{}\char`\"{})
+\item 
+\#define \mbox{\hyperlink{config_8h_a1832a8b24c5256b9b96404f71211874b}{to\+\_\+string}}(i)~string(String(i).c\+\_\+str())
+\end{DoxyCompactItemize}
+\end{Indent}
+\begin{Indent}\textbf{ Logging support}\par
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}{L\+O\+GS}}(s)~Serial.\+print(F(s))
+\item 
+\#define \mbox{\hyperlink{config_8h_abb62e552165265104f181c31c7ab1027}{L\+OG}}(v)~Serial.\+print(v)
+\item 
+\#define \mbox{\hyperlink{config_8h_afc1872935fccc09c4b32c1e3d27f5ce8}{L\+O\+GX}}(v)~Serial.\+print(v, H\+EX)
+\item 
+\#define \mbox{\hyperlink{config_8h_af5c0a2edb9d8e2c7cef48f9cab2afa9a}{L\+O\+G\+\_\+\+NA}}()~\mbox{\hyperlink{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}{L\+O\+GS}}(\char`\"{}N/A\textbackslash{}n\char`\"{})
+\item 
+\#define \mbox{\hyperlink{config_8h_a3df0d3a48723355a845d4cbf48500db8}{L\+O\+G\+\_\+\+KV}}(k,  v)~\mbox{\hyperlink{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}{L\+O\+GS}}(k); \mbox{\hyperlink{config_8h_abb62e552165265104f181c31c7ab1027}{L\+OG}}(v)
+\item 
+\#define \mbox{\hyperlink{config_8h_a14694ee4ae482f0c98e7e4c5ed6a357f}{L\+O\+G\+\_\+\+KX}}(k,  x)~\mbox{\hyperlink{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}{L\+O\+GS}}(k); \mbox{\hyperlink{config_8h_afc1872935fccc09c4b32c1e3d27f5ce8}{L\+O\+GX}}(x)
+\item 
+\#define \mbox{\hyperlink{config_8h_a614a580b75287a31ba63b87bce8b8b0d}{L\+O\+G\+\_\+\+H\+DR}}(f,  s)~\mbox{\hyperlink{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}{L\+O\+GS}}(f); \mbox{\hyperlink{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}{L\+O\+GS}}(\char`\"{}(\char`\"{}); \mbox{\hyperlink{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}{L\+O\+GS}}(s); \mbox{\hyperlink{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}{L\+O\+GS}}(\char`\"{}) =$>$ \char`\"{})
+\item 
+\#define \mbox{\hyperlink{config_8h_af89696433a0c4452c18ae316957216c4}{L\+O\+G\+\_\+\+D\+IC}}(i)
+\end{DoxyCompactItemize}
+\end{Indent}
+\doxysubsection*{Logical units (instead of physical) for type check and portability}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{config_8h_ab09a231138adc0fb73bfb9ba7144b797}{D\+U0}}~0
+\item 
+\#define \mbox{\hyperlink{config_8h_a7b3b4f9835caaf6be7bfa7f843bbec05}{U\+I\+NT}}(v)~(abs(v))
+\item 
+typedef uint32\+\_\+t \mbox{\hyperlink{config_8h_a696390429f2f3b644bde8d0322a24124}{U32}}
+\begin{DoxyCompactList}\small\item\em unsigned 32-\/bit integer \end{DoxyCompactList}\item 
+typedef int32\+\_\+t \mbox{\hyperlink{config_8h_a39c786017723555afb9e8b85accec0de}{S32}}
+\begin{DoxyCompactList}\small\item\em signed 32-\/bit integer \end{DoxyCompactList}\item 
+typedef uint16\+\_\+t \mbox{\hyperlink{config_8h_a0a0a322d5fa4a546d293a77ba8b4a71f}{U16}}
+\begin{DoxyCompactList}\small\item\em unsigned 16-\/bit integer \end{DoxyCompactList}\item 
+typedef uint8\+\_\+t \mbox{\hyperlink{config_8h_aa63ef7b996d5487ce35a5a66601f3e73}{U8}}
+\begin{DoxyCompactList}\small\item\em byte, unsigned character \end{DoxyCompactList}\item 
+typedef uintptr\+\_\+t \mbox{\hyperlink{config_8h_a34c9e39f868b60a2945e499befe08091}{U\+FP}}
+\begin{DoxyCompactList}\small\item\em function pointer as integer \end{DoxyCompactList}\item 
+typedef int64\+\_\+t \mbox{\hyperlink{config_8h_acdee6bf4ab3aa323dd7343fd2348095b}{D\+U2}}
+\item 
+typedef int32\+\_\+t \mbox{\hyperlink{config_8h_aa37b071e9b75686518ba19bfc6526b04}{DU}}
+\item 
+typedef uint16\+\_\+t \mbox{\hyperlink{config_8h_aff5e3e5f0579f9bce7aeaeac9d89d33a}{IU}}
+\begin{DoxyCompactList}\small\item\em instruction pointer unit \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{config_8h_a8150f027b39e6dde27a7d73c34fe5356}\label{config_8h_a8150f027b39e6dde27a7d73c34fe5356}} 
+\index{config.h@{config.h}!CC\_DEBUG@{CC\_DEBUG}}
+\index{CC\_DEBUG@{CC\_DEBUG}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{CC\_DEBUG}{CC\_DEBUG}}
+{\footnotesize\ttfamily \#define C\+C\+\_\+\+D\+E\+B\+UG~1}
+
+debug level 0$\vert$1$\vert$2 ~\newline
+ \mbox{\Hypertarget{config_8h_a0c7f096b34080fdfa0a4d55e6cd8ca8a}\label{config_8h_a0c7f096b34080fdfa0a4d55e6cd8ca8a}} 
+\index{config.h@{config.h}!RANGE\_CHECK@{RANGE\_CHECK}}
+\index{RANGE\_CHECK@{RANGE\_CHECK}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{RANGE\_CHECK}{RANGE\_CHECK}}
+{\footnotesize\ttfamily \#define R\+A\+N\+G\+E\+\_\+\+C\+H\+E\+CK~0}
+
+vector range check ~\newline
+ \mbox{\Hypertarget{config_8h_a5a03415e5a2d7bdc6ce680c47ddc156a}\label{config_8h_a5a03415e5a2d7bdc6ce680c47ddc156a}} 
+\index{config.h@{config.h}!USE\_FLOAT@{USE\_FLOAT}}
+\index{USE\_FLOAT@{USE\_FLOAT}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{USE\_FLOAT}{USE\_FLOAT}}
+{\footnotesize\ttfamily \#define U\+S\+E\+\_\+\+F\+L\+O\+AT~0}
+
+support floating point \mbox{\Hypertarget{config_8h_ab6d791a7c6dd6df90bf98aa8d74a0e82}\label{config_8h_ab6d791a7c6dd6df90bf98aa8d74a0e82}} 
+\index{config.h@{config.h}!DO\_WASM@{DO\_WASM}}
+\index{DO\_WASM@{DO\_WASM}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{DO\_WASM}{DO\_WASM}}
+{\footnotesize\ttfamily \#define D\+O\+\_\+\+W\+A\+SM~\+\_\+\+\_\+\+E\+M\+S\+C\+R\+I\+P\+T\+E\+N\+\_\+\+\_\+}
+
+for W\+A\+SM output ~\newline
+ \mbox{\Hypertarget{config_8h_a5f69a406901fcf08ab5615294d7f334a}\label{config_8h_a5f69a406901fcf08ab5615294d7f334a}} 
+\index{config.h@{config.h}!E4\_RS\_SZ@{E4\_RS\_SZ}}
+\index{E4\_RS\_SZ@{E4\_RS\_SZ}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{E4\_RS\_SZ}{E4\_RS\_SZ}}
+{\footnotesize\ttfamily \#define E4\+\_\+\+R\+S\+\_\+\+SZ~32}
+
+\mbox{\Hypertarget{config_8h_af9fc7bdce59a3dac7fa463f733c888cf}\label{config_8h_af9fc7bdce59a3dac7fa463f733c888cf}} 
+\index{config.h@{config.h}!E4\_SS\_SZ@{E4\_SS\_SZ}}
+\index{E4\_SS\_SZ@{E4\_SS\_SZ}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{E4\_SS\_SZ}{E4\_SS\_SZ}}
+{\footnotesize\ttfamily \#define E4\+\_\+\+S\+S\+\_\+\+SZ~16}
+
+\mbox{\Hypertarget{config_8h_a3663378c5ef858dd03bc28732c610758}\label{config_8h_a3663378c5ef858dd03bc28732c610758}} 
+\index{config.h@{config.h}!E4\_DICT\_SZ@{E4\_DICT\_SZ}}
+\index{E4\_DICT\_SZ@{E4\_DICT\_SZ}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{E4\_DICT\_SZ}{E4\_DICT\_SZ}}
+{\footnotesize\ttfamily \#define E4\+\_\+\+D\+I\+C\+T\+\_\+\+SZ~400}
+
+\mbox{\Hypertarget{config_8h_a0a0ff68a63bb8a53d930d405fe8624f8}\label{config_8h_a0a0ff68a63bb8a53d930d405fe8624f8}} 
+\index{config.h@{config.h}!E4\_PMEM\_SZ@{E4\_PMEM\_SZ}}
+\index{E4\_PMEM\_SZ@{E4\_PMEM\_SZ}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{E4\_PMEM\_SZ}{E4\_PMEM\_SZ}}
+{\footnotesize\ttfamily \#define E4\+\_\+\+P\+M\+E\+M\+\_\+\+SZ~(32$\ast$1024)}
+
+\mbox{\Hypertarget{config_8h_ab09a231138adc0fb73bfb9ba7144b797}\label{config_8h_ab09a231138adc0fb73bfb9ba7144b797}} 
+\index{config.h@{config.h}!DU0@{DU0}}
+\index{DU0@{DU0}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{DU0}{DU0}}
+{\footnotesize\ttfamily \#define D\+U0~0}
+
+\mbox{\Hypertarget{config_8h_a7b3b4f9835caaf6be7bfa7f843bbec05}\label{config_8h_a7b3b4f9835caaf6be7bfa7f843bbec05}} 
+\index{config.h@{config.h}!UINT@{UINT}}
+\index{UINT@{UINT}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{UINT}{UINT}}
+{\footnotesize\ttfamily \#define U\+I\+NT(\begin{DoxyParamCaption}\item[{}]{v }\end{DoxyParamCaption})~(abs(v))}
+
+\mbox{\Hypertarget{config_8h_a2eb6f9e0395b47b8d5e3eeae4fe0c116}\label{config_8h_a2eb6f9e0395b47b8d5e3eeae4fe0c116}} 
+\index{config.h@{config.h}!INLINE@{INLINE}}
+\index{INLINE@{INLINE}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{INLINE}{INLINE}}
+{\footnotesize\ttfamily \#define I\+N\+L\+I\+NE~\+\_\+\+\_\+attribute\+\_\+\+\_\+((always\+\_\+inline))}
+
+\mbox{\Hypertarget{config_8h_a7e57896edccce561d980ab169d3b5ff7}\label{config_8h_a7e57896edccce561d980ab169d3b5ff7}} 
+\index{config.h@{config.h}!ALIGN2@{ALIGN2}}
+\index{ALIGN2@{ALIGN2}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{ALIGN2}{ALIGN2}}
+{\footnotesize\ttfamily \#define A\+L\+I\+G\+N2(\begin{DoxyParamCaption}\item[{}]{sz }\end{DoxyParamCaption})~((sz) + (-\/(sz) \& 0x1))}
+
+\mbox{\Hypertarget{config_8h_a056d3f5d159b253ad746e0111a6b40c8}\label{config_8h_a056d3f5d159b253ad746e0111a6b40c8}} 
+\index{config.h@{config.h}!ALIGN4@{ALIGN4}}
+\index{ALIGN4@{ALIGN4}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{ALIGN4}{ALIGN4}}
+{\footnotesize\ttfamily \#define A\+L\+I\+G\+N4(\begin{DoxyParamCaption}\item[{}]{sz }\end{DoxyParamCaption})~((sz) + (-\/(sz) \& 0x3))}
+
+\mbox{\Hypertarget{config_8h_af1c36bda5eb7e9eb12cc52d52c491db5}\label{config_8h_af1c36bda5eb7e9eb12cc52d52c491db5}} 
+\index{config.h@{config.h}!ALIGN16@{ALIGN16}}
+\index{ALIGN16@{ALIGN16}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{ALIGN16}{ALIGN16}}
+{\footnotesize\ttfamily \#define A\+L\+I\+G\+N16(\begin{DoxyParamCaption}\item[{}]{sz }\end{DoxyParamCaption})~((sz) + (-\/(sz) \& 0xf))}
+
+\mbox{\Hypertarget{config_8h_a49d9ff52840ffdf8640600c6d625f4eb}\label{config_8h_a49d9ff52840ffdf8640600c6d625f4eb}} 
+\index{config.h@{config.h}!ALIGN32@{ALIGN32}}
+\index{ALIGN32@{ALIGN32}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{ALIGN32}{ALIGN32}}
+{\footnotesize\ttfamily \#define A\+L\+I\+G\+N32(\begin{DoxyParamCaption}\item[{}]{sz }\end{DoxyParamCaption})~((sz) + (-\/(sz) \& 0x1f))}
+
+\mbox{\Hypertarget{config_8h_a53ee12f4dd53b3aa1de7e6aa2e3d61fe}\label{config_8h_a53ee12f4dd53b3aa1de7e6aa2e3d61fe}} 
+\index{config.h@{config.h}!ALIGN@{ALIGN}}
+\index{ALIGN@{ALIGN}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{ALIGN}{ALIGN}}
+{\footnotesize\ttfamily \#define A\+L\+I\+GN(\begin{DoxyParamCaption}\item[{}]{sz }\end{DoxyParamCaption})~\mbox{\hyperlink{config_8h_a7e57896edccce561d980ab169d3b5ff7}{A\+L\+I\+G\+N2}}(sz)}
+
+\mbox{\Hypertarget{config_8h_a916ffefe1fc74532d08102cca55d8e34}\label{config_8h_a916ffefe1fc74532d08102cca55d8e34}} 
+\index{config.h@{config.h}!STRLEN@{STRLEN}}
+\index{STRLEN@{STRLEN}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{STRLEN}{STRLEN}}
+{\footnotesize\ttfamily \#define S\+T\+R\+L\+EN(\begin{DoxyParamCaption}\item[{}]{s }\end{DoxyParamCaption})~(\mbox{\hyperlink{config_8h_a53ee12f4dd53b3aa1de7e6aa2e3d61fe}{A\+L\+I\+GN}}(strlen(s)+1))  /$\ast$$\ast$ calculate string size with alignment $\ast$/}
+
+\mbox{\Hypertarget{config_8h_a90dc3f3ee970394e0080300526390a84}\label{config_8h_a90dc3f3ee970394e0080300526390a84}} 
+\index{config.h@{config.h}!ENDL@{ENDL}}
+\index{ENDL@{ENDL}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{ENDL}{ENDL}}
+{\footnotesize\ttfamily \#define E\+N\+DL~endl; \mbox{\hyperlink{ceforth_8cpp_ae601152c2463f358fc585f95817fb315}{fout\+\_\+cb}}(fout.\+str().length(), fout.\+str().c\+\_\+str()); fout.\+str(\char`\"{}\char`\"{})}
+
+\mbox{\Hypertarget{config_8h_a1832a8b24c5256b9b96404f71211874b}\label{config_8h_a1832a8b24c5256b9b96404f71211874b}} 
+\index{config.h@{config.h}!to\_string@{to\_string}}
+\index{to\_string@{to\_string}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{to\_string}{to\_string}}
+{\footnotesize\ttfamily \#define to\+\_\+string(\begin{DoxyParamCaption}\item[{}]{i }\end{DoxyParamCaption})~string(String(i).c\+\_\+str())}
+
+\mbox{\Hypertarget{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}\label{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}} 
+\index{config.h@{config.h}!LOGS@{LOGS}}
+\index{LOGS@{LOGS}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{LOGS}{LOGS}}
+{\footnotesize\ttfamily \#define L\+O\+GS(\begin{DoxyParamCaption}\item[{}]{s }\end{DoxyParamCaption})~Serial.\+print(F(s))}
+
+\mbox{\Hypertarget{config_8h_abb62e552165265104f181c31c7ab1027}\label{config_8h_abb62e552165265104f181c31c7ab1027}} 
+\index{config.h@{config.h}!LOG@{LOG}}
+\index{LOG@{LOG}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{LOG}{LOG}}
+{\footnotesize\ttfamily \#define L\+OG(\begin{DoxyParamCaption}\item[{}]{v }\end{DoxyParamCaption})~Serial.\+print(v)}
+
+\mbox{\Hypertarget{config_8h_afc1872935fccc09c4b32c1e3d27f5ce8}\label{config_8h_afc1872935fccc09c4b32c1e3d27f5ce8}} 
+\index{config.h@{config.h}!LOGX@{LOGX}}
+\index{LOGX@{LOGX}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{LOGX}{LOGX}}
+{\footnotesize\ttfamily \#define L\+O\+GX(\begin{DoxyParamCaption}\item[{}]{v }\end{DoxyParamCaption})~Serial.\+print(v, H\+EX)}
+
+\mbox{\Hypertarget{config_8h_af5c0a2edb9d8e2c7cef48f9cab2afa9a}\label{config_8h_af5c0a2edb9d8e2c7cef48f9cab2afa9a}} 
+\index{config.h@{config.h}!LOG\_NA@{LOG\_NA}}
+\index{LOG\_NA@{LOG\_NA}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{LOG\_NA}{LOG\_NA}}
+{\footnotesize\ttfamily \#define L\+O\+G\+\_\+\+NA(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~\mbox{\hyperlink{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}{L\+O\+GS}}(\char`\"{}N/A\textbackslash{}n\char`\"{})}
+
+\mbox{\Hypertarget{config_8h_a3df0d3a48723355a845d4cbf48500db8}\label{config_8h_a3df0d3a48723355a845d4cbf48500db8}} 
+\index{config.h@{config.h}!LOG\_KV@{LOG\_KV}}
+\index{LOG\_KV@{LOG\_KV}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{LOG\_KV}{LOG\_KV}}
+{\footnotesize\ttfamily \#define L\+O\+G\+\_\+\+KV(\begin{DoxyParamCaption}\item[{}]{k,  }\item[{}]{v }\end{DoxyParamCaption})~\mbox{\hyperlink{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}{L\+O\+GS}}(k); \mbox{\hyperlink{config_8h_abb62e552165265104f181c31c7ab1027}{L\+OG}}(v)}
+
+\mbox{\Hypertarget{config_8h_a14694ee4ae482f0c98e7e4c5ed6a357f}\label{config_8h_a14694ee4ae482f0c98e7e4c5ed6a357f}} 
+\index{config.h@{config.h}!LOG\_KX@{LOG\_KX}}
+\index{LOG\_KX@{LOG\_KX}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{LOG\_KX}{LOG\_KX}}
+{\footnotesize\ttfamily \#define L\+O\+G\+\_\+\+KX(\begin{DoxyParamCaption}\item[{}]{k,  }\item[{}]{x }\end{DoxyParamCaption})~\mbox{\hyperlink{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}{L\+O\+GS}}(k); \mbox{\hyperlink{config_8h_afc1872935fccc09c4b32c1e3d27f5ce8}{L\+O\+GX}}(x)}
+
+\mbox{\Hypertarget{config_8h_a614a580b75287a31ba63b87bce8b8b0d}\label{config_8h_a614a580b75287a31ba63b87bce8b8b0d}} 
+\index{config.h@{config.h}!LOG\_HDR@{LOG\_HDR}}
+\index{LOG\_HDR@{LOG\_HDR}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{LOG\_HDR}{LOG\_HDR}}
+{\footnotesize\ttfamily \#define L\+O\+G\+\_\+\+H\+DR(\begin{DoxyParamCaption}\item[{}]{f,  }\item[{}]{s }\end{DoxyParamCaption})~\mbox{\hyperlink{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}{L\+O\+GS}}(f); \mbox{\hyperlink{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}{L\+O\+GS}}(\char`\"{}(\char`\"{}); \mbox{\hyperlink{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}{L\+O\+GS}}(s); \mbox{\hyperlink{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}{L\+O\+GS}}(\char`\"{}) =$>$ \char`\"{})}
+
+\mbox{\Hypertarget{config_8h_af89696433a0c4452c18ae316957216c4}\label{config_8h_af89696433a0c4452c18ae316957216c4}} 
+\index{config.h@{config.h}!LOG\_DIC@{LOG\_DIC}}
+\index{LOG\_DIC@{LOG\_DIC}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{LOG\_DIC}{LOG\_DIC}}
+{\footnotesize\ttfamily \#define L\+O\+G\+\_\+\+D\+IC(\begin{DoxyParamCaption}\item[{}]{i }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{                        \mbox{\hyperlink{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}{LOGS}}(\textcolor{stringliteral}{"dict["}); \mbox{\hyperlink{config_8h_abb62e552165265104f181c31c7ab1027}{LOG}}(i); \mbox{\hyperlink{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}{LOGS}}(\textcolor{stringliteral}{"] "});  \(\backslash\)}
+\DoxyCodeLine{                        LOGS(\mbox{\hyperlink{ceforth_8cpp_aa086a2419b6fa4292fe7a96ade49cfd4}{dict}}[i].name); \mbox{\hyperlink{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}{LOGS}}(\textcolor{stringliteral}{" attr="}); \(\backslash\)}
+\DoxyCodeLine{                        LOGX(\mbox{\hyperlink{ceforth_8cpp_aa086a2419b6fa4292fe7a96ade49cfd4}{dict}}[i].attr); \mbox{\hyperlink{config_8h_a23c9be2739d1f57d5e53c91a5644ef84}{LOGS}}(\textcolor{stringliteral}{"\(\backslash\)n"})}
+
+\end{DoxyCode}
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{config_8h_a696390429f2f3b644bde8d0322a24124}\label{config_8h_a696390429f2f3b644bde8d0322a24124}} 
+\index{config.h@{config.h}!U32@{U32}}
+\index{U32@{U32}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{U32}{U32}}
+{\footnotesize\ttfamily typedef uint32\+\_\+t \mbox{\hyperlink{config_8h_a696390429f2f3b644bde8d0322a24124}{U32}}}
+
+
+
+unsigned 32-\/bit integer 
+
+\mbox{\Hypertarget{config_8h_a39c786017723555afb9e8b85accec0de}\label{config_8h_a39c786017723555afb9e8b85accec0de}} 
+\index{config.h@{config.h}!S32@{S32}}
+\index{S32@{S32}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{S32}{S32}}
+{\footnotesize\ttfamily typedef int32\+\_\+t \mbox{\hyperlink{config_8h_a39c786017723555afb9e8b85accec0de}{S32}}}
+
+
+
+signed 32-\/bit integer 
+
+\mbox{\Hypertarget{config_8h_a0a0a322d5fa4a546d293a77ba8b4a71f}\label{config_8h_a0a0a322d5fa4a546d293a77ba8b4a71f}} 
+\index{config.h@{config.h}!U16@{U16}}
+\index{U16@{U16}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{U16}{U16}}
+{\footnotesize\ttfamily typedef uint16\+\_\+t \mbox{\hyperlink{config_8h_a0a0a322d5fa4a546d293a77ba8b4a71f}{U16}}}
+
+
+
+unsigned 16-\/bit integer 
+
+\mbox{\Hypertarget{config_8h_aa63ef7b996d5487ce35a5a66601f3e73}\label{config_8h_aa63ef7b996d5487ce35a5a66601f3e73}} 
+\index{config.h@{config.h}!U8@{U8}}
+\index{U8@{U8}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{U8}{U8}}
+{\footnotesize\ttfamily typedef uint8\+\_\+t \mbox{\hyperlink{config_8h_aa63ef7b996d5487ce35a5a66601f3e73}{U8}}}
+
+
+
+byte, unsigned character 
+
+\mbox{\Hypertarget{config_8h_a34c9e39f868b60a2945e499befe08091}\label{config_8h_a34c9e39f868b60a2945e499befe08091}} 
+\index{config.h@{config.h}!UFP@{UFP}}
+\index{UFP@{UFP}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{UFP}{UFP}}
+{\footnotesize\ttfamily typedef uintptr\+\_\+t \mbox{\hyperlink{config_8h_a34c9e39f868b60a2945e499befe08091}{U\+FP}}}
+
+
+
+function pointer as integer 
+
+\mbox{\Hypertarget{config_8h_acdee6bf4ab3aa323dd7343fd2348095b}\label{config_8h_acdee6bf4ab3aa323dd7343fd2348095b}} 
+\index{config.h@{config.h}!DU2@{DU2}}
+\index{DU2@{DU2}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{DU2}{DU2}}
+{\footnotesize\ttfamily typedef int64\+\_\+t \mbox{\hyperlink{config_8h_acdee6bf4ab3aa323dd7343fd2348095b}{D\+U2}}}
+
+\mbox{\Hypertarget{config_8h_aa37b071e9b75686518ba19bfc6526b04}\label{config_8h_aa37b071e9b75686518ba19bfc6526b04}} 
+\index{config.h@{config.h}!DU@{DU}}
+\index{DU@{DU}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{DU}{DU}}
+{\footnotesize\ttfamily typedef int32\+\_\+t \mbox{\hyperlink{config_8h_aa37b071e9b75686518ba19bfc6526b04}{DU}}}
+
+\mbox{\Hypertarget{config_8h_aff5e3e5f0579f9bce7aeaeac9d89d33a}\label{config_8h_aff5e3e5f0579f9bce7aeaeac9d89d33a}} 
+\index{config.h@{config.h}!IU@{IU}}
+\index{IU@{IU}!config.h@{config.h}}
+\doxysubsubsection{\texorpdfstring{IU}{IU}}
+{\footnotesize\ttfamily typedef uint16\+\_\+t \mbox{\hyperlink{config_8h_aff5e3e5f0579f9bce7aeaeac9d89d33a}{IU}}}
+
+
+
+instruction pointer unit 
+
