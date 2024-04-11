@@ -121,7 +121,7 @@
     ///
     function forth_eval() {
         let cmd=tib.value.replace(/:/g,'<br/>:')
-        if (cmd=='clear') { txt.innerHTML=''; return }  /// client-side
+        if (cmd=='clear') { txt.innerHTML=''; tib.value=''; return }  /// client-side
         if (cmd.indexOf('<br/>')==0) cmd.replace('<br/>','')
         to_txt('<pre class="cmd"><em>'+cmd+'</em></pre>', false)
 
