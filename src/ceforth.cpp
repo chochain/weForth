@@ -270,12 +270,12 @@ void to_s(IU w, U8 *ip) {
     auto d_jmp = [](U8 *ip) {
         fout << " ( " << setfill('0') << setw(4) << *(IU*)ip << " )";
     };
-    d_addr(w, ip);           ///> display address & opcode
+    d_addr(w, ip);                     ///> display address
 #else  // !CC_DEBUG
     auto d_jmp  = [](U8 *ip) {}
 #endif // CC_DEBUG
     
-    ip += sizeof(IU);        ///> calculate next ip
+    ip += sizeof(IU);                  ///> calculate next ip
     switch (w) {
     case EXIT: fout << ";";                         break;
     case LIT:  fout << *(DU*)ip << "  ( lit )";     break;
@@ -412,6 +412,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
     ///
     /// @defgroup Execution flow ops
     /// @brief - DO NOT change the sequence here (see forth_opcode enum)
+    ///        - the build-in control words have extra last blank char
     /// @{
     CODE("exit ",   {});                                // dict[0] also the storage for base
     CODE("next ",                                       // handled in nest()
@@ -590,10 +591,10 @@ void dict_compile() {  ///< compile primitive words into dictionary
     CODE("create", def_word(word()); add_w(VAR));               // dovar (+ parameter field)
     IMMD("does>", add_w(DOES));
     CODE("to",              // 3 to x                           // alter the value of a constant
-         IU w = find(word());                                   // to save the extra @ of a variable
+         IU w = find(word()); if (!w) return;                   // to save the extra @ of a variable
          *(DU*)(MEM(dict[w].pfa) + sizeof(IU)) = POP());
     CODE("is",              // ' y is x                         // alias a word
-         IU w = find(word());                             // copy entire union struct
+         IU w = find(word()); if (!w) return;                   // copy entire union struct
          dict[POP()].xt = dict[w].xt);
     ///
     /// be careful with memory access, especially BYTE because
