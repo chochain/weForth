@@ -396,14 +396,18 @@ void dict_dump() {
 ///> eForth dictionary assembler
 ///  Note: sequenced by enum forth_opcode as following
 ///
+UFP Code::XT0 = ~0;    ///< init base of xt pointers (before calling CODE macros)
+
 #if DO_WASM
-UFP Code::XT0 =  0;    ///< WASM xt is index to vtable
 /// function in worker thread
 EM_JS(void, canvas, (const char *arg, U32 v=0), {
         postMessage(['ui', [ UTF8ToString(arg), v]])
     });
-#else  // !DO_WASM
-UFP Code::XT0 = ~0;    ///< init base of xt pointers (before calling CODE macros)
+int RGB() {
+    int rgb = top | (ss.pop()<<8) | (ss.pop()<<16);
+    top = ss.pop();
+    return rgb;
+}
 #endif // DO_WASM
 
 void dict_compile() {  ///< compile primitive words into dictionary
@@ -657,10 +661,8 @@ void dict_compile() {  ///< compile primitive words into dictionary
     CODE("BK",    canvas("bk", POP()));  // backward
     CODE("RT",    canvas("rt", POP()));  // right turn
     CODE("LT",    canvas("lt", POP()));  // left turn
-    CODE("PC",                           // pencolor
-         int c = top | (ss.pop()<<8) | (ss.pop()<<16);
-         top = ss.pop();
-         canvas("pc", c));
+    CODE("PC",    canvas("pc", RGB()));  // pencolor
+    CODE("BG",    canvas("bg", RGB()));  // background color
     CODE("PW",    canvas("pw", POP()));  // penwidth
     CODE("XY",                           // set x, y
          int xy = top | (ss.pop()<<16);
