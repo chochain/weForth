@@ -105,12 +105,12 @@
     let st = {                           // turtle drawing state
         w: cvs.width, h: cvs.height,
         dir: 0, pw: 3, pen: 1, show: 1,
-        fg: '#000', bg: '#FEE'
+        fg: '#000', bg: '#FFF'
     }
     function clear_eve() {
         eve.beginPath()                  // erase Eve
         eve.fillStyle = st.bg
-        eve.arc(20,0,20,0,360.0*_PI2)    // circle to erase
+        eve.arc(16,0,24,0,360.0*_PI2)    // circle to erase
         eve.fill()
     }
     function draw_eve(c) {
@@ -149,7 +149,7 @@
         switch (op) {
         case 'cs':
             sfc.save()
-            sfc.setTransform(1,0,0,1,0,0)
+            sfc.resetTransform()
             sfc.clearRect(0,0,st.w,st.h)
             sfc.restore()
             break
