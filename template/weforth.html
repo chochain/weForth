@@ -1,5 +1,5 @@
 <html>
-  <head>    
+  <head>
   <title>weForth</title>
   <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css'></link>
   <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js'></script>
@@ -105,12 +105,12 @@
     let st = {                           // turtle drawing state
         w: cvs.width, h: cvs.height,
         dir: 0, pw: 3, pen: 1, show: 1,
-        fg: '#000', bg: '#FFE'
+        fg: '#000', bg: '#FEE'
     }
-    function erase_eve() {
+    function clear_eve() {
         eve.beginPath()                  // erase Eve
         eve.fillStyle = st.bg
-        eve.arc(15,0,15,0,360.0*_PI2)    // circle to erase
+        eve.arc(20,0,20,0,360.0*_PI2)    // circle to erase
         eve.fill()
     }
     function draw_eve(c) {
@@ -124,23 +124,26 @@
         eve.strokeStyle = c
         eve.stroke()
     }
-    function xform(x, y, d) {
+    function xform(x, y, d, rst=false) {
+        if (rst) {
+            sfc.resetTransform()
+            eve.resetTransform()
+        }
         st.dir -= d
         sfc.translate(x, y); sfc.rotate(d)
         eve.translate(x, y); eve.rotate(d)
     }          
     function reset() {
-        sfc.setTransform(1,0,0,1,0,0)
+        xform(st.w/2, st.h/2, -90.0*_PI2, true)
         sfc.lineWidth   = st.pw
         eve.lineWidth   = 3
         eve.strokeStyle = '#F00'
-        xform(st.w/2, st.h/2, -90.0*_PI2)
         draw_eve()
-    }          
+    }
     function update_canvas(cmd) {
         const op = cmd[0]
         const v  = cmd[1]
-        erase_eve()
+        clear_eve()
         sfc.beginPath()
         sfc.moveTo(0, 0)
         switch (op) {
@@ -163,10 +166,9 @@
         case 'pc': st.fg = RGB(cmd[1]);     break
         case 'bg': st.bg = RGB(cmd[1]);     break
         case 'pw': sfc.lineWidth = v;       break
-        case 'xy': sfc.setTransform(1,0,0,1,0,0)
-                   xform(st.w/2 + (v>>16),
+        case 'xy': xform(st.w/2 + (v>>16),
                          st.h/2 - (v&0xffff),
-                         st.dir);           break
+                         st.dir, true);     break
         default: console.log('unknown opcode:' + cmd);
             eval?.(op);                 ///< indirect eval
         }
