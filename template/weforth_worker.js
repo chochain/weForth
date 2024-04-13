@@ -55,7 +55,7 @@ function send_mem(off, len) {
         for (let i = 0; i < 0x10; i++) {
             let ch = mem[i+j] || 0
             bt += `${hx[ch>>4]}${hx[ch&0xf]}`
-            if ((i & 0x3)==3) bt += ' '
+            bt += ((i & 0x3)==3) ? '  ' : ' '
             tx += (ch < 0x20) ? '_' : String.fromCharCode(ch)
         }
         div += h4(j) + ': ' + bt + tx + '\n'
