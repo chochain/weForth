@@ -45,11 +45,11 @@
         <div id='ss' class='ss'>[ ]</div>
       </div>
       <div id='gra' class='col'>
-        <pre id='mm' class='mem' style='display:none; height=50%'></pre>
         <div class='ctx'>
-          <canvas id='eve' class='sfc' width='800' height='800' style='z-index:0'></canvas>
-          <canvas id='canvas' class='sfc' width='800' height='800' style='z-index:1' oncontextmenu='event.preventDefault()'></canvas>
-         </div>
+          <canvas id='eve' class='sfc' width='800px' height='800px' style='z-index:0'></canvas>
+          <canvas id='canvas' class='sfc' width='800px' height='800px' style='z-index:1' oncontextmenu='event.preventDefault()'></canvas>
+          <pre id='mm' class='mem' style='display:flex; height=100%; z-index:2'></pre>
+        </div>
       </div>
     <script type='text/javascript'>
     Module = {
@@ -96,76 +96,22 @@
         if (htm.indexOf('<br/>')==0) htm.replace('<br/>','')  /// * remove blank lines
         to_txt(`<pre class="cmd"><em>${htm}</em></pre>`, false)
     }
+    function RGB(v) { return `rgb(${(v>>16)&0xff} ${(v>>8)&0xff} ${v&0xff})` }
     /// LOGO implementation
-      const _PI2 = Math.PI/180.0;
+    const _PI2 = Math.PI/180.0;
     const cvs = $('#canvas')      
     const sfc = cvs.getContext('2d')
     const eve = $('#eve').getContext('2d')
-    let st = {                // turtle drawing state
-        pd: 1,
-        t:  1,
-        fg: '#000',
-        bg: '#FFF',
-        w:  cvs.width,
-        h:  cvs.height
+    let st = {                           // turtle drawing state
+        w: cvs.width, h: cvs.height,
+        dir: 0, pw: 3, pen: 1, show: 1,
+        fg: '#000', bg: '#FFE'
     }
-    function update_canvas(cmd) {
-        const op = cmd[0]
-        const v  = cmd[1]
-        var x, y, d
+    function erase_eve() {
         eve.beginPath()                  // erase Eve
-        eve.arc(15,0,15,0,360.0*_PI2)
+        eve.fillStyle = st.bg
+        eve.arc(15,0,15,0,360.0*_PI2)    // circle to erase
         eve.fill()
-        sfc.beginPath()
-        sfc.moveTo(0, 0)
-        switch (op) {
-        case 'cs':
-            sfc.fillRect(0,0,st.w,st.h)
-            sfc.fillStroke = st.bg
-            sfc.fill()
-            break
-        case 'ht': st.t = 0; break
-        case 'st': st.t = 1; break
-        case 'ct':
-            x = sfc.width/2
-            y = sfc.height/2
-            d = 90.0*_PI2
-            break
-        case 'pd': st.pd = 1; break
-        case 'pu': st.pd = 0; break
-        case 'hd': st.d += (90.0 + v)*_PI2; break
-        case 'fd':
-            sfc.translate(v, 0)
-            eve.translate(v, 0)
-            break
-        case 'bk':
-            sfc.translate(-v, 0)
-            eve.translate(-v, 0)
-            break
-        case 'rt':
-            d = v * _PI2
-            sfc.rotate(d)
-            eve.rotate(d)
-            break
-        case 'lt':
-            d = -v * _PI2
-            sfc.rotate(d)
-            eve.rotate(d)
-            break
-        case 'pc': st.c = `rgb(${(cmd[1]>>16)&0xff} ${(cmd[1]>>8)&0xff} ${(cmd[1])&0xff})`
-            break
-        case 'pw': sfc.width = v; break
-        case 'xy':
-            x = (v>>16)+st.w/2
-            y = (v&0xffff)+st.h/2
-            break
-        default: console.log('unknown opcode:' + cmd);
-            eval?.(op);                 ///< indirect eval
-        }
-        if (st.pd) sfc.lineTo(0, 0)
-        else       sfc.moveTo(0, 0)
-        sfc.strokeStyle = st.fg
-        sfc.stroke()
     }
     function draw_eve(c) {
         eve.beginPath()
@@ -178,17 +124,60 @@
         eve.strokeStyle = c
         eve.stroke()
     }
-    window.onload = ()=>{
-        let x0 = cvs.width/2
-        let y0 = cvs.height/2
-        let d0 = -90.0 * _PI2
-        sfc.translate(x0, y0)
-        sfc.rotate(d0)
-        eve.fillStyle = '#FEE'
-        eve.translate(x0, y0)
-        eve.rotate(d0)
-        draw_eve('#F00')
+    function xform(x, y, d) {
+        st.dir -= d
+        sfc.translate(x, y); sfc.rotate(d)
+        eve.translate(x, y); eve.rotate(d)
+    }          
+    function reset() {
+        sfc.setTransform(1,0,0,1,0,0)
+        sfc.lineWidth   = st.pw
+        eve.lineWidth   = 3
+        eve.strokeStyle = '#F00'
+        xform(st.w/2, st.h/2, -90.0*_PI2)
+        draw_eve()
+    }          
+    function update_canvas(cmd) {
+        const op = cmd[0]
+        const v  = cmd[1]
+        erase_eve()
+        sfc.beginPath()
+        sfc.moveTo(0, 0)
+        switch (op) {
+        case 'cs':
+            sfc.save()
+            sfc.setTransform(1,0,0,1,0,0)
+            sfc.clearRect(0,0,st.w,st.h)
+            sfc.restore()
+            break
+        case 'st': st.show = 1;             break
+        case 'ht': st.show = 0;             break
+        case 'ct': reset();                 break
+        case 'pd': st.pen  = 1;             break
+        case 'pu': st.pen  = 0;             break
+        case 'hd': xform(0, 0, st.dir - v * _PI2); break
+        case 'fd': xform(v, 0, 0);          break
+        case 'bk': xform(-v, 0, 0);         break
+        case 'rt': xform(0, 0, v * _PI2);   break
+        case 'lt': xform(0, 0, -v * _PI2);  break
+        case 'pc': st.fg = RGB(cmd[1]);     break
+        case 'bg': st.bg = RGB(cmd[1]);     break
+        case 'pw': sfc.lineWidth = v;       break
+        case 'xy': sfc.setTransform(1,0,0,1,0,0)
+                   xform(st.w/2 + (v>>16),
+                         st.h/2 - (v&0xffff),
+                         st.dir);           break
+        default: console.log('unknown opcode:' + cmd);
+            eval?.(op);                 ///< indirect eval
+        }
+        if (st.pen) sfc.lineTo(0, 0)
+        else        sfc.moveTo(0, 0)
+        sfc.strokeStyle = st.fg
+        sfc.stroke()
+        if (st.show) draw_eve()
+        console.log(JSON.stringify(st))
     }
+    window.onload = ()=>reset()
     ///
     /// Forth section
     ///
@@ -205,10 +194,7 @@
         case 'us' : usr.innerHTML = v; break
         case 'ss' : ss.innerHTML  = v; break
         case 'mm' : mm.innerHTML  = v; break
-        case 'ui' :
-            update_canvas(v)
-            draw_eve('#F00')
-            break
+        case 'ui' : update_canvas(v);  break
         default: console.log('onmessage.error=>'+e)
         }
     }
@@ -221,7 +207,7 @@
             show_cmd(cmd)
             vm.postMessage(['cmd', cmd])             /// * send command to Forth worker
             vm.postMessage(['ss'])                   /// * send command to Forth worker
-            vm.postMessage(['mm', [0, 256]])
+            vm.postMessage(['mm', [0, 640]])
         }
         if (dc.style.display!='none') {              /// * query dictionary
             vm.postMessage(['dc'])
