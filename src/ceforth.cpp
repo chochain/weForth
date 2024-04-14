@@ -661,7 +661,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
     CODE("BK",    canvas("bk", POP()));  // backward
     CODE("RT",    canvas("rt", POP()));  // right turn
     CODE("LT",    canvas("lt", POP()));  // left turn
-    CODE("PC",    canvas("pc", RGB()));  // pencolor
+    CODE("PC",    canvas("pc", POP()));  // pencolor
     CODE("BG",    canvas("bg", RGB()));  // background color
     CODE("PW",    canvas("pw", POP()));  // penwidth
     CODE("XY",                           // set x, y
