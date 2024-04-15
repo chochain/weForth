@@ -14,14 +14,14 @@ const HSV = (h)=>{
     let t = v * (1.0 - (1.0 - f) * s)
     var r, g, b
     switch (i % 6) {
-    case 0: r = v, g = t, b = p; break;
-    case 1: r = q, g = v, b = p; break;
-    case 2: r = p, g = v, b = t; break;
-    case 3: r = p, g = q, b = v; break;
-    case 4: r = t, g = p, b = v; break;
-    case 5: r = v, g = p, b = q; break;
+    case 0: r = v, g = t, b = p; break
+    case 1: r = q, g = v, b = p; break
+    case 2: r = p, g = v, b = t; break
+    case 3: r = p, g = q, b = v; break
+    case 4: r = t, g = p, b = v; break
+    case 5: r = v, g = p, b = q; break
     }
-    return `rgb(${r*255} ${g*255} ${b*255})`
+    return `rgb(${r*255|0} ${g*255|0} ${b*255|0})`
 }
 const RAD = Math.PI / 180.0
 class Logo {
@@ -95,24 +95,25 @@ class Logo {
             s.clearRect(0,0,t.w,t.h)
             s.restore()
             break
-        case 'st': t.show = 1;           break
-        case 'ht': t.show = 0;           break
-        case 'ct': reset();              break
-        case 'pd': t.pen  = 1;           break
-        case 'pu': t.pen  = 0;           break
+        case 'st': t.show = 1;               break
+        case 'ht': t.show = 0;               break
+        case 'ct': reset();                  break
+        case 'pd': t.pen  = 1;               break
+        case 'pu': t.pen  = 0;               break
         case 'hd': this.xform(0, 0, t.dir - v*RAD); break
-        case 'fd': this.xform(v, 0, 0);    break
-        case 'bk': this.xform(-v, 0, 0);          break         // ( d -- )
-        case 'rt': this.xform(0, 0, v*RAD);       break         // ( a -- )
-        case 'lt': this.xform(0, 0, -v*RAD);      break         // ( a -- )
-        case 'pc': t.fg = HSV(cmd[1]);   break         // ( hue -- )
-        case 'bg': t.bg = RGB(cmd[1]);   break         // ( r g b -- )
-        case 'pw': s.lineWidth = v;      break
+        case 'fd': this.xform(v, 0, 0);      break
+        case 'bk': this.xform(-v, 0, 0);     break         // ( d -- )
+        case 'rt': this.xform(0, 0, v*RAD);  break         // ( a -- )
+        case 'lt': this.xform(0, 0, -v*RAD); break         // ( a -- )
+        case 'pc': t.fg = HSV(v);            break         // ( hue -- )
+        case 'bg': t.bg = RGB(v);            break         // ( r g b -- )
+        case 'pw': s.lineWidth = t.pw = v;   break
         case 'xy': this.xform(t.w/2 + (v>>16),
-                         t.h/2 - (v&0xffff),
-                         t.dir, true);   break
-        default: console.log('unknown opcode:' + cmd);
-            eval?.(op);                 ///< indirect eval
+                   t.h/2 - (v&0xffff),
+                   t.dir, true);             break
+        default:
+			console.log('?opcode:' + op)
+			eval?.(op+' '+v);                break         ///< indirect eval			
         }
         if (t.pen) s.lineTo(0, 0)
         else       s.moveTo(0, 0)
