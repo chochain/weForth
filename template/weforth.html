@@ -22,7 +22,7 @@
           <span style='float:left; position:fixed'>
             <b>weForth</b> - Web eForth - <span id='fname'></span>
           </span>
-          <i class='material-icons' style='float:right' onclick='toggle("dsp")'>perm_media</i>
+          <i class='material-icons' style='float:right' onclick='toggle("mm")'>perm_media</i>
           <i class='material-icons' style='float:right' onclick='(toggle("edt"),cm_refresh())'>edit_square</i>
         </cite>
         <div id='edt' class='row' style='display:none'>
@@ -45,8 +45,8 @@
         <div style='width:auto'><input id='tib' class='code' value='' /></div>
         <div id='ss' class='ss'>[ ]</div>
       </div>
-      <div id='dsp' class='layer'>
-        <pre id='mm' class='mem' style='z-index:0'></pre>
+      <div id='dsp' class='dsp' style='width:70%'>
+        <pre id='mm' class='mem' style='z-index:10'></pre>
         <div id='ctx' class='layer'></div>
       </div>
     <script type='text/javascript'>
