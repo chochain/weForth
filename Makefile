@@ -9,6 +9,7 @@ HTML = \
 	template/weforth.html \
 	template/weforth.css \
 	template/file_io.js \
+	template/weforth_logo.js \
 	template/weforth_helper.js \
 	template/weforth_worker.js
 
