@@ -25,23 +25,24 @@ const HSV = (h)=>{
 }
 const RAD = Math.PI / 180.0
 class Logo {
-    static new_cv(n, z) {
+    static new_cv(n, w, z) {
         return `<canvas id="${n}" style="z-index:${z}" `+
-            'class="sfc" width="800px" height="auto" '+
+            `class="sfc" width="${w}" height="${w}" `+
             'oncontextmenu="event.preventDefault()"></canvas>'
     }
     constructor(ctx) {
         let e = document.getElementById(ctx)
-        e.innerHTML += Logo.new_cv('eve', 1)
-        e.innerHTML += Logo.new_cv('sfc', 2)
+        let w = e.offsetWidth
+        e.innerHTML += Logo.new_cv('eve', w, 0)
+        e.innerHTML += Logo.new_cv('sfc', w, 1)
         this.eve = document.getElementById('eve').getContext('2d')
         this.sfc = document.getElementById('sfc').getContext('2d')
         this.st  = {
-            w: e.offsetWidth, h: e.offsetHeight,
+            w: w, h: e.offsetHeight,
             dir: 0, pw: 3, pen: 1, show: 1,
             fg: '#000', bg: '#FFF'
         }
-        console.log(JSON.stringify(this))
+        console.log('logo='+JSON.stringify(this))
     }
     /// LOGO implementation
     clear_eve() {
@@ -66,7 +67,6 @@ class Logo {
     }
     xform(x, y, d, rst=false) {
         let s = this.sfc, e = this.eve
-        console.log(e)
         if (rst) {
             s.resetTransform()
             e.resetTransform()
@@ -97,7 +97,7 @@ class Logo {
             break
         case 'st': t.show = 1;               break
         case 'ht': t.show = 0;               break
-        case 'ct': reset();                  break
+        case 'ct': this.reset();             break
         case 'pd': t.pen  = 1;               break
         case 'pu': t.pen  = 0;               break
         case 'hd': this.xform(0, 0, t.dir - v*RAD); break
