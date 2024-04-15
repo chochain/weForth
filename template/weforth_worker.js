@@ -3,13 +3,13 @@
 /// @brief weForth - worker proxy to weforth.js (called by weforth.html)
 ///
 Module = {
-  print: (e)=>postMessage([ 'cmd', e ])
+    print: e=>postMessage([ 'cmd', e ])
 }
 var vm_dict_len = 0
 var vm_mem_addr = 0
 
-importScripts('weforth_helper.js')             /// * vocabulary handler
-importScripts('weforth.js')                    /// * load js emscripten created
+importScripts('weforth_helper.js')  /// * vocabulary handler
+importScripts('weforth.js')         /// * load js emscripten created
 
 function send_ss() {
     const wa  = wasmExports
@@ -45,8 +45,8 @@ function send_dict() {
 function send_mem(off, len) {
     const wa = wasmExports
     const hx = '0123456789ABCDEF'
-    const h2 = (v)=>hx[(v>>4)&0xf]+hx[v&0xf]
-    const h4 = (v)=>h2(v>>8)+h2(v)
+    const h2 = v=>hx[(v>>4)&0xf]+hx[v&0xf]
+    const h4 = v=>h2(v>>8)+h2(v)
     const adr = wa.vm_mem() + off
     const mem = new Uint8Array(wa.memory.buffer, adr, len)
     const n   = (off + len + 0x10) & ~0xf
