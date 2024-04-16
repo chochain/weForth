@@ -400,14 +400,9 @@ UFP Code::XT0 = ~0;    ///< init base of xt pointers (before calling CODE macros
 
 #if DO_WASM
 /// function in worker thread
-EM_JS(void, js, (const char *arg, U32 v=0), {
+EM_JS(void, js, (char *arg, U32 v=0), {
         postMessage(['js', [ UTF8ToString(arg), v]])
     });
-int RGB() {
-    int rgb = top | (ss.pop()<<8) | (ss.pop()<<16);
-    top = ss.pop();
-    return rgb;
-}
 #endif // DO_WASM
 
 void dict_compile() {  ///< compile primitive words into dictionary
@@ -646,34 +641,12 @@ void dict_compile() {  ///< compile primitive words into dictionary
          POP();                             // string length, not used
          U8 *fn = MEM(POP());               // file name
          forth_include((const char*)fn));   // include file
-    /// @}
-#ifdef DO_LOGO
-    /// @defgroup LOGO ops
-    /// @{
-    CODE("CS",    js("cs"));           // clear screen
-    CODE("HT",    js("ht"));           // hide turtle
-    CODE("ST",    js("st"));           // show turtle
-    CODE("CT",    js("ct"));           // center turtle
-    CODE("PD",    js("pd"));           // pen down
-    CODE("PU",    js("pu"));           // pen up
-    CODE("HD",    js("hd", POP()));    // set heading
-    CODE("FD",    js("fd", POP()));    // forward
-    CODE("BK",    js("bk", POP()));    // backward
-    CODE("RT",    js("rt", POP()));    // right turn
-    CODE("LT",    js("lt", POP()));    // left turn
-    CODE("PC",    js("pc", POP()));    // pencolor ( hue -- )
-    CODE("FG",    js("fg", RGB()));    // pencolor ( r g b -- )
-    CODE("BG",    js("bg", RGB()));    // background color ( r g b -- )
-    CODE("PW",    js("pw", POP()));    // penwidth
-    CODE("XY",                         // set x, y
-         int xy = top | (ss.pop()<<16);
-         top = ss.pop();
-         js("xy", xy));
-    CODE("RGB",   PUSH(RGB()));
-#endif // DO_LOGO
-    CODE("JS",  POP();                 // string length, not used
-         const char* op = (const char*)MEM(POP());
-         js(op, POP()));               // get string pointer
+#if DO_WASM    
+    CODE("JS",                              // Javascript interface
+         POP();                             // strlen, not used
+         char *op = (char*)MEM(POP());      // pointer to string
+         js(op, POP()));                    // call Emscripten js function
+#endif // DO_WASM    
     CODE("bye",   exit(0));
     /// @}
     CODE("boot",  dict.clear(find("boot") + 1); pmem.clear(sizeof(DU)));
