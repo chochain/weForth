@@ -17,6 +17,13 @@ all: one two
 	echo "cmd: python3 -m http.server to start local web server"
 	echo "cmd: enter http://localhost:8000/tests/ceforth.html or weforth.html to test"
 
+zero: $(SRC)
+	echo "WASM: eForth simple demo"
+	$(EM) -o tests/eforth.html $^ \
+		--shell-file template/eforth.html \
+		-sEXPORTED_FUNCTIONS=$(EXP) \
+		-sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+
 one: $(SRC)
 	echo "WASM: eForth single-threaded"
 	$(EM) -o tests/ceforth.html $^ \
