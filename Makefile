@@ -27,7 +27,7 @@ one: $(SRC)
 two: $(SRC)
 	echo "WASM: eForth + one worker thread"
 	cp $(HTML) ./tests
-	$(EM) -DDO_LOGO -o tests/weforth.js $^ \
+	$(EM) -o tests/weforth.js $^ \
 		-sEXPORTED_FUNCTIONS=$(EXP) \
 		-sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
