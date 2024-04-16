@@ -4,8 +4,7 @@
 ///
 'use strict'
 const RGB = (v)=>`rgb(${(v>>16)&0xff} ${(v>>8)&0xff} ${v&0xff})`
-const HSV = (h)=>{
-    //  let h = (hsv>>16)&0xff, s = (hsv>>8)&0xff, v = hsv&0xff
+const HSV = (h)=>{                    // 0 < h < 100
     let s = 1.0, v = 1.0
     let i = Math.floor(h * 0.06)
     let f = h * 0.06 - i
@@ -42,7 +41,7 @@ class Logo {
             dir: 0, pw: 3, pen: 1, show: 1,
             fg: '#000', bg: '#FFF'
         }
-        console.log('logo='+JSON.stringify(this))
+//        console.log('logo='+JSON.stringify(this))
     }
     /// LOGO implementation
     clear_eve() {
@@ -74,7 +73,7 @@ class Logo {
         this.st.dir -= d
         s.translate(x, y); s.rotate(d)
         e.translate(x, y); e.rotate(d)
-    }          
+    }
     reset() {
         let t = this.st
         this.xform(t.w/2, t.h/2, -90.0*RAD, true)
@@ -102,18 +101,17 @@ class Logo {
         case 'pu': t.pen  = 0;               break
         case 'hd': this.xform(0, 0, t.dir - v*RAD); break
         case 'fd': this.xform(v, 0, 0);      break
-        case 'bk': this.xform(-v, 0, 0);     break         // ( d -- )
-        case 'rt': this.xform(0, 0, v*RAD);  break         // ( a -- )
-        case 'lt': this.xform(0, 0, -v*RAD); break         // ( a -- )
-        case 'pc': t.fg = HSV(v);            break         // ( hue -- )
-        case 'bg': t.bg = RGB(v);            break         // ( r g b -- )
-        case 'pw': s.lineWidth = t.pw = v;   break
-        case 'xy': this.xform(t.w/2 + (v>>16),
+        case 'bk': this.xform(-v, 0, 0);     break  // ( d -- )
+        case 'rt': this.xform(0, 0, v*RAD);  break  // ( a -- )
+        case 'lt': this.xform(0, 0, -v*RAD); break  // ( a -- )
+        case 'pc': t.fg = HSV(v);            break  // ( hue -- )
+        case 'fg': t.fg = RGB(v);            break  // ( r g b -- )
+        case 'bg': t.bg = RGB(v);            break  // ( r g b -- )
+        case 'pw': s.lineWidth = t.pw = v;   break  // ( w -- )
+        case 'xy': this.xform(t.w/2 + (v>>16),      // ( x y -- )
                    t.h/2 - (v&0xffff),
                    t.dir, true);             break
-        default:
-			console.log('?opcode:' + op)
-			eval?.(op+' '+v);                break         ///< indirect eval			
+        default: console.log('?op:'+op);     break
         }
         if (t.pen) s.lineTo(0, 0)
         else       s.moveTo(0, 0)
