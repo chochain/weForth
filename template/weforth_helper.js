@@ -177,6 +177,7 @@ var _forth_voc = {
     'RT'      : [ 'gr', '( a -- )',     'Right Turn a degree' ],
     'LT'      : [ 'gr', '( a -- )',     'Left Turn a degree' ],
     'PC'      : [ 'gr', '( hue -- )',   'Pen Color' ],
+    'FG'      : [ 'gr', '( r g b -- )', 'Pen Color' ],
     'BG'      : [ 'gr', '( r g b -- )', 'Background Color' ],
     'PW'      : [ 'gr', '( n -- )',     'Pen Width in pixel' ],
     'XY'      : [ 'gr', '( x y -- )',   'Pen Position at (x,y)' ],
