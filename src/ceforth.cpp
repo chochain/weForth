@@ -767,8 +767,20 @@ void mem_stat() {
          << ")\n  rs  : " << rs.idx   << "/" << E4_RS_SZ << " (max " << rs.max
          << ")\n  mem : " << HERE     << "/" << E4_PMEM_SZ << endl;
 }
+
+#include <sstream>
+void send_to_nul(int len, const char *rst) { /* >> nul */ }
 int  forth_include(const char *fn) {
-    /* not implemented */
+    auto load = [](void *fn, void *buf, int sz) {
+        string cmd;
+        istringstream istm((char*)buf);    ///> stream from str buffer
+        while (getline(istm, cmd)) {
+            forth_vm(cmd.c_str(), send_to_nul);
+        }
+    };
+    auto err = [](void *fn) { fout << (char*)fn << " err! " << ENDL; };
+
+    emscripten_async_wget_data(fn, (void*)fn, load, err);
     return 0;
 }
 
@@ -781,7 +793,6 @@ int  main(int ac, char* av[]) {
 /// WASM/Emscripten ccall interfaces
 ///
 #if DO_WASM
-#include <emscripten.h>
 extern "C" {
 void forth(int n, char *cmd) {
     auto rsp_to_con =
