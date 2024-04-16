@@ -400,8 +400,8 @@ UFP Code::XT0 = ~0;    ///< init base of xt pointers (before calling CODE macros
 
 #if DO_WASM
 /// function in worker thread
-EM_JS(void, canvas, (const char *arg, U32 v=0), {
-        postMessage(['ui', [ UTF8ToString(arg), v]])
+EM_JS(void, js, (const char *arg, U32 v=0), {
+        postMessage(['js', [ UTF8ToString(arg), v]])
     });
 int RGB() {
     int rgb = top | (ss.pop()<<8) | (ss.pop()<<16);
@@ -650,27 +650,30 @@ void dict_compile() {  ///< compile primitive words into dictionary
 #ifdef DO_LOGO
     /// @defgroup LOGO ops
     /// @{
-    CODE("CS",    canvas("cs"));         // clear screen
-    CODE("HT",    canvas("ht"));         // hide turtle
-    CODE("ST",    canvas("st"));         // show turtle
-    CODE("CT",    canvas("ct"));         // center turtle
-    CODE("PD",    canvas("pd"));         // pen down
-    CODE("PU",    canvas("pu"));         // pen up
-    CODE("HD",    canvas("hd", POP()));  // set heading
-    CODE("FD",    canvas("fd", POP()));  // forward
-    CODE("BK",    canvas("bk", POP()));  // backward
-    CODE("RT",    canvas("rt", POP()));  // right turn
-    CODE("LT",    canvas("lt", POP()));  // left turn
-    CODE("PC",    canvas("pc", POP()));  // pencolor
-    CODE("BG",    canvas("bg", RGB()));  // background color
-    CODE("PW",    canvas("pw", POP()));  // penwidth
-    CODE("XY",                           // set x, y
+    CODE("CS",    js("cs"));           // clear screen
+    CODE("HT",    js("ht"));           // hide turtle
+    CODE("ST",    js("st"));           // show turtle
+    CODE("CT",    js("ct"));           // center turtle
+    CODE("PD",    js("pd"));           // pen down
+    CODE("PU",    js("pu"));           // pen up
+    CODE("HD",    js("hd", POP()));    // set heading
+    CODE("FD",    js("fd", POP()));    // forward
+    CODE("BK",    js("bk", POP()));    // backward
+    CODE("RT",    js("rt", POP()));    // right turn
+    CODE("LT",    js("lt", POP()));    // left turn
+    CODE("PC",    js("pc", POP()));    // pencolor ( hue -- )
+    CODE("FG",    js("fg", RGB()));    // pencolor ( r g b -- )
+    CODE("BG",    js("bg", RGB()));    // background color ( r g b -- )
+    CODE("PW",    js("pw", POP()));    // penwidth
+    CODE("XY",                         // set x, y
          int xy = top | (ss.pop()<<16);
          top = ss.pop();
-         canvas("xy", xy));
-    CODE("JS",    POP();                   // string length, not used
-         canvas((const char*)MEM(POP()))); // get string pointer
+         js("xy", xy));
+    CODE("RGB",   PUSH(RGB()));
 #endif // DO_LOGO
+    CODE("JS",  POP();                 // string length, not used
+         const char* op = (const char*)MEM(POP());
+         js(op, POP()));               // get string pointer
     CODE("bye",   exit(0));
     /// @}
     CODE("boot",  dict.clear(find("boot") + 1); pmem.clear(sizeof(DU)));
