@@ -26,17 +26,14 @@
       /// Forth outer interpreter
       ///
       function forth_eval(echo=true) {
-          const clear_tib = ()=>{ tib.value=''; tib.focus() }
+          const xtib = ()=>{ tib.value=''; tib.focus() }
+          const forth = Module.cwrap('forth', null, ['number', 'string'])
           let cmd = tib.value
-          if (cmd=='clear') { txt.innerHTML=''; clear_tib(); return }
+          if (cmd=='clear') { txt.innerHTML=''; xtib(); return }
           if (echo) to_txt('<pre class="cmd"><em>'+cmd+'</em></pre>', false)
-          try      {
-              var forth =
-                  Module.cwrap('forth', null, ['number', 'string'])
-              forth(0, cmd);           /// * call Forth in C/C++
-          } 
+          try      { forth(0, cmd); }       /// * call Forth in C/C++
           catch(e) { console.log(e.toString()+'\n') }
-          finally  { clear_tib(); }
+          finally  { xtib(); }
       }
       window.onload = ()=>setTimeout(()=>{
           tib.value = 'mstat'; forth_eval(false)
