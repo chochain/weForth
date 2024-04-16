@@ -99,6 +99,9 @@
     /// Forth section
     ///
     const vm = new Worker('weforth_worker.js')  ///< create the Forth worker thread
+    const ex = (op, v)=>Function(               ///< scope limiting eval
+        `"use strict"; this.update('${op}', ${v})`
+    ).bind(logo)()
     ///
     /// setup listeners for message from worker thread
     ///
@@ -110,7 +113,7 @@
         case 'us' : usr.innerHTML = v; break
         case 'ss' : ss.innerHTML  = v; break
         case 'mm' : mm.innerHTML  = v; ok=1; break
-        case 'ui' : logo.update(v[0], v[1]);  break
+        case 'js' : ex(v[0], v[1]);    break
         default: console.log('onmessage.error=>'+e)
         }
     }
@@ -124,7 +127,9 @@
             show_cmd(cmd)
             vm.postMessage(['cmd', cmd])
             vm.postMessage(['ss'])
-            vm.postMessage(['mm', [0, 640]])
+            if (mm.style.display!='none') {
+                vm.postMessage(['mm', [0, 640]])
+            }
         }
         if (dc.style.display!='none') {              /// * query dictionary
             vm.postMessage(['dc'])
