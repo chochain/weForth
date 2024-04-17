@@ -352,9 +352,12 @@ void words() {
     fout << setbase(*base) << ENDL;
 }
 void ss_dump() {
+    bool d = *base==10;
     fout << " <";
-    for (int i=0; i<ss.idx; i++) { fout << ss[i] << " "; }
-    fout << top << "> ok" << ENDL;
+    for (int i=0; i<ss.idx; i++) {
+        fout << (d ? ss[i] : (U32)ss[i]) << " ";
+    }
+    fout << (d ? top : (U32)top) << "> ok" << ENDL;
 }
 void mem_dump(IU p0, DU sz) {
     fout << setbase(16) << setfill('0');
@@ -468,14 +471,14 @@ void dict_compile() {  ///< compile primitive words into dictionary
     CODE("*/mod",   DU2 n = (DU2)ss.pop() * ss.pop();
                     DU2 t = top;
                     ss.push((DU)(n % t)); top = (DU)(n / t));
-    CODE("and",     top = ss.pop() & top);
-    CODE("or",      top = ss.pop() | top);
-    CODE("xor",     top = ss.pop() ^ top);
+    CODE("and",     top = (U32)ss.pop() & (U32)top);
+    CODE("or",      top = (U32)ss.pop() | (U32)top);
+    CODE("xor",     top = (U32)ss.pop() ^ (U32)top);
     CODE("abs",     top = abs(top));
     CODE("negate",  top = -top);
     CODE("invert",  top = ~top);
-    CODE("rshift",  top = ss.pop() >> top);
-    CODE("lshift",  top = ss.pop() << top);
+    CODE("rshift",  top = (U32)ss.pop() >> (U32)top);
+    CODE("lshift",  top = (U32)ss.pop() << (U32)top);
     CODE("max",     DU n=ss.pop(); top = (top>n)?top:n);
     CODE("min",     DU n=ss.pop(); top = (top<n)?top:n);
     CODE("2*",      top *= 2);
