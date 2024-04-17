@@ -14,9 +14,13 @@ importScripts('weforth.js')         /// * load js emscripten created
 function send_ss() {
     const wa  = wasmExports
     const base= wa.vm_base()
-    const len = wa.vm_ss_idx()
-    const ss  = new Int32Array(wa.memory.buffer, wa.vm_ss(), len)
-    const top = new Int32Array(wa.memory.buffer, wa.top, 1)
+    const len = wa.vm_ss_idx()>0 ? wa.vm_ss_idx() : 0
+    const ss  = base==10
+          ? new Int32Array(wa.memory.buffer, wa.vm_ss(), len)
+          : new Uint32Array(wa.memory.buffer, wa.vm_ss(), len)
+    const top = base==10
+          ? new Int32Array(wa.memory.buffer, wa.top, 1)
+          : new Uint32Array(wa.memory.buffer, wa.top, 1)
     let div = []
     ss.forEach(v=>div.push(v.toString(base)))
     div.push(top[0].toString(base))

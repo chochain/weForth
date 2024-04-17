@@ -87,14 +87,19 @@
     /// Sidebar handler functions
     ///
     function show_ss() {
-        let wa  = wasmExports
-        let len = wa.vm_ss_idx()
-        let ss  = new Int32Array(wa.memory.buffer, wa.vm_ss(), len)
-        let top = new Int32Array(wa.memory.buffer, wa.top, 1)
+        const wa  = wasmExports
+        const base= wa.vm_base()
+        const len = wa.vm_ss_idx()>0 ? wa.vm_ss_idx() : 0
+        const ss  = base==10
+              ? new Int32Array(wa.memory.buffer, wa.vm_ss(), len)
+              : new Uint32Array(wa.memory.buffer, wa.vm_ss(), len)
+        const top = base==10
+              ? new Int32Array(wa.memory.buffer, wa.top, 1)
+              : new Uint32Array(wa.memory.buffer, wa.top, 1)
         let div = document.getElementById('ss')
-        div.innerHTML = top + '<br/>'
+        div.innerHTML = top[0].toString(base) + '<br/>'
         for (let i = len - 1; i >= 0; --i) {
-            div.innerHTML += ss[i] + '<br/>'
+            div.innerHTML += ss[i].toString(base) + '<br/>'
         }
     }
     function show_dict() {
