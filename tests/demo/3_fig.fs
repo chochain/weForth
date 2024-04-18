@@ -1,6 +1,9 @@
 .( example 3.      fig, forth interest group )
 
 variable t3
+: bar   cr ." *****" ;
+: post  cr ." *    " ;
+: f     bar post bar post post post ;
 : center cr ."   *  " ;
 : sides  cr ." *   *" ;
 : triad1 cr ." * * *" ;
