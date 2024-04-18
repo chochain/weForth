@@ -249,7 +249,7 @@ void s_quote(IU op) {
         add_str(s);                    ///> byte0, byte1, byte2, ..., byteN
     }
     else {                             ///> use PAD ad TEMP storage
-        IU h0  = HERE;                 ///> keep current memory addr
+        IU h0  = HERE;
         DU len = add_str(s);           ///> write string to PAD
         PUSH(h0);                      ///> push string address
         PUSH(len);                     ///> push string length
@@ -352,9 +352,22 @@ void words() {
     fout << setbase(*base) << ENDL;
 }
 void ss_dump() {
+    char buf[34];
+    auto rdx = [&buf](DU v, int b) {      ///> display v by radix
+        int i = 33;  buf[i]='\0';         /// * C++ can do only 8,10,16
+        DU  n = v < 0 ? -v : v;           ///< handle negative
+        while (n && i) {                  ///> digit-by-digit
+            U8 d = (U8)(n % b);  n /= b;
+            buf[--i] = d > 9 ? (d-10)+'a' : d+'0';
+        }
+        if (v < 0) buf[--i]='-';
+        return &buf[i];
+    };
     fout << " <";
-    for (int i=0; i<ss.idx; i++) { fout << ss[i] << " "; }
-    fout << top << "> ok" << ENDL;
+    for (int i=0; i<ss.idx; i++) {
+        fout << rdx(ss[i], *base) << " ";
+    }
+    fout << rdx(top, *base) << "> ok" << ENDL;
 }
 void mem_dump(IU p0, DU sz) {
     fout << setbase(16) << setfill('0');
@@ -383,8 +396,8 @@ void dict_dump() {
     for (int i=0; i<dict.idx; i++) {
         Code &c = dict[i];
         fout << setfill('0') << setw(3) << i
-             << "> attr=" << (c.attr & ~MSK_ATTR)
-             << ", xt="   << setw(4) << c.xtoff()
+             << "> attr=" << (c.attr & 0x3)
+             << ", xt="   << setw(4) << (IS_UDF(i) ? c.pfa : c.xtoff())
              << ":"       << setw(8) << (UFP)c.xt
              << ", name=" << setw(8) << (UFP)c.name
              << " "       << c.name << ENDL;
@@ -393,21 +406,48 @@ void dict_dump() {
 }
 ///====================================================================
 ///
+///> Javascript/WASM interface
+///
+#if DO_WASM
+/// function in worker thread
+EM_JS(void, js, (const char *ops), {
+    postMessage(['js', UTF8ToString(ops)])
+});
+void call_js() {                           ///> ( n addr u -- )
+    stringstream n;
+    auto t2s = [&n](char c) {              ///< template to string
+        n.str("");                         /// * clear stream
+        switch (c) {
+        case 'd': n << POP();                    break;
+        case 'x': n << "0x" << hex << POP();     break;
+        case 's': POP(); n << (char*)MEM(POP()); break;
+        default : n << c << '?';                 break;
+        }
+        return n.str();
+    };
+    POP();                                 /// * strlen, not used
+    pad.clear();                           /// * borrow PAD for string op
+    pad.append((char*)MEM(POP()));         /// copy string on stack
+    for (size_t i=pad.find_last_of('%');   ///> find % from back
+         i!=string::npos;                  /// * until not found
+         i=pad.find_last_of('%',i?i-1:0)) {
+        if (i && pad[i-1]=='%') {          /// * double %%
+            pad.replace(--i,1,"");         /// * drop one %
+        }
+        else pad.replace(i, 2, t2s(pad[i+1]));
+    }
+    js(pad.c_str());    /// * call Emscripten js function
+}
+#endif // DO_WASM
+///====================================================================
+///
 ///> eForth dictionary assembler
 ///  Note: sequenced by enum forth_opcode as following
 ///
-#if DO_WASM
-UFP Code::XT0 =  0;    ///< WASM xt is index to vtable
-/// function in worker thread
-EM_JS(void, canvas, (const char *arg, U32 v=0), {
-        postMessage(['ui', [ UTF8ToString(arg), v]])
-    });
-#else  // !DO_WASM
 UFP Code::XT0 = ~0;    ///< init base of xt pointers (before calling CODE macros)
-#endif // DO_WASM
 
 void dict_compile() {  ///< compile primitive words into dictionary
-    base = (int*)MEM(pmem.idx);                         ///< set pointer to base
+    base = (DU*)MEM(pmem.idx);                          ///< set pointer to base
     add_du(10);                                         ///< default radix=10
     ///
     /// @defgroup Execution flow ops
@@ -469,14 +509,14 @@ void dict_compile() {  ///< compile primitive words into dictionary
     CODE("*/mod",   DU2 n = (DU2)ss.pop() * ss.pop();
                     DU2 t = top;
                     ss.push((DU)(n % t)); top = (DU)(n / t));
-    CODE("and",     top = ss.pop() & top);
-    CODE("or",      top = ss.pop() | top);
-    CODE("xor",     top = ss.pop() ^ top);
+    CODE("and",     top &= ss.pop());
+    CODE("or",      top |= ss.pop());
+    CODE("xor",     top ^= ss.pop());
     CODE("abs",     top = abs(top));
     CODE("negate",  top = -top);
     CODE("invert",  top = ~top);
-    CODE("rshift",  top = ss.pop() >> top);
-    CODE("lshift",  top = ss.pop() << top);
+    CODE("rshift",  top = (U32)ss.pop() >> top);
+    CODE("lshift",  top = (U32)ss.pop() << top);
     CODE("max",     DU n=ss.pop(); top = (top>n)?top:n);
     CODE("min",     DU n=ss.pop(); top = (top<n)?top:n);
     CODE("2*",      top *= 2);
@@ -642,33 +682,9 @@ void dict_compile() {  ///< compile primitive words into dictionary
          POP();                             // string length, not used
          U8 *fn = MEM(POP());               // file name
          forth_include((const char*)fn));   // include file
-    /// @}
-#ifdef DO_LOGO
-    /// @defgroup LOGO ops
-    /// @{
-    CODE("CS",    canvas("cs"));         // clear screen
-    CODE("HT",    canvas("ht"));         // hide turtle
-    CODE("ST",    canvas("st"));         // show turtle
-    CODE("CT",    canvas("ct"));         // center turtle
-    CODE("PD",    canvas("pd"));         // pen down
-    CODE("PU",    canvas("pu"));         // pen up
-    CODE("HD",    canvas("hd", POP()));  // set heading
-    CODE("FD",    canvas("fd", POP()));  // forward
-    CODE("BK",    canvas("bk", POP()));  // backward
-    CODE("RT",    canvas("rt", POP()));  // right turn
-    CODE("LT",    canvas("lt", POP()));  // left turn
-    CODE("PC",                           // pencolor
-         int c = top | (ss.pop()<<8) | (ss.pop()<<16);
-         top = ss.pop();
-         canvas("pc", c));
-    CODE("PW",    canvas("pw", POP()));  // penwidth
-    CODE("XY",                           // set x, y
-         int xy = top | (ss.pop()<<16);
-         top = ss.pop();
-         canvas("xy", xy));
-    CODE("JS",    POP();                   // string length, not used
-         canvas((const char*)MEM(POP()))); // get string pointer
-#endif // DO_LOGO
+#if DO_WASM    
+    CODE("JS",    call_js())                // Javascript interface
+#endif // DO_WASM    
     CODE("bye",   exit(0));
     /// @}
     CODE("boot",  dict.clear(find("boot") + 1); pmem.clear(sizeof(DU)));
@@ -762,8 +778,22 @@ void mem_stat() {
          << ")\n  rs  : " << rs.idx   << "/" << E4_RS_SZ << " (max " << rs.max
          << ")\n  mem : " << HERE     << "/" << E4_PMEM_SZ << endl;
 }
+
+#include <sstream>
+void send_to_nul(int len, const char *rst) { /* >> nul */ }
 int  forth_include(const char *fn) {
-    /* not implemented */
+#if DO_WASM	
+    auto load = [](void *fn, void *buf, int sz) {
+        string cmd;
+        istringstream istm((char*)buf);    ///> stream from str buffer
+        while (getline(istm, cmd)) {
+            forth_vm(cmd.c_str(), send_to_nul);
+        }
+    };
+    auto err = [](void *fn) { fout << (char*)fn << " err! " << ENDL; };
+
+    emscripten_async_wget_data(fn, (void*)fn, load, err);
+#endif // DO_WASM	
     return 0;
 }
 
@@ -776,7 +806,6 @@ int  main(int ac, char* av[]) {
 /// WASM/Emscripten ccall interfaces
 ///
 #if DO_WASM
-#include <emscripten.h>
 extern "C" {
 void forth(int n, char *cmd) {
     auto rsp_to_con =

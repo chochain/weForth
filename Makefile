@@ -9,12 +9,20 @@ HTML = \
 	template/weforth.html \
 	template/weforth.css \
 	template/file_io.js \
+	template/weforth_logo.js \
 	template/weforth_helper.js \
 	template/weforth_worker.js
 
-all: one two
+all: zero one two
 	echo "cmd: python3 -m http.server to start local web server"
 	echo "cmd: enter http://localhost:8000/tests/ceforth.html or weforth.html to test"
+
+zero: $(SRC)
+	echo "WASM: eForth simple demo"
+	$(EM) -o tests/eforth.html $^ \
+		--shell-file template/eforth.html \
+		-sEXPORTED_FUNCTIONS=$(EXP) \
+		-sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
 one: $(SRC)
 	echo "WASM: eForth single-threaded"
@@ -26,7 +34,7 @@ one: $(SRC)
 two: $(SRC)
 	echo "WASM: eForth + one worker thread"
 	cp $(HTML) ./tests
-	$(EM) -DDO_LOGO -o tests/weforth.js $^ \
+	$(EM) -o tests/weforth.js $^ \
 		-sEXPORTED_FUNCTIONS=$(EXP) \
 		-sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 

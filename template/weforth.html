@@ -1,5 +1,5 @@
 <html>
-  <head>    
+  <head>
   <title>weForth</title>
   <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css'></link>
   <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js'></script>
@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <link rel='stylesheet' href='weforth.css'></link>
   <script type='text/javascript' src='file_io.js'></script>
+  <script type='text/javascript' src='weforth_logo.js'></script>
   </head>
   <body>
     <div class='row' style='height:100%'>
@@ -21,7 +22,7 @@
           <span style='float:left; position:fixed'>
             <b>weForth</b> - Web eForth - <span id='fname'></span>
           </span>
-          <i class='material-icons' style='float:right' onclick='toggle("gra")'>perm_media</i>
+          <i class='material-icons' style='float:right' onclick='toggle("mm")'>perm_media</i>
           <i class='material-icons' style='float:right' onclick='(toggle("edt"),cm_refresh())'>edit_square</i>
         </cite>
         <div id='edt' class='row' style='display:none'>
@@ -44,38 +45,36 @@
         <div style='width:auto'><input id='tib' class='code' value='' /></div>
         <div id='ss' class='ss'>[ ]</div>
       </div>
-      <div id='gra' class='col'>
-        <pre id='mm' class='mem' style='display:none; height=50%'></pre>
-        <div class='ctx'>
-          <canvas id='eve' class='sfc' width='800' height='800' style='z-index:0'></canvas>
-          <canvas id='canvas' class='sfc' width='800' height='800' style='z-index:1' oncontextmenu='event.preventDefault()'></canvas>
-         </div>
+      <div id='dsp' class='dsp' style='width:70%'>
+        <pre id='mm' class='mem' style='z-index:10'></pre>
+        <div id='ctx' class='layer'></div>
       </div>
     <script type='text/javascript'>
-    Module = {
-      canvas: (()=>{ return document.getElementById('canvas'); })()
-    }
-    const $ = (s)=>s[0]=='#' && !s.includes(' ') ? /* ala jQuery */
-        document.querySelector(s) : document.querySelectorAll(s)
+    const $ = s=>s[0]=='#' && !s.includes(' ') ? /* ala jQuery */
+          document.querySelector(s) : document.querySelectorAll(s)
     const dir = $('#dir'), usr = $('#usr'), dc = $('#dc')
     const tib = $('#tib'), txt = $('#txt'), ss = $('#ss'), mm = $('#mm')
     const cm  = CodeMirror.fromTextArea($('#cm'), {
         lineNumbers: true, styleActiveLine: true,
         mode: 'forth',                            /// * Forth language
-        extraKeys: { 'Ctrl-Enter': (e)=>forth(e.getSelection()) }
+        extraKeys: { 'Ctrl-Enter': e=>forth(e.getSelection()) }
     })
     const rz  = new ResizeObserver(e=>{           ///< adjust console height
         edt.style.height = cm.innerHeight
         txt.scrollTop    = txt.scrollHeight
     }).observe($('#cm'))
+    const logo = new Logo('ctx')
       
-    tib.onkeydown = (e)=>{                        ///< console input
+    tib.onkeydown = e=>{                          ///< console input
         if (13!=e.keyCode) return
         forth(tib.value)
         tib.value = ''
         txt.scrollTop = txt.scrollHeight          /// * scroll down
         tib.focus()
     }
+    ///
+    /// DOM manipulators
+    ///
     function toggle(id) {
         let sty = $('#'+id).style
         sty.display = sty.display=='none' ? 'flex' : 'none'
@@ -84,7 +83,7 @@
         $('#edt > .CodeMirror').forEach(e=>e.CodeMirror.refresh())
     }
     function to_txt(t, esc=true) {
-        const escape = (s)=>{
+        const escape = s=>{
             return s.replace(/\n/g,'<br/>').replace(/\s/g, '&nbsp;')+'<br/>'
         }
         txt.innerHTML += esc && typeof(t)=='string' ? escape(t) : t
@@ -96,122 +95,29 @@
         if (htm.indexOf('<br/>')==0) htm.replace('<br/>','')  /// * remove blank lines
         to_txt(`<pre class="cmd"><em>${htm}</em></pre>`, false)
     }
-    /// LOGO implementation
-      const _PI2 = Math.PI/180.0;
-    const cvs = $('#canvas')      
-    const sfc = cvs.getContext('2d')
-    const eve = $('#eve').getContext('2d')
-    let st = {                // turtle drawing state
-        pd: 1,
-        t:  1,
-        fg: '#000',
-        bg: '#FFF',
-        w:  cvs.width,
-        h:  cvs.height
-    }
-    function update_canvas(cmd) {
-        const op = cmd[0]
-        const v  = cmd[1]
-        var x, y, d
-        eve.beginPath()                  // erase Eve
-        eve.arc(15,0,15,0,360.0*_PI2)
-        eve.fill()
-        sfc.beginPath()
-        sfc.moveTo(0, 0)
-        switch (op) {
-        case 'cs':
-            sfc.fillRect(0,0,st.w,st.h)
-            sfc.fillStroke = st.bg
-            sfc.fill()
-            break
-        case 'ht': st.t = 0; break
-        case 'st': st.t = 1; break
-        case 'ct':
-            x = sfc.width/2
-            y = sfc.height/2
-            d = 90.0*_PI2
-            break
-        case 'pd': st.pd = 1; break
-        case 'pu': st.pd = 0; break
-        case 'hd': st.d += (90.0 + v)*_PI2; break
-        case 'fd':
-            sfc.translate(v, 0)
-            eve.translate(v, 0)
-            break
-        case 'bk':
-            sfc.translate(-v, 0)
-            eve.translate(-v, 0)
-            break
-        case 'rt':
-            d = v * _PI2
-            sfc.rotate(d)
-            eve.rotate(d)
-            break
-        case 'lt':
-            d = -v * _PI2
-            sfc.rotate(d)
-            eve.rotate(d)
-            break
-        case 'pc': st.c = `rgb(${(cmd[1]>>16)&0xff} ${(cmd[1]>>8)&0xff} ${(cmd[1])&0xff})`
-            break
-        case 'pw': sfc.width = v; break
-        case 'xy':
-            x = (v>>16)+st.w/2
-            y = (v&0xffff)+st.h/2
-            break
-        default: console.log('unknown opcode:' + cmd);
-            eval?.(op);                 ///< indirect eval
-        }
-        if (st.pd) sfc.lineTo(0, 0)
-        else       sfc.moveTo(0, 0)
-        sfc.strokeStyle = st.fg
-        sfc.stroke()
-    }
-    function draw_eve(c) {
-        eve.beginPath()
-        eve.moveTo(0, 0)
-        eve.arc(0, 0, 20, -Math.PI/15, -Math.PI/6, true) // left shoulder
-        eve.moveTo(0, 0)
-        eve.arc(0, 0, 20, Math.PI/15, Math.PI/6)         // right shoulder
-        eve.moveTo(24, 0)
-        eve.arc(24, 0, 4, 0, Math.PI*2)                  // head
-        eve.strokeStyle = c
-        eve.stroke()
-    }
-    window.onload = ()=>{
-        let x0 = cvs.width/2
-        let y0 = cvs.height/2
-        let d0 = -90.0 * _PI2
-        sfc.translate(x0, y0)
-        sfc.rotate(d0)
-        eve.fillStyle = '#FEE'
-        eve.translate(x0, y0)
-        eve.rotate(d0)
-        draw_eve('#F00')
-    }
     ///
     /// Forth section
     ///
     const vm = new Worker('weforth_worker.js')  ///< create the Forth worker thread
-    clear_txt()
+    const ex = (ops)=>Function(                 ///< scope limiting eval
+        `"use strict"; this.update('${ops}')`
+    ).bind(logo)()
     ///
     /// setup listeners for message from worker thread
     ///
-    vm.onmessage = (e)=>{                            /// * wait for worker's response
+    vm.onmessage = e=>{               /// * wait for worker's response
         let k = e.data[0], v = e.data[1]
         switch (k) {
         case 'cmd': to_txt(v);         break
         case 'dc' : show_dict(v);      break
         case 'us' : usr.innerHTML = v; break
         case 'ss' : ss.innerHTML  = v; break
-        case 'mm' : mm.innerHTML  = v; break
-        case 'ui' :
-            update_canvas(v)
-            draw_eve('#F00')
-            break
+        case 'mm' : mm.innerHTML  = v; ok=1; break
+        case 'js' : ex(v);             break
         default: console.log('onmessage.error=>'+e)
         }
     }
+    clear_txt()
     ///
     /// Forth outer interpreter
     ///
@@ -219,9 +125,11 @@
         if (cmd=='clear') clear_txt()                /// * clear output console
         else if (cmd) {
             show_cmd(cmd)
-            vm.postMessage(['cmd', cmd])             /// * send command to Forth worker
-            vm.postMessage(['ss'])                   /// * send command to Forth worker
-            vm.postMessage(['mm', [0, 256]])
+            vm.postMessage(['cmd', cmd])
+            vm.postMessage(['ss'])
+            if (mm.style.display!='none') {
+                vm.postMessage(['mm', [0, 640]])
+            }
         }
         if (dc.style.display!='none') {              /// * query dictionary
             vm.postMessage(['dc'])
@@ -244,7 +152,16 @@
                 e.preventDefault()
             }
         })
-    }          
+    }
+    ///
+    /// start up Forth interpreter
+    ///
+    window.onload = ()=>{
+        setTimeout(()=>{
+            logo.reset()
+            vm.postMessage(['mm', [0, 640]])
+        }, 1000)
+    }
     </script>
   </body>
 </html>

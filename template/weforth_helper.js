@@ -176,7 +176,9 @@ var _forth_voc = {
     'BK'      : [ 'gr', '( n -- )',     'Backward n pixel' ],
     'RT'      : [ 'gr', '( a -- )',     'Right Turn a degree' ],
     'LT'      : [ 'gr', '( a -- )',     'Left Turn a degree' ],
-    'PC'      : [ 'gr', '( r g b -- )', 'Pen Color' ],
+    'PC'      : [ 'gr', '( hue -- )',   'Pen Color' ],
+    'FG'      : [ 'gr', '( r g b -- )', 'Pen Color' ],
+    'BG'      : [ 'gr', '( r g b -- )', 'Background Color' ],
     'PW'      : [ 'gr', '( n -- )',     'Pen Width in pixel' ],
     'XY'      : [ 'gr', '( x y -- )',   'Pen Position at (x,y)' ],
     'JS'      : [ 'gr', '( s n -- )',   'Execute Javascript char string with length' ]
@@ -254,3 +256,4 @@ function colon_words(nlst) {
     }
     return div+'</li></ul>'
 }
+

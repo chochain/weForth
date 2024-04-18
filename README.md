@@ -9,33 +9,60 @@ Regardless, it brought me warm smiles seeing eForth run in a browser. Better yet
 With WASM, the interoperability between different languages become a thing of the near future. If Forth can compile word directly into WASM opcodes, engage WASI to access OS and peripherals, hookup the graphic front-end (i.g. SDL or WebGL), weForth can become a worthy scripting alternative for Web.
 
 ### Features
-   * Javascript access to ss, dict, and VM memory (via WebAssembly.Memory)
    * Forth in Web Worker threads (multi-VMs possible)
+   * Javascript access to ss, dict, and VM memory (via WebAssembly.Memory)
+   * Javascript function calling interface
    * IDE-style interactive front-end (cloud possible, i.g. JupyterLab)
 
-### To Compile into a single wasm file (make sure python3 and Emscripten are installed)
+### Build - (make sure python3 and Emscripten are installed)
+#### Bare-bone eForth on Web
+
+    make zero
+    Note: -O2 works OK, -O3 emscripten spits wrong code
+
+try eforth.html [here](https://chochain.github.io/weForth/ref/eforth.html)
+
+#### Single WASM file
 
     make one
-    Note: -O2 works OK, -O3 emscripten spits wrong code
     
-try it here <a href="https://chochain.github.io/weForth/ref/ceforth.html" target="_blank">ceforth.html</a>
+try ceforth.html [here](https://chochain.github.io/weForth/ref/ceforth.html)
 
-### To Compile into wasm and one Web Worker thread (multi-threaded)
+#### Extra Web Worker thread
 
     make two
     
-try it here <a href="https://chochain.github.io/weForth/ref/weforth.html" target="_blank">weforth.html</a>
+try weforth.html [here](https://chochain.github.io/weForth/ref/weforth.html)
 
-### To Run on your own box
+### Run on your own box
 Server-side
 
     python3 -m http.server
     
 Client-side Browser
 
-    http://localhost:8000/tests/ceforth.html or weforth.html
+    http://localhost:8000/tests/eforth.html, ceforth.html or weforth.html
 
-### To Debug the WASM file (dump all functions, check with wasm-objdump in WABT kit)
+### Javascript interface
+
+ceforth.html
+
+    > 54321 s" alert('%d ... hello world!')" JS⏎
+    
+> ![JS call](https://chochain.github.io/weforth/docs/img/weforth_js.png)
+
+weforth.html
+
+    > s" forth/logo.fs" included⏎
+    > : seg FD 30 RT ;⏎
+    > : color 2* PC ;⏎
+    > : daz 100 0 do i color i seg loop ;⏎
+    > daz⏎
+    
+> ![logo demo](https://chochain.github.io/weforth/docs/img/weforth_logo.png)
+    
+
+### DEBUG the WASM file (dump all functions, check with wasm-objdump in WABT kit)
 
     make debug
     read tests/ceforth.wasm.txt (really long)
@@ -43,10 +70,10 @@ Client-side Browser
 ### Benchmark (on my aged IBM X230 w Intel i5-3470@3.2GHz)
 Simple 10M tests
   
-    : xx 9999 FOR 34 DROP NEXT ;
-    : yy 999 FOR xx NEXT ;
-    : zz MS NEGATE yy MS + ;
-    zz
+    : xx 9999 FOR 34 DROP NEXT ;⏎
+    : yy 999 FOR xx NEXT ;⏎
+    : zz MS NEGATE yy MS + ;⏎
+    zz⏎
 
 |implementation|version|source code|optimization|platform|run time(ms)|code size(KB)|
 |--|--|--|--|--|--|--|
@@ -82,20 +109,6 @@ Simple 10M tests
     Note6: WASM -O3 => err functions (wa.*) not found
     Note7: FireFox v122 is vastly faster than v120
     Note8: Chrome is about 10% slower than FireFox
-
-### SDL2 - Experimental on Linux
-Install sdl2, image, sound, and fonts
-
-    sudo apt install libsdl2-dev libsdl2-2.0-0 -y;
-    sudo apt install libjpeg-dev libwebp-dev libtiff5-dev libsdl2-image-dev libsdl2-image-2.0-0 -y;
-    sudo apt install libmikmod-dev libfishsound1-dev libsmpeg-dev liboggz2-dev libflac-dev libfluidsynth-dev libsdl2-mixer-dev libsdl2-mixer-2.0-0 -y;
-    sudo apt install libfreetype6-dev libsdl2-ttf-dev libsdl2-ttf-2.0-0 -y;
-    
-Build
-
-    make sdl
-    ./tests/sdl2 to tests native on CPU
-    enter http://localhost:8000/tests/sdl2.html into the browser
 
 ### TODO
 * review wasmtime (CLI), perf+hotspot (profiling)

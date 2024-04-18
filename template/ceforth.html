@@ -4,32 +4,34 @@
   <style>
     h2    { color: #c44; margin: 0; }
     h3    { color: #fc4; margin: 0; }
+    .base { display:flex; font-size:18px; font-family:monospace; width:100%; height:100%; }
+    .side { display:flex; flex-direction:column; width:220px; height:100%; }
     .tic  { width:100%; text-align:center; background-color:#eee; margin:2px; padding: 5px 0 5px 0; }
-    .tac  { width:90%; text-align:right; color:#484; margin:4px; }
-    .toe  { width:90%; text-align:left; text-wrap:auto; color:#484; margin:4px; }
-    .txt  { width:50%; height:100%; margin:4px; display:flex; flex-direction:column; overflow-x:scroll; display:block }
-    .sep  { width:4px; height:100%; border:0px; cursor:col-resize; }
+    .tac  { text-align:right; color:#484; margin:4px; padding-right:6px; }
+    .edt  { height:100%; display:flex; flex-direction:row; }
+    .txt  { height:100%; margin:4px; display:flex; flex-direction:column; overflow-x:scroll; display:block }
+    .sep  { width:3px; height:100%; border:0px; cursor:col-resize; }
     .cmd  { color:#48f; margin: 2px; }
-    .CodeMirror { width:100%; border:1px solid #444; height:auto; }
+    .CodeMirror { width:100%; border:1px solid #444; height:auto; font-size: 0.8em; }
   </style>
   <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css'></link>
   <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js'></script>
   <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/forth/forth.min.js'></script>
   </head>
   <body>
-    <div style='display:flex; font-size:18px; font-family:monospace; width:100%; height:100%'>
-      <div style='display:flex; flex-direction:column; width:15%; height:100%'>
+    <div class='base'>
+      <div class='side'>
         <pre class='tic'>Data Stack</pre>
         <pre id='ss' class='tac'></pre>
         <pre class='tic'>User Dict</pre>
         <pre id='dc' class='tac'></pre>
       </div>
-      <div style='display:flex; flex-direction:row; width:85%; height:100%'>
-        <pre id='txt' class='txt'></pre>
+      <div class='edt' style='width:85%'>
+        <pre id='txt' class='txt' style='width:60%'></pre>
         <div id='sep' class='sep'></div>
-        <div id='edt' class='txt'>
+        <div id='edt' class='txt' style='width:40%'>
           <div style='display:flex; width=100%'>
-            <input id='tib' style='width:100%' value=''
+            <input id='tib' style='width:100%; font-size:1.0em' value=''
                onkeydown='if (13===event.keyCode) forth_eval()'/>
           </div>
           <textarea id='cm'>
@@ -82,17 +84,22 @@
     }
     drag(txt, document.getElementById("sep"), edt)
     ///
-    /// TextArea handler functions
+    /// Sidebar handler functions
     ///
     function show_ss() {
-        let wa  = wasmExports
-        let len = wa.vm_ss_idx()
-        let ss  = new Int32Array(wa.memory.buffer, wa.vm_ss(), len)
-        let top = new Int32Array(wa.memory.buffer, wa.top, 1)
+        const wa  = wasmExports
+        const base= wa.vm_base()
+        const len = wa.vm_ss_idx()>0 ? wa.vm_ss_idx() : 0
+        const ss  = base==10
+              ? new Int32Array(wa.memory.buffer, wa.vm_ss(), len)
+              : new Uint32Array(wa.memory.buffer, wa.vm_ss(), len)
+        const top = base==10
+              ? new Int32Array(wa.memory.buffer, wa.top, 1)
+              : new Uint32Array(wa.memory.buffer, wa.top, 1)
         let div = document.getElementById('ss')
-        div.innerHTML = top + '<br/>'
+        div.innerHTML = top[0].toString(base) + '<br/>'
         for (let i = len - 1; i >= 0; --i) {
-            div.innerHTML += ss[i] + '<br/>'
+            div.innerHTML += ss[i].toString(base) + '<br/>'
         }
     }
     function show_dict() {
@@ -101,11 +108,14 @@
         let dict= Module.cwrap('vm_dict', 'string', ['number'])
         let div = document.getElementById('dc')
         div.innerHTML = ''
-        for (let i = len - 1; i >= 0; --i) {
-            if (dict(i)=='boot') break          /// * only colon 
+        for (var i = len - 1; i >= 0; --i) {
+            if (dict(i)=='boot') break          /// * only colon words
             div.innerHTML += dict(i) + '<br/>'
         }
     }
+    ///
+    /// Forth console
+    ///
     function to_txt(t, br=true) {
         txt.innerHTML += br ? t + '<br/>' : t
         txt.scrollTop = txt.scrollHeight
@@ -113,28 +123,36 @@
     ///
     /// WASM ==========================================================
     ///      
-    var Module = {                              ///< WASM global object
-        print: to_txt                           ///< assign print function
+    var Module = { print: to_txt }  ///< WASM global object
+    const ex = (ops)=>Function(      ///< scope limiting eval
+        `"use strict"; this.eval(${ops})`
+    ).bind(this)()
+    this.onmessage = e=>{
+        console.log(e.data)
+        if (e.data[0]=='js') ex(e.data[1])
     }
     ///
     /// Forth outer interpreter
     ///
     function forth_eval() {
+        const xtib = ()=>{
+            tib.value=''; tib.focus();
+            tib.style.backgroundColor='white'
+        }
         let cmd=tib.value.replace(/:/g,'<br/>:')
-        if (cmd=='clear') { txt.innerHTML=''; tib.value=''; return }  /// client-side
+        if (cmd=='clear') { txt.innerHTML=''; xtib(); return }
         if (cmd.indexOf('<br/>')==0) cmd.replace('<br/>','')
+        
         to_txt('<pre class="cmd"><em>'+cmd+'</em></pre>', false)
-
+        
         try {
             var forth = Module.cwrap('forth', null, ['number', 'string'])
-            forth(0, tib.value)  /// * call Forth in C/C++
+            forth(0, tib.value)    /// * call Forth in C/C++
             show_ss()
             show_dict()
         }
         catch(e) { console.log(e.toString()+'\n') }
-        finally  {               /// * clear input buffer
-            tib.value=''; tib.style.backgroundColor='white'
-        }
+        finally  { xtib(); }       /// * clear input buffer
     }
     </script>
     {{{ SCRIPT }}}
