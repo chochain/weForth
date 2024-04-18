@@ -50,7 +50,7 @@ var _forth_voc = {
     '?do'     : [ 'br', 'todo', 'todo' ],
     '?dup'    : [ 'ss', '( w -- w w)',  'Duplicate w if not zero' ],
     '@'       : [ 'mm', '( w -- a )',   'Return contents of a variable' ],
-    'abort'   : [ 'os', '( -- )',       'Clear rs, ss' ],
+    'abort'   : [ 'db', '( -- )',       'Clear rs, ss' ],
     'abs'     : [ 'au', '( a -- b )',   'Return absolute of TOS' ],
     'aft'     : [ 'br', '( -- )',       'Skip loop once for the first time' ],
     'again'   : [ 'br', '( -- )',       'Repeat the begin loop' ],
@@ -58,8 +58,7 @@ var _forth_voc = {
     'and'     : [ 'au', '( a b -- c )', 'Bitwise AND of two TOS items' ],
     'array!'  : [ 'mm', '( n w i -- )', 'Store n into ith item of array w' ],
     'array@'  : [ 'mm', '( w i -- b )', 'Return contents of the ith item in array w' ],
-    'base!'   : [ 'io', '( a -- )',     'Make a the current base' ],
-    'base@'   : [ 'io', '( -- a )',     'Return current base' ],
+    'base'    : [ 'io', '( -- a )',     'Return current base address' ],
     'begin'   : [ 'br', '( -- )',       'Start a begin loop structure' ],
     'bl'      : [ 'io', '( -- )',       'Send a blank char to console' ],
     'branch'  : [ 'br', '( -- )',       'Branch to following address' ],
@@ -71,13 +70,16 @@ var _forth_voc = {
     'date'    : [ 'os', '( -- )',       'Display data-time string' ],
     'decimal' : [ 'io', '( -- )',       'Change to decimal base' ],
     'delay'   : [ 'os', '( n -- )',     'Wait n milliseconds' ],
+    'depth'   : [ 'db', '( -- n )',     'Number of elements on data stack' ],
+    'do'      : [ 'br', '( m n -- )',   'Repeat loop from n to m' ],
     'does>'   : [ 'cm', '( -- )',       'Assign following token list to the new word just created' ],
     'dolit'   : [ 'li', '( -- )',       'Push next token on stack' ],
     'donext'  : [ 'br', '( -- )',       'Loop to the following address' ],
     'dostr'   : [ 'li', '( -- w )',     'Return token of next string' ],
     'dotstr'  : [ 'li', '( -- )',       'Display next compiled string' ],
     'drop'    : [ 'ss', '( a -- )',     'Discard TOS' ],
-    'dump'    : [ 'db', '( -- )',       'Display all word objects in dictionary' ],
+    'dict'    : [ 'db', '( -- )',       'display woll words' ],
+    'dump'    : [ 'db', '( i n -- )',   'Display words in dictionary from index a with n count' ],
     'dup'     : [ 'ss', '( a -- a a )', 'Duplicate TOS' ],
     'else'    : [ 'br', '( -- )',       'Take the next false branch' ],
     'emit'    : [ 'io', '( a -- )',     'Display an ASCII character' ],
@@ -92,17 +94,22 @@ var _forth_voc = {
     'hex'     : [ 'io', '( -- )',       'Change to hexadecimal base' ],
     'i'       : [ 'br', '( -- a )',     'Duplicate top of return stack to TOS' ],
     'if'      : [ 'br', '( f -- )',     'Skip the next true branch if TOS is 0' ],
+    'immediate':[ 'cm', '( -- )',       'set colon word just defined as immediate word' ],
+    'included': [ 'os', '( s n -- )',   'load external file with char string s with length n' ],
     'int'     : [ 'au', '( a -- n )',   'Change TOS to integer' ],
     'invert'  : [ 'au', '( n -- n )',   'Invert all binary digit' ],
     'is'      : [ 'cm', '( w -- )',     'Force next word to execute w. interpret only' ],
     'j'       : [ 'br', '( -- n )',     'Fetch 2nd on return stack' ],
     'key'     : [ 'io', '( -- n)',      'Fetch one keystoke from input terminal' ],
-    'loop'    : [ 'br', 'todo', 'todo' ],
+    'loop'    : [ 'br', '( -- )',       'Incement top of return stack. Exit loop if >= than 2nd top of return stack' ],
     'lshift'  : [ 'au', '( n i -- n )', 'Shift n by i bits' ],
     'max'     : [ 'au', '( a b -- c )', 'Return larger of two TOS items' ],
     'min'     : [ 'au', '( a b -- c )', 'Return smaller of two TOS items' ],
     'mod'     : [ 'au', '( a b -- c )', 'Modulus NOS by TOS' ],
+    '/mod'    : [ 'au', '( a b -- r q )', 'a divided by b, r=a%b, q=a/b' ],
+    '*/mod'   : [ 'au', '( a b c-- r q )','double d= a * b, r=r%c, q=d/b' ],
     'ms'      : [ 'os', '( n -- )',     'Delay n milliseconds' ],
+    'mstat'   : [ 'db', '( -- )',       'Display memory statistics' ],
     'n!'      : [ 'mm', '( n w i -- )', 'Store n into ith item of array w' ],
     'n@'      : [ 'mm', '( w i -- b )', 'Return contents of the ith item in array w' ],
     'negate'  : [ 'au', '( a -- b )',   'Negate TOS' ],
@@ -130,6 +137,7 @@ var _forth_voc = {
     'then'    : [ 'br', '( -- )',       'Terminate an if-else-then branch structure' ],
     'time'    : [ 'os', '( -- )',       'Display system time string' ],
     'to'      : [ 'cm', '( n -- )',     'Change the value of next constant token to n. compile only' ],
+    'type'    : [ 'io', '( a n -- )',   'Send character string at address a with length to console' ],
     'u.'      : [ 'io', '( n -- )',     'Display value n as unsigned' ],
     'u.r'     : [ 'io', '( a n -- )',   'Display unsinged a in n columns' ],
     'u<'      : [ 'au', '( a b -- f )', 'Check condition unsigned a < unsigned b' ],
@@ -157,6 +165,23 @@ var _forth_voc = {
     'sin'     : [ 'ex', '( a -- b )',   'Return sine of TOS' ],
     'sqrt'    : [ 'ex', '( a -- b )',   'Return square root of TOS' ],
     'tan'     : [ 'ex', '( a -- b )',   'Return tangent of TOS' ],
+    'CS'      : [ 'gr', '( -- )',       'Clear Graphic surface' ],
+    'HT'      : [ 'gr', '( -- )',       'Hide Turtle' ],
+    'ST'      : [ 'gr', '( -- )',       'Show Turtle' ],
+    'CT'      : [ 'gr', '( -- )',       'Center Turtle' ],
+    'PD'      : [ 'gr', '( -- )',       'Pen Down' ],
+    'PU'      : [ 'gr', '( -- )',       'Pen Up' ],
+    'HD'      : [ 'gr', '( a -- )',     'Heading in degree' ],
+    'FD'      : [ 'gr', '( n -- )',     'Forward n pixel' ],
+    'BK'      : [ 'gr', '( n -- )',     'Backward n pixel' ],
+    'RT'      : [ 'gr', '( a -- )',     'Right Turn a degree' ],
+    'LT'      : [ 'gr', '( a -- )',     'Left Turn a degree' ],
+    'PC'      : [ 'gr', '( hue -- )',   'Pen Color' ],
+    'FG'      : [ 'gr', '( r g b -- )', 'Pen Color' ],
+    'BG'      : [ 'gr', '( r g b -- )', 'Background Color' ],
+    'PW'      : [ 'gr', '( n -- )',     'Pen Width in pixel' ],
+    'XY'      : [ 'gr', '( x y -- )',   'Pen Position at (x,y)' ],
+    'JS'      : [ 'gr', '( s n -- )',   'Execute Javascript char string with length' ]
 }
 ///
 /// Vocabulary helpers
@@ -176,7 +201,7 @@ function _category(name) {
     const _cat = {                            ///< category desc lookup
         ss: 'Stack',  au: 'ALU',    eq: 'Compare', io: 'IO',    li: 'Literal',
         br: 'Branch', mm: 'Memory', cm: 'Compile', db: 'Debug', os: 'OS',
-        ex: 'Math Ext.'
+        ex: 'Math Ext.', gr: 'Graphic'
     }
     return _voc(name) && _cat[_voc(name)[0]]
 }
@@ -231,3 +256,4 @@ function colon_words(nlst) {
     }
     return div+'</li></ul>'
 }
+

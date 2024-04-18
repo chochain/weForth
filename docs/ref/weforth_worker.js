@@ -3,20 +3,24 @@
 /// @brief weForth - worker proxy to weforth.js (called by weforth.html)
 ///
 Module = {
-  print: (e)=>postMessage([ 'cmd', e ])
+    print: e=>postMessage([ 'cmd', e ])
 }
 var vm_dict_len = 0
 var vm_mem_addr = 0
 
-importScripts('weforth_helper.js')             /// * vocabulary handler
-importScripts('weforth.js')                    /// * load js emscripten created
+importScripts('weforth_helper.js')  /// * vocabulary handler
+importScripts('weforth.js')         /// * load js emscripten created
 
 function send_ss() {
     const wa  = wasmExports
     const base= wa.vm_base()
-    const len = wa.vm_ss_idx()
-    const ss  = new Int32Array(wa.memory.buffer, wa.vm_ss(), len)
-    const top = new Int32Array(wa.memory.buffer, wa.top, 1)
+    const len = wa.vm_ss_idx()>0 ? wa.vm_ss_idx() : 0
+    const ss  = base==10
+          ? new Int32Array(wa.memory.buffer, wa.vm_ss(), len)
+          : new Uint32Array(wa.memory.buffer, wa.vm_ss(), len)
+    const top = base==10
+          ? new Int32Array(wa.memory.buffer, wa.top, 1)
+          : new Uint32Array(wa.memory.buffer, wa.top, 1)
     let div = []
     ss.forEach(v=>div.push(v.toString(base)))
     div.push(top[0].toString(base))
@@ -45,8 +49,8 @@ function send_dict() {
 function send_mem(off, len) {
     const wa = wasmExports
     const hx = '0123456789ABCDEF'
-    const h2 = (v)=>hx[(v>>4)&0xf]+hx[v&0xf]
-    const h4 = (v)=>h2(v>>8)+h2(v)
+    const h2 = v=>hx[(v>>4)&0xf]+hx[v&0xf]
+    const h4 = v=>h2(v>>8)+h2(v)
     const adr = wa.vm_mem() + off
     const mem = new Uint8Array(wa.memory.buffer, adr, len)
     const n   = (off + len + 0x10) & ~0xf
@@ -55,7 +59,7 @@ function send_mem(off, len) {
         for (let i = 0; i < 0x10; i++) {
             let ch = mem[i+j] || 0
             bt += `${hx[ch>>4]}${hx[ch&0xf]}`
-            if ((i & 0x3)==3) bt += ' '
+            bt += ((i & 0x3)==3) ? '  ' : ' '
             tx += (ch < 0x20) ? '_' : String.fromCharCode(ch)
         }
         div += h4(j) + ': ' + bt + tx + '\n'
