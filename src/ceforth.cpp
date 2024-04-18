@@ -396,7 +396,7 @@ void dict_dump() {
     for (int i=0; i<dict.idx; i++) {
         Code &c = dict[i];
         fout << setfill('0') << setw(3) << i
-             << "> attr=" << (c.attr & ~MSK_ATTR)
+             << "> attr=" << (c.attr & 0x3)
              << ", xt="   << setw(4) << (IS_UDF(i) ? c.pfa : c.xtoff())
              << ":"       << setw(8) << (UFP)c.xt
              << ", name=" << setw(8) << (UFP)c.name
@@ -413,9 +413,23 @@ UFP Code::XT0 = ~0;    ///< init base of xt pointers (before calling CODE macros
 
 #if DO_WASM
 /// function in worker thread
-EM_JS(void, js, (char *arg, U32 v=0), {
-        postMessage(['js', [ UTF8ToString(arg), v]])
-    });
+EM_JS(void, js, (const char *ops), {
+    postMessage(['js', UTF8ToString(ops)])
+});
+void call_js() {                           ///> ( n addr u -- )
+    POP();                                 /// * strlen, not used
+    pad.clear();                           /// * borrow PAD for string op
+    pad.append((char*)MEM(POP()));         /// copy string on stack
+    for (size_t i=pad.find_last_of('%');   ///> find % from back
+         i!=string::npos;                  /// * until not found
+         i=pad.find_last_of('%', i-1)) {
+        if (i && pad[i-1]=='%') {          /// * double %%
+            pad.replace(i--,1,"");         /// * drop one %
+        }
+        else pad.replace(i,1,to_string(POP()));
+    }
+    js(pad.c_str());    /// * call Emscripten js function
+}
 #endif // DO_WASM
 
 void dict_compile() {  ///< compile primitive words into dictionary
@@ -655,10 +669,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
          U8 *fn = MEM(POP());               // file name
          forth_include((const char*)fn));   // include file
 #if DO_WASM    
-    CODE("JS",                              // Javascript interface
-         POP();                             // strlen, not used
-         char *op = (char*)MEM(POP());      // pointer to string
-         js(op, POP()));                    // call Emscripten js function
+    CODE("JS",    call_js())                // Javascript interface
 #endif // DO_WASM    
     CODE("bye",   exit(0));
     /// @}
