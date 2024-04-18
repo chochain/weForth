@@ -20,7 +20,7 @@ With WASM, the interoperability between different languages become a thing of th
     make zero
     Note: -O2 works OK, -O3 emscripten spits wrong code
 
-try eforth.html [here](https://chochain.github.io/weForth/ref/ceforth.html)
+try eforth.html [here](https://chochain.github.io/weForth/ref/eforth.html)
 
 #### Single WASM file
 
