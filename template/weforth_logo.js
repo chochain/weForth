@@ -84,7 +84,8 @@ class Logo {
         this.draw_eve(t.fg)
     }
     update(ops) {
-        let op = ops[0],  v = ops[1]
+        let av = ops.split(' ')
+        let op = av[0],   v = av[1]
         let t  = this.st, s = this.sfc
         this.clear_eve()
         s.beginPath()
