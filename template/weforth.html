@@ -106,14 +106,14 @@
     /// setup listeners for message from worker thread
     ///
     vm.onmessage = e=>{               /// * wait for worker's response
-        let k = e.data[0], ops = e.data[1].split(' ')
+        let k = e.data[0], v = e.data[1]
         switch (k) {
         case 'cmd': to_txt(v);         break
         case 'dc' : show_dict(v);      break
         case 'us' : usr.innerHTML = v; break
         case 'ss' : ss.innerHTML  = v; break
         case 'mm' : mm.innerHTML  = v; ok=1; break
-        case 'js' : ex(ops);           break
+        case 'js' : ex(v);             break
         default: console.log('onmessage.error=>'+e)
         }
     }
