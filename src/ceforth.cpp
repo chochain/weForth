@@ -422,9 +422,9 @@ void call_js() {                           ///> ( n addr u -- )
     pad.append((char*)MEM(POP()));         /// copy string on stack
     for (size_t i=pad.find_last_of('%');   ///> find % from back
          i!=string::npos;                  /// * until not found
-         i=pad.find_last_of('%', i-1)) {
+         i=pad.find_last_of('%',i?i-1:0)) {
         if (i && pad[i-1]=='%') {          /// * double %%
-            pad.replace(i--,1,"");         /// * drop one %
+            pad.replace(--i,1,"");         /// * drop one %
         }
         else pad.replace(i,1,to_string(POP()));
     }
@@ -768,6 +768,7 @@ void mem_stat() {
 #include <sstream>
 void send_to_nul(int len, const char *rst) { /* >> nul */ }
 int  forth_include(const char *fn) {
+#if DO_WASM	
     auto load = [](void *fn, void *buf, int sz) {
         string cmd;
         istringstream istm((char*)buf);    ///> stream from str buffer
@@ -778,6 +779,7 @@ int  forth_include(const char *fn) {
     auto err = [](void *fn) { fout << (char*)fn << " err! " << ENDL; };
 
     emscripten_async_wget_data(fn, (void*)fn, load, err);
+#endif // DO_WASM	
     return 0;
 }
 
