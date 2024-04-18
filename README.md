@@ -44,14 +44,35 @@ Client-side Browser
     http://localhost:8000/tests/eforth.html, ceforth.html or weforth.html
 
 ### Javascript interface
+To communicate between Forth and Javascript engine, weForth implemented a word 'JS' and a function call_js(). They utilize Emscripten EM_JS macro that *postMessage* from C++ backend-side to *onmessage* on browser-side. Depends on your need, handler can be very simple to complicated.
 
-ceforth.html
+#### ceforth.html - a very simple (and dangerous) handler
+
+    this.onmessage = e=>{
+        if (e.data[0]=='js') this.eval(e.data[1])
+    }
 
     > 54321 s" alert('%d ... hello world!')" JS⏎
     
-> ![JS call](https://chochain.github.io/weforth/docs/img/weforth_js.png)
+> ![JS call](https://chochain.github.io/weForth/img/weforth_js.png)
 
-weforth.html
+#### weforth.html - a more complex handler
+
+    const ex = (ops)=>Function(       ///< scope limiting eval
+        `"use strict"; this.update('${ops}')`
+    ).bind(logo)()
+    vm.onmessage = e=>{               /// * wait for worker's response
+        let k = e.data[0], v = e.data[1]
+        switch (k) {
+        case 'cmd': to_txt(v);         break
+        case 'dc' : show_dict(v);      break
+        case 'us' : usr.innerHTML = v; break
+        case 'ss' : ss.innerHTML  = v; break
+        case 'mm' : mm.innerHTML  = v; ok=1; break
+        case 'js' : ex(v);             break
+        default: console.log('onmessage.error=>'+e)
+        }
+    }
 
     > s" forth/logo.fs" included⏎
     > : seg FD 30 RT ;⏎
@@ -59,7 +80,7 @@ weforth.html
     > : daz 100 0 do i color i seg loop ;⏎
     > daz⏎
     
-> ![logo demo](https://chochain.github.io/weforth/docs/img/weforth_logo.png)
+> ![logo demo](https://chochain.github.io/weForth/img/weforth_logo.png)
     
 
 ### DEBUG the WASM file (dump all functions, check with wasm-objdump in WABT kit)
@@ -121,7 +142,9 @@ Simple 10M tests
   + Character graphic (SDL_ttf or HTML5)
   + 3D graphic (GL)
   + Music (SDL_media)
-* Robotic Simulation Engine (raylib)
+* Robotic Simulation Engine
+  + review raylib
+  + review Three.js
   + CSG Object (with optional motion trail) [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
   + Collision (with directional distance sensing)
 * add network system (SD_net)
