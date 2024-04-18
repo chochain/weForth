@@ -13,7 +13,7 @@ HTML = \
 	template/weforth_helper.js \
 	template/weforth_worker.js
 
-all: one two
+all: zero one two
 	echo "cmd: python3 -m http.server to start local web server"
 	echo "cmd: enter http://localhost:8000/tests/ceforth.html or weforth.html to test"
 
