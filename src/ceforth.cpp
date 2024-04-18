@@ -249,7 +249,7 @@ void s_quote(IU op) {
         add_str(s);                    ///> byte0, byte1, byte2, ..., byteN
     }
     else {                             ///> use PAD ad TEMP storage
-        IU h0  = HERE;                 ///> keep current memory addr
+        IU h0  = HERE;
         DU len = add_str(s);           ///> write string to PAD
         PUSH(h0);                      ///> push string address
         PUSH(len);                     ///> push string length
@@ -406,17 +406,25 @@ void dict_dump() {
 }
 ///====================================================================
 ///
-///> eForth dictionary assembler
-///  Note: sequenced by enum forth_opcode as following
+///> Javascript/WASM interface
 ///
-UFP Code::XT0 = ~0;    ///< init base of xt pointers (before calling CODE macros)
-
 #if DO_WASM
 /// function in worker thread
 EM_JS(void, js, (const char *ops), {
     postMessage(['js', UTF8ToString(ops)])
 });
 void call_js() {                           ///> ( n addr u -- )
+    stringstream n;
+    auto t2s = [&n](char c) {              ///< template to string
+        n.str("");                         /// * clear stream
+        switch (c) {
+        case 'd': n << POP();                    break;
+        case 'x': n << "0x" << hex << POP();     break;
+        case 's': POP(); n << (char*)MEM(POP()); break;
+        default : n << c << '?';                 break;
+        }
+        return n.str();
+    };
     POP();                                 /// * strlen, not used
     pad.clear();                           /// * borrow PAD for string op
     pad.append((char*)MEM(POP()));         /// copy string on stack
@@ -426,11 +434,17 @@ void call_js() {                           ///> ( n addr u -- )
         if (i && pad[i-1]=='%') {          /// * double %%
             pad.replace(--i,1,"");         /// * drop one %
         }
-        else pad.replace(i,1,to_string(POP()));
+        else pad.replace(i, 2, t2s(pad[i+1]));
     }
     js(pad.c_str());    /// * call Emscripten js function
 }
 #endif // DO_WASM
+///====================================================================
+///
+///> eForth dictionary assembler
+///  Note: sequenced by enum forth_opcode as following
+///
+UFP Code::XT0 = ~0;    ///< init base of xt pointers (before calling CODE macros)
 
 void dict_compile() {  ///< compile primitive words into dictionary
     base = (DU*)MEM(pmem.idx);                          ///< set pointer to base
