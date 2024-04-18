@@ -69,6 +69,7 @@ class Logo {
         if (rst) {
             s.resetTransform()
             e.resetTransform()
+            this.st.dir = 0
         }
         this.st.dir -= d
         s.translate(x, y); s.rotate(d)
@@ -82,8 +83,9 @@ class Logo {
         this.eve.strokeStyle = '#F00'
         this.draw_eve(t.fg)
     }
-    update(op, v) {
-        let t = this.st, s = this.sfc
+    update(ops) {
+        let op = ops[0],  v = ops[1]
+        let t  = this.st, s = this.sfc
         this.clear_eve()
         s.beginPath()
         s.moveTo(0, 0)
@@ -108,9 +110,12 @@ class Logo {
         case 'fg': t.fg = RGB(v);            break  // ( r g b -- )
         case 'bg': t.bg = RGB(v);            break  // ( r g b -- )
         case 'pw': s.lineWidth = t.pw = v;   break  // ( w -- )
-        case 'xy': this.xform(t.w/2 + (v>>16),      // ( x y -- )
-                   t.h/2 - (v&0xffff),
-                   t.dir, true);             break
+        case 'xy':                                  // ( x y -- )
+            let x = (v|0)&0xffff, y = (v|0)>>16
+            x |= (x & 0x8000) ? 0xffff0000 : 0      // x negative
+            y |= (y & 0x8000) ? 0xffff0000 : 0      // y negative
+            this.xform(t.w/2+x, t.h/2-y,
+                       -t.dir, true);        break
         default: console.log('?op:'+op);     break
         }
         if (t.pen) s.lineTo(0, 0)
