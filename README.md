@@ -142,7 +142,9 @@ Simple 10M tests
   + Character graphic (SDL_ttf or HTML5)
   + 3D graphic (GL)
   + Music (SDL_media)
-* Robotic Simulation Engine (raylib)
+* Robotic Simulation Engine
+  + review raylib
+  + review Three.js
   + CSG Object (with optional motion trail) [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
   + Collision (with directional distance sensing)
 * add network system (SD_net)
