@@ -35,7 +35,24 @@ Client-side Browser
 
     http://localhost:8000/tests/ceforth.html or weforth.html
 
-### To Debug the WASM file (dump all functions, check with wasm-objdump in WABT kit)
+### Javascript interface
+
+ceforth.html
+
+    > 54321 s" alert('%d ... hello world!')" JS
+    [javascript demo](https://chochain.github.io/weforth/docs/img/weforth_js.png)
+
+weforth.html
+
+    > s" forth/logo.fs" included⏎
+    > : seg FD 30 RT ;⏎
+    > : color 2* PC ;⏎
+    > : daz 100 0 do i color i seg loop ;⏎
+    > daz
+    [logo demo](https://chochain.github.io/weforth/docs/img/weforth_logo.png)
+    
+
+### DEBUG the WASM file (dump all functions, check with wasm-objdump in WABT kit)
 
     make debug
     read tests/ceforth.wasm.txt (really long)
@@ -82,20 +99,6 @@ Simple 10M tests
     Note6: WASM -O3 => err functions (wa.*) not found
     Note7: FireFox v122 is vastly faster than v120
     Note8: Chrome is about 10% slower than FireFox
-
-### SDL2 - Experimental on Linux
-Install sdl2, image, sound, and fonts
-
-    sudo apt install libsdl2-dev libsdl2-2.0-0 -y;
-    sudo apt install libjpeg-dev libwebp-dev libtiff5-dev libsdl2-image-dev libsdl2-image-2.0-0 -y;
-    sudo apt install libmikmod-dev libfishsound1-dev libsmpeg-dev liboggz2-dev libflac-dev libfluidsynth-dev libsdl2-mixer-dev libsdl2-mixer-2.0-0 -y;
-    sudo apt install libfreetype6-dev libsdl2-ttf-dev libsdl2-ttf-2.0-0 -y;
-    
-Build
-
-    make sdl
-    ./tests/sdl2 to tests native on CPU
-    enter http://localhost:8000/tests/sdl2.html into the browser
 
 ### TODO
 * review wasmtime (CLI), perf+hotspot (profiling)
