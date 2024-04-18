@@ -10,39 +10,98 @@ With W\+A\+SM, the interoperability between different languages become a thing o
 
 
 \begin{DoxyItemize}
-\item Javascript access to ss, dict, and VM memory (via Web\+Assembly.\+Memory)
 \item Forth in Web Worker threads (multi-\/\+V\+Ms possible)
+\item Javascript access to ss, dict, and VM memory (via Web\+Assembly.\+Memory)
+\item Javascript function calling interface
 \item I\+D\+E-\/style interactive front-\/end (cloud possible, i.\+g. Jupyter\+Lab)
 \end{DoxyItemize}
 
-\doxysubsection*{To Compile into a single wasm file (make sure python3 and Emscripten are installed)}
+\doxysubsection*{Build -\/ (make sure python3 and Emscripten are installed)}
 
-\begin{DoxyVerb}make one
+\doxysubsubsection*{Bare-\/bone e\+Forth on Web}
+
+\begin{DoxyVerb}make zero
 Note: -O2 works OK, -O3 emscripten spits wrong code
 \end{DoxyVerb}
 
 
-try it here \href{https://chochain.github.io/weForth/ref/ceforth.html}{\texttt{ ceforth.\+html}}
+try eforth.\+html \href{https://chochain.github.io/weForth/ref/eforth.html}{\texttt{ here}}
 
-\doxysubsection*{To Compile into wasm and one Web Worker thread (multi-\/threaded)}
+\doxysubsubsection*{Single W\+A\+SM file}
+
+\begin{DoxyVerb}make one
+\end{DoxyVerb}
+
+
+try ceforth.\+html \href{https://chochain.github.io/weForth/ref/ceforth.html}{\texttt{ here}}
+
+\doxysubsubsection*{Extra Web Worker thread}
 
 \begin{DoxyVerb}make two
 \end{DoxyVerb}
 
 
-try it here \href{https://chochain.github.io/weForth/ref/weforth.html}{\texttt{ weforth.\+html}}
+try weforth.\+html \href{https://chochain.github.io/weForth/ref/weforth.html}{\texttt{ here}}
 
-\doxysubsection*{To Run on your own box}
+\doxysubsection*{Run on your own box}
 
 Server-\/side \begin{DoxyVerb}python3 -m http.server
 \end{DoxyVerb}
 
 
-Client-\/side Browser \begin{DoxyVerb}http://localhost:8000/tests/ceforth.html or weforth.html
+Client-\/side Browser \begin{DoxyVerb}http://localhost:8000/tests/eforth.html, ceforth.html or weforth.html
 \end{DoxyVerb}
 
 
-\doxysubsection*{To Debug the W\+A\+SM file (dump all functions, check with wasm-\/objdump in W\+A\+BT kit)}
+\doxysubsection*{Javascript interface}
+
+To communicate between Forth and Javascript engine, we\+Forth implemented a word \textquotesingle{}JS\textquotesingle{} and a function call\+\_\+js(). They utilize Emscripten E\+M\+\_\+\+JS macro that {\itshape post\+Message} from C++ backend-\/side to {\itshape onmessage} on browser-\/side. Depends on your need, handler can be very simple to complicated.
+
+\doxysubsubsection*{ceforth.\+html -\/ a very simple (and dangerous) handler}
+
+\begin{DoxyVerb}this.onmessage = e=>{
+    if (e.data[0]=='js') this.eval(e.data[1])
+}
+
+> 54321 s" alert('%d ... hello world!')" JS⏎
+\end{DoxyVerb}
+
+
+\begin{quote}
+ \end{quote}
+
+
+\doxysubsubsection*{weforth.\+html -\/ a more complex handler}
+
+\begin{DoxyVerb}const ex = (ops)=>Function(       ///< scope limiting eval
+    `"use strict"; this.update('${ops}')`
+).bind(logo)()
+vm.onmessage = e=>{               /// * wait for worker's response
+    let k = e.data[0], v = e.data[1]
+    switch (k) {
+    case 'cmd': to_txt(v);         break
+    case 'dc' : show_dict(v);      break
+    case 'us' : usr.innerHTML = v; break
+    case 'ss' : ss.innerHTML  = v; break
+    case 'mm' : mm.innerHTML  = v; ok=1; break
+    case 'js' : ex(v);             break
+    default: console.log('onmessage.error=>'+e)
+    }
+}
+
+> s" forth/logo.fs" included⏎
+> : seg FD 30 RT ;⏎
+> : color 2* PC ;⏎
+> : daz 100 0 do i color i seg loop ;⏎
+> daz⏎
+\end{DoxyVerb}
+
+
+\begin{quote}
+ \end{quote}
+
+
+\doxysubsection*{D\+E\+B\+UG the W\+A\+SM file (dump all functions, check with wasm-\/objdump in W\+A\+BT kit)}
 
 \begin{DoxyVerb}make debug
 read tests/ceforth.wasm.txt (really long)
@@ -51,10 +110,10 @@ read tests/ceforth.wasm.txt (really long)
 
 \doxysubsection*{Benchmark (on my aged I\+BM X230 w Intel \href{mailto:i5-3470@3.2GHz}{\texttt{ i5-\/3470@3.\+2\+G\+Hz}})}
 
-Simple 10M tests \begin{DoxyVerb}: xx 9999 FOR 34 DROP NEXT ;
-: yy 999 FOR xx NEXT ;
-: zz MS NEGATE yy MS + ;
-zz
+Simple 10M tests \begin{DoxyVerb}: xx 9999 FOR 34 DROP NEXT ;⏎
+: yy 999 FOR xx NEXT ;⏎
+: zz MS NEGATE yy MS + ;⏎
+zz⏎
 \end{DoxyVerb}
 
 
@@ -103,21 +162,6 @@ Note8: Chrome is about 10% slower than FireFox
 \end{DoxyVerb}
 
 
-\doxysubsection*{S\+D\+L2 -\/ Experimental on Linux}
-
-Install sdl2, image, sound, and fonts \begin{DoxyVerb}sudo apt install libsdl2-dev libsdl2-2.0-0 -y;
-sudo apt install libjpeg-dev libwebp-dev libtiff5-dev libsdl2-image-dev libsdl2-image-2.0-0 -y;
-sudo apt install libmikmod-dev libfishsound1-dev libsmpeg-dev liboggz2-dev libflac-dev libfluidsynth-dev libsdl2-mixer-dev libsdl2-mixer-2.0-0 -y;
-sudo apt install libfreetype6-dev libsdl2-ttf-dev libsdl2-ttf-2.0-0 -y;
-\end{DoxyVerb}
-
-
-Build \begin{DoxyVerb}make sdl
-./tests/sdl2 to tests native on CPU
-enter http://localhost:8000/tests/sdl2.html into the browser
-\end{DoxyVerb}
-
-
 \doxysubsection*{T\+O\+DO}
 
 
@@ -134,8 +178,10 @@ enter http://localhost:8000/tests/sdl2.html into the browser
 \item 3D graphic (GL)
 \item Music (S\+D\+L\+\_\+media)
 \end{DoxyItemize}
-\item Robotic Simulation Engine (raylib)
+\item Robotic Simulation Engine
 \begin{DoxyItemize}
+\item review raylib
+\item review Three.\+js
 \item C\+SG Object (with optional motion trail) \href{https://opencsg.org/}{\texttt{ Open\+C\+SG}}, \href{https://gts.sourceforge.net/}{\texttt{ G\+TS}}
 \item Collision (with directional distance sensing)
 \end{DoxyItemize}

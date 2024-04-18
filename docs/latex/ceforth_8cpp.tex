@@ -10,8 +10,7 @@ e\+Forth implemented in 100\% C/\+C++ for portability and education
 {\ttfamily \#include \char`\"{}ceforth.\+h\char`\"{}}\newline
 {\ttfamily \#include $<$iomanip$>$}\newline
 {\ttfamily \#include $<$sstream$>$}\newline
-Include dependency graph for ceforth.\+cpp\+:
-\nopagebreak
+Include dependency graph for ceforth.\+cpp\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -107,6 +106,8 @@ int \mbox{\hyperlink{ceforth_8cpp_a23c9400f2dbf91290602937ec3a6f283}{forth\+\_\+
 void \mbox{\hyperlink{ceforth_8cpp_a7f66d1cf6a56ed50c9abd5331ed2073e}{forth\+\_\+init}} ()
 \item 
 void \mbox{\hyperlink{ceforth_8cpp_a8c87f3590669c015f51863d357c405ff}{forth\+\_\+vm}} (const char $\ast$cmd, void($\ast$callback)(int, const char $\ast$))
+\item 
+void \mbox{\hyperlink{ceforth_8cpp_ae6fea408b4b287d858b4dd48c7aef229}{send\+\_\+to\+\_\+nul}} (int len, const char $\ast$rst)
 \item 
 int \mbox{\hyperlink{ceforth_8cpp_ac0fd47776c33f55abe0077eb4d77ce0c}{forth\+\_\+include}} (const char $\ast$fn)
 \item 
@@ -509,10 +510,6 @@ use P\+AD ad T\+E\+MP storage \end{quote}
 
 
 \begin{quote}
-keep current memory addr \end{quote}
-
-
-\begin{quote}
 write string to P\+AD \end{quote}
 
 
@@ -619,6 +616,19 @@ extra bytes to skip \end{quote}
 \doxysubsubsection{\texorpdfstring{ss\_dump()}{ss\_dump()}}
 {\footnotesize\ttfamily void ss\+\_\+dump (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
 
+\begin{quote}
+display v by radix \end{quote}
+
+
+
+\begin{DoxyItemize}
+\item C++ can do only 8,10,16
+\end{DoxyItemize}
+
+$<$ handle negative
+
+\begin{quote}
+digit-\/by-\/digit \end{quote}
 \mbox{\Hypertarget{ceforth_8cpp_ad02298b4b36999fd51429dfba9010edd}\label{ceforth_8cpp_ad02298b4b36999fd51429dfba9010edd}} 
 \index{ceforth.cpp@{ceforth.cpp}!mem\_dump@{mem\_dump}}
 \index{mem\_dump@{mem\_dump}!ceforth.cpp@{ceforth.cpp}}
@@ -759,7 +769,13 @@ single command to Forth core \end{quote}
 
 \begin{DoxyItemize}
 \item dump stack and display ok prompt
-\end{DoxyItemize}\mbox{\Hypertarget{ceforth_8cpp_ac0fd47776c33f55abe0077eb4d77ce0c}\label{ceforth_8cpp_ac0fd47776c33f55abe0077eb4d77ce0c}} 
+\end{DoxyItemize}\mbox{\Hypertarget{ceforth_8cpp_ae6fea408b4b287d858b4dd48c7aef229}\label{ceforth_8cpp_ae6fea408b4b287d858b4dd48c7aef229}} 
+\index{ceforth.cpp@{ceforth.cpp}!send\_to\_nul@{send\_to\_nul}}
+\index{send\_to\_nul@{send\_to\_nul}!ceforth.cpp@{ceforth.cpp}}
+\doxysubsubsection{\texorpdfstring{send\_to\_nul()}{send\_to\_nul()}}
+{\footnotesize\ttfamily void send\+\_\+to\+\_\+nul (\begin{DoxyParamCaption}\item[{int}]{len,  }\item[{const char $\ast$}]{rst }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{ceforth_8cpp_ac0fd47776c33f55abe0077eb4d77ce0c}\label{ceforth_8cpp_ac0fd47776c33f55abe0077eb4d77ce0c}} 
 \index{ceforth.cpp@{ceforth.cpp}!forth\_include@{forth\_include}}
 \index{forth\_include@{forth\_include}!ceforth.cpp@{ceforth.cpp}}
 \doxysubsubsection{\texorpdfstring{forth\_include()}{forth\_include()}}

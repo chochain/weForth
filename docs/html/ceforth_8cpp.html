@@ -210,6 +210,8 @@ Functions</h2></td></tr>
 <tr class="separator:a7f66d1cf6a56ed50c9abd5331ed2073e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8c87f3590669c015f51863d357c405ff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8cpp.html#a8c87f3590669c015f51863d357c405ff">forth_vm</a> (const char *cmd, void(*callback)(int, const char *))</td></tr>
 <tr class="separator:a8c87f3590669c015f51863d357c405ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae6fea408b4b287d858b4dd48c7aef229"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8cpp.html#ae6fea408b4b287d858b4dd48c7aef229">send_to_nul</a> (int len, const char *rst)</td></tr>
+<tr class="separator:ae6fea408b4b287d858b4dd48c7aef229"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac0fd47776c33f55abe0077eb4d77ce0c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8cpp.html#ac0fd47776c33f55abe0077eb4d77ce0c">forth_include</a> (const char *fn)</td></tr>
 <tr class="separator:ac0fd47776c33f55abe0077eb4d77ce0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adacbe0175a79dff748855d8c9839f82b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8cpp.html#adacbe0175a79dff748855d8c9839f82b">main</a> (int ac, char *av[])</td></tr>
@@ -813,9 +815,6 @@ Variables</h2></td></tr>
 <p>use PAD ad TEMP storage </p>
 </blockquote>
 <blockquote class="doxtable">
-<p>keep current memory addr </p>
-</blockquote>
-<blockquote class="doxtable">
 <p>write string to PAD </p>
 </blockquote>
 <blockquote class="doxtable">
@@ -972,6 +971,16 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<blockquote class="doxtable">
+<p>display v by radix </p>
+</blockquote>
+<ul>
+<li>C++ can do only 8,10,16</li>
+</ul>
+<p>&lt; handle negative</p>
+<blockquote class="doxtable">
+<p>digit-by-digit </p>
+</blockquote>
 
 </div>
 </div>
@@ -1204,6 +1213,34 @@ Variables</h2></td></tr>
 <ul>
 <li>dump stack and display ok prompt</li>
 </ul>
+
+</div>
+</div>
+<a id="ae6fea408b4b287d858b4dd48c7aef229"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae6fea408b4b287d858b4dd48c7aef229">&#9670;&nbsp;</a></span>send_to_nul()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void send_to_nul </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>len</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>rst</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>

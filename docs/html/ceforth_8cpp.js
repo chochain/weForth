@@ -44,6 +44,7 @@ var ceforth_8cpp =
     [ "forth_core", "ceforth_8cpp.html#a23c9400f2dbf91290602937ec3a6f283", null ],
     [ "forth_init", "ceforth_8cpp.html#a7f66d1cf6a56ed50c9abd5331ed2073e", null ],
     [ "forth_vm", "ceforth_8cpp.html#a8c87f3590669c015f51863d357c405ff", null ],
+    [ "send_to_nul", "ceforth_8cpp.html#ae6fea408b4b287d858b4dd48c7aef229", null ],
     [ "forth_include", "ceforth_8cpp.html#ac0fd47776c33f55abe0077eb4d77ce0c", null ],
     [ "main", "ceforth_8cpp.html#adacbe0175a79dff748855d8c9839f82b", null ],
     [ "rs", "ceforth_8cpp.html#a624ee54d8d2274faa869f5908ce720a5", null ],
