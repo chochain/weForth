@@ -99,21 +99,21 @@
     /// Forth section
     ///
     const vm = new Worker('weforth_worker.js')  ///< create the Forth worker thread
-    const ex = (op, v)=>Function(               ///< scope limiting eval
-        `"use strict"; this.update('${op}', ${v})`
+    const ex = (ops)=>Function(                 ///< scope limiting eval
+        `"use strict"; this.update('${ops}')`
     ).bind(logo)()
     ///
     /// setup listeners for message from worker thread
     ///
     vm.onmessage = e=>{               /// * wait for worker's response
-        let k = e.data[0], v = e.data[1]
+        let k = e.data[0], ops = e.data[1].split(' ')
         switch (k) {
         case 'cmd': to_txt(v);         break
         case 'dc' : show_dict(v);      break
         case 'us' : usr.innerHTML = v; break
         case 'ss' : ss.innerHTML  = v; break
         case 'mm' : mm.innerHTML  = v; ok=1; break
-        case 'js' : ex(v[0], v[1]);    break
+        case 'js' : ex(ops);           break
         default: console.log('onmessage.error=>'+e)
         }
     }

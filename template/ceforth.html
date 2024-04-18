@@ -124,8 +124,8 @@
     /// WASM ==========================================================
     ///      
     var Module = { print: to_txt }  ///< WASM global object
-    const ex = (op)=>Function(      ///< scope limiting eval
-        `"use strict"; this.eval(${op[0]})`
+    const ex = (ops)=>Function(      ///< scope limiting eval
+        `"use strict"; this.eval(${ops})`
     ).bind(this)()
     this.onmessage = e=>{
         console.log(e.data)
