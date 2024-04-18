@@ -49,7 +49,7 @@ ceforth.html
 
     > 54321 s" alert('%d ... hello world!')" JS⏎
     
-    * [javascript demo](https://chochain.github.io/weforth/docs/img/weforth_js.png)
+> ![JS call](https://chochain.github.io/weforth/docs/img/weforth_js.png)
 
 weforth.html
 
@@ -59,7 +59,7 @@ weforth.html
     > : daz 100 0 do i color i seg loop ;⏎
     > daz⏎
     
-    * [logo demo](https://chochain.github.io/weforth/docs/img/weforth_logo.png)
+> ![logo demo](https://chochain.github.io/weforth/docs/img/weforth_logo.png)
     
 
 ### DEBUG the WASM file (dump all functions, check with wasm-objdump in WABT kit)
