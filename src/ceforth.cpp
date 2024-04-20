@@ -748,14 +748,21 @@ void forth_init() {
     
     dict_compile();            ///> compile dictionary
 }
-void forth_vm(const char *cmd, void(*callback)(int, const char*)) {
-    fin.clear();               ///> clear input stream error bit if any
-    fin.str(cmd);              ///> feed user command into input stream
-    fout_cb = callback;        ///> setup callback function
-    fout.str("");              ///> clean output buffer, ready for next run
-    while (fin >> pad) {       ///> outer interpreter loop
-        const char *idiom = pad.c_str();
-        forth_core(idiom);     ///> single command to Forth core
+void forth_vm(const char *cmd, void(*hook)(int, const char*)) {
+    auto cb = [](int,const char *rst) { printf("%s", rst); };
+    fout_cb = hook ? hook : cb;          ///> setup callback function
+    
+    istringstream istm(cmd);             ///< input stream
+    string        line;                  ///< line command
+    fout.str("");                        ///> clean output buffer
+    while (getline(istm, line)) {        ///> fetch one line at a time
+        fin.clear();                     ///> clear input stream error bit if any
+        fin.str(line);                   ///> feed user command into input stream
+        while (fin >> pad) {             ///> outer interpreter loop
+            const char *idiom = pad.c_str();
+            forth_core(idiom);           ///> single command to Forth core
+            fout << "fin='" << fin.str() << "'" << ENDL;
+        }
     }
 #if DO_WASM    
     if (!compile) fout << "ok" << ENDL;
@@ -779,19 +786,24 @@ void mem_stat() {
 }
 
 #include <sstream>
-void send_to_nul(int len, const char *rst) { /* >> nul */ }
+void rsp_to_nul(int len, const char *rst) { printf(">%s", rst); }
 int  forth_include(const char *fn) {
-#if DO_WASM	
+#if DO_WASM
     auto load = [](void *fn, void *buf, int sz) {
-        string cmd;
-        istringstream istm((char*)buf);    ///> stream from str buffer
-        while (getline(istm, cmd)) {
-            forth_vm(cmd.c_str(), send_to_nul);
-        }
+        forth_vm((const char *)buf, rsp_to_nul);
+        fout_cb = NULL;                      /// release semaphore
     };
     auto err = [](void *fn) { fout << (char*)fn << " err! " << ENDL; };
-
+    
+    void (*cb)(int, const char*) = fout_cb;  ///> keep output function
+    string in; getline(fin, in);             ///< keep input buffers
+    fout << ENDL;                            /// * flush output
+    
     emscripten_async_wget_data(fn, (void*)fn, load, err);
+
+    while (fout_cb != NULL);                 ///> semaphore wait
+    fout_cb = cb;                            ///> restore output cb
+    fin.clear(); fin.str(in);                ///> restore input
 #endif // DO_WASM	
     return 0;
 }
@@ -806,11 +818,7 @@ int  main(int ac, char* av[]) {
 ///
 #if DO_WASM
 extern "C" {
-void forth(int n, char *cmd) {
-    auto rsp_to_con =
-        [](int len, const char *rst) { printf("%s", rst); };
-    forth_vm(cmd, rsp_to_con);
-}
+void forth(int n, char *cmd) { forth_vm(cmd); }
 int  vm_base()       { return *base;    }
 int  vm_ss_idx()     { return ss.idx;   }
 int  vm_dict_idx()   { return dict.idx; }
