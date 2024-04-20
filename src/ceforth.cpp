@@ -749,20 +749,23 @@ void forth_init() {
     dict_compile();            ///> compile dictionary
 }
 void forth_vm(const char *cmd, void(*hook)(int, const char*)) {
+    auto outer = []() {                  ///> outer interpreter loop
+        string idiom;
+        while (fin >> idiom) {           
+            forth_core(idiom.c_str());   ///> single command to Forth core
+            fout << "fin='" << fin.str() << "'" << ENDL;
+        }
+    };
     auto cb = [](int,const char *rst) { printf("%s", rst); };
     fout_cb = hook ? hook : cb;          ///> setup callback function
     
     istringstream istm(cmd);             ///< input stream
     string        line;                  ///< line command
-    fout.str("");                        ///> clean output buffer
-    while (getline(istm, line)) {        ///> fetch one line at a time
-        fin.clear();                     ///> clear input stream error bit if any
-        fin.str(line);                   ///> feed user command into input stream
-        while (fin >> pad) {             ///> outer interpreter loop
-            const char *idiom = pad.c_str();
-            forth_core(idiom);           ///> single command to Forth core
-            fout << "fin='" << fin.str() << "'" << ENDL;
-        }
+    fout.str("");                        /// * clean output buffer
+    while (getline(istm, line)) {        /// * fetch one line at a time
+        fin.clear();                     /// * clear input stream error bit if any
+        fin.str(line);                   /// * feed user command into input stream
+        outer();                         /// * invoke Forth outer interpreter
     }
 #if DO_WASM    
     if (!compile) fout << "ok" << ENDL;
@@ -804,7 +807,7 @@ int  forth_include(const char *fn) {
     while (fout_cb != NULL);                 ///> semaphore wait
     fout_cb = cb;                            ///> restore output cb
     fin.clear(); fin.str(in);                ///> restore input
-#endif // DO_WASM	
+#endif // DO_WASM
     return 0;
 }
 
