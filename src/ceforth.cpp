@@ -752,8 +752,7 @@ void forth_vm(const char *cmd, void(*hook)(int, const char*)) {
     auto outer = []() {                  ///> outer interpreter loop
         string idiom;
         while (fin >> idiom) {           
-            forth_core(idiom.c_str());   ///> single command to Forth core
-            fout << "fin='" << fin.str() << "'" << ENDL;
+            forth_core(idiom.c_str());   ///> send word to Forth core
         }
     };
     auto cb = [](int,const char *rst) { printf("%s", rst); };
@@ -788,25 +787,24 @@ void mem_stat() {
          << ")\n  mem : " << HERE     << "/" << E4_PMEM_SZ << endl;
 }
 
-#include <sstream>
-void rsp_to_nul(int len, const char *rst) { printf(">%s", rst); }
 int  forth_include(const char *fn) {
 #if DO_WASM
-    auto load = [](void *fn, void *buf, int sz) {
-        forth_vm((const char *)buf, rsp_to_nul);
-        fout_cb = NULL;                      /// release semaphore
-    };
-    auto err = [](void *fn) { fout << (char*)fn << " err! " << ENDL; };
+    auto rsp_to_nul = [](int, const char*) { /* >> nul */ };
+    void (*cb)(int, const char*) = fout_cb;      ///< keep output function
+    string in; getline(fin, in);                 ///< keep input buffers
+    fout << ENDL;                                /// * flush output
     
-    void (*cb)(int, const char*) = fout_cb;  ///> keep output function
-    string in; getline(fin, in);             ///< keep input buffers
-    fout << ENDL;                            /// * flush output
+    void *buf;                                   ///< memory buffer 
+    int   sz, err;                               ///< size fetch or err
+    emscripten_wget_data(fn, &buf, &sz, &err);   /// * fetch from server
+    if (err) { fout << fn << " err! " << ENDL; } /// * yelp!
+    else {
+        forth_vm((const char *)buf, rsp_to_nul); /// * process commands
+        free(buf);                               /// * must, or leak
+    }
     
-    emscripten_async_wget_data(fn, (void*)fn, load, err);
-
-    while (fout_cb != NULL);                 ///> semaphore wait
-    fout_cb = cb;                            ///> restore output cb
-    fin.clear(); fin.str(in);                ///> restore input
+    fout_cb = cb;                                ///> restore output cb
+    fin.clear(); fin.str(in);                    ///> restore input
 #endif // DO_WASM
     return 0;
 }
