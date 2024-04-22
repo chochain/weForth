@@ -159,8 +159,8 @@ Typedefs</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:a7f66d1cf6a56ed50c9abd5331ed2073e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a7f66d1cf6a56ed50c9abd5331ed2073e">forth_init</a> ()</td></tr>
 <tr class="separator:a7f66d1cf6a56ed50c9abd5331ed2073e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8c87f3590669c015f51863d357c405ff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a8c87f3590669c015f51863d357c405ff">forth_vm</a> (const char *cmd, void(*callback)(int, const char *))</td></tr>
-<tr class="separator:a8c87f3590669c015f51863d357c405ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2acc503994a2c4c6150dccf4a9ed6424"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#a2acc503994a2c4c6150dccf4a9ed6424">forth_vm</a> (const char *stm, void(*hook)(int, const char *)=NULL)</td></tr>
+<tr class="separator:a2acc503994a2c4c6150dccf4a9ed6424"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac0fd47776c33f55abe0077eb4d77ce0c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ceforth_8h.html#ac0fd47776c33f55abe0077eb4d77ce0c">forth_include</a> (const char *fn)</td></tr>
 <tr class="separator:ac0fd47776c33f55abe0077eb4d77ce0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -402,8 +402,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a8c87f3590669c015f51863d357c405ff"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8c87f3590669c015f51863d357c405ff">&#9670;&nbsp;</a></span>forth_vm()</h2>
+<a id="a2acc503994a2c4c6150dccf4a9ed6424"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2acc503994a2c4c6150dccf4a9ed6424">&#9670;&nbsp;</a></span>forth_vm()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -412,13 +412,13 @@ Functions</h2></td></tr>
           <td class="memname">void forth_vm </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>cmd</em>, </td>
+          <td class="paramname"><em>stm</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">void(*)(int, const char *)&#160;</td>
-          <td class="paramname"><em>callback</em>&#160;</td>
+          <td class="paramname"><em>hook</em> = <code>NULL</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -428,24 +428,22 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <blockquote class="doxtable">
-<p>clear input stream error bit if any </p>
+<p>outer interpreter loop </p>
 </blockquote>
 <blockquote class="doxtable">
-<p>feed user command into input stream </p>
+<p>send word to Forth core </p>
 </blockquote>
 <blockquote class="doxtable">
 <p>setup callback function </p>
 </blockquote>
-<blockquote class="doxtable">
-<p>clean output buffer, ready for next run </p>
-</blockquote>
-<blockquote class="doxtable">
-<p>outer interpreter loop </p>
-</blockquote>
-<blockquote class="doxtable">
-<p>single command to Forth core </p>
-</blockquote>
+<p>&lt; input stream</p>
+<p>&lt; line command</p>
 <ul>
+<li>clean output buffer</li>
+<li>fetch one line at a time</li>
+<li>clear input stream error bit if any</li>
+<li>feed user command into input stream</li>
+<li>invoke Forth outer interpreter</li>
 <li>dump stack and display ok prompt</li>
 </ul>
 

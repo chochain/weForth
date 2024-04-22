@@ -60,7 +60,7 @@ typedef void($\ast$ \mbox{\hyperlink{ceforth_8h_ad49a4a3795be934579ff11f1296c105
 \item 
 void \mbox{\hyperlink{ceforth_8h_a7f66d1cf6a56ed50c9abd5331ed2073e}{forth\+\_\+init}} ()
 \item 
-void \mbox{\hyperlink{ceforth_8h_a8c87f3590669c015f51863d357c405ff}{forth\+\_\+vm}} (const char $\ast$cmd, void($\ast$callback)(int, const char $\ast$))
+void \mbox{\hyperlink{ceforth_8h_a2acc503994a2c4c6150dccf4a9ed6424}{forth\+\_\+vm}} (const char $\ast$stm, void($\ast$hook)(int, const char $\ast$)=N\+U\+LL)
 \item 
 int \mbox{\hyperlink{ceforth_8h_ac0fd47776c33f55abe0077eb4d77ce0c}{forth\+\_\+include}} (const char $\ast$fn)
 \end{DoxyCompactItemize}
@@ -163,38 +163,35 @@ check dictionary initilized \end{quote}
 
 \begin{quote}
 compile dictionary \end{quote}
-\mbox{\Hypertarget{ceforth_8h_a8c87f3590669c015f51863d357c405ff}\label{ceforth_8h_a8c87f3590669c015f51863d357c405ff}} 
+\mbox{\Hypertarget{ceforth_8h_a2acc503994a2c4c6150dccf4a9ed6424}\label{ceforth_8h_a2acc503994a2c4c6150dccf4a9ed6424}} 
 \index{ceforth.h@{ceforth.h}!forth\_vm@{forth\_vm}}
 \index{forth\_vm@{forth\_vm}!ceforth.h@{ceforth.h}}
 \doxysubsubsection{\texorpdfstring{forth\_vm()}{forth\_vm()}}
-{\footnotesize\ttfamily void forth\+\_\+vm (\begin{DoxyParamCaption}\item[{const char $\ast$}]{cmd,  }\item[{void($\ast$)(int, const char $\ast$)}]{callback }\end{DoxyParamCaption})}
-
-\begin{quote}
-clear input stream error bit if any \end{quote}
-
-
-\begin{quote}
-feed user command into input stream \end{quote}
-
-
-\begin{quote}
-setup callback function \end{quote}
-
-
-\begin{quote}
-clean output buffer, ready for next run \end{quote}
-
+{\footnotesize\ttfamily void forth\+\_\+vm (\begin{DoxyParamCaption}\item[{const char $\ast$}]{stm,  }\item[{void($\ast$)(int, const char $\ast$)}]{hook = {\ttfamily NULL} }\end{DoxyParamCaption})}
 
 \begin{quote}
 outer interpreter loop \end{quote}
 
 
 \begin{quote}
-single command to Forth core \end{quote}
+send word to Forth core \end{quote}
 
+
+\begin{quote}
+setup callback function \end{quote}
+
+
+$<$ input stream
+
+$<$ line command
 
 
 \begin{DoxyItemize}
+\item clean output buffer
+\item fetch one line at a time
+\item clear input stream error bit if any
+\item feed user command into input stream
+\item invoke Forth outer interpreter
 \item dump stack and display ok prompt
 \end{DoxyItemize}\mbox{\Hypertarget{ceforth_8h_ac0fd47776c33f55abe0077eb4d77ce0c}\label{ceforth_8h_ac0fd47776c33f55abe0077eb4d77ce0c}} 
 \index{ceforth.h@{ceforth.h}!forth\_include@{forth\_include}}

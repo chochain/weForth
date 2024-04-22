@@ -97,6 +97,9 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <li>Javascript function calling interface</li>
 <li>IDE-style interactive front-end (cloud possible, i.g. JupyterLab)</li>
 </ul>
+<blockquote class="doxtable">
+<p><a href="https://chochain.github.io/weForth/img/weforth_logo_snip2.png" style="width:800px">sample</a> </p>
+</blockquote>
 <h2>Build - (make sure python3 and Emscripten are installed)</h2>
 <h3>Bare-bone eForth on Web</h3>
 <pre class="fragment">make zero
@@ -120,7 +123,7 @@ Note: -O2 works OK, -O3 emscripten spits wrong code
 
 &gt; 54321 s" alert('%d ... hello world!')" JS⏎
 </pre><blockquote class="doxtable">
-<p><img src="https://chochain.github.io/weForth/img/weforth_js.png" alt="JS call" class="inline"/> </p>
+<p><a href="https://chochain.github.io/weForth/img/weforth_js.png" width="604px">JS call</a> </p>
 </blockquote>
 <h3>weforth.html - a more complex handler</h3>
 <pre class="fragment">const ex = (ops)=&gt;Function(       ///&lt; scope limiting eval
@@ -145,7 +148,7 @@ vm.onmessage = e=&gt;{               /// * wait for worker's response
 &gt; : daz 100 0 do i color i seg loop ;⏎
 &gt; daz⏎
 </pre><blockquote class="doxtable">
-<p><img src="https://chochain.github.io/weForth/img/weforth_logo.png" alt="logo demo" class="inline"/> </p>
+<p><a href="https://chochain.github.io/weForth/img/weforth_logo.png" width="604px">Logo demo</a> </p>
 </blockquote>
 <h2>DEBUG the WASM file (dump all functions, check with wasm-objdump in WABT kit)</h2>
 <pre class="fragment">make debug

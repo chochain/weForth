@@ -105,9 +105,7 @@ int \mbox{\hyperlink{ceforth_8cpp_a23c9400f2dbf91290602937ec3a6f283}{forth\+\_\+
 \item 
 void \mbox{\hyperlink{ceforth_8cpp_a7f66d1cf6a56ed50c9abd5331ed2073e}{forth\+\_\+init}} ()
 \item 
-void \mbox{\hyperlink{ceforth_8cpp_a8c87f3590669c015f51863d357c405ff}{forth\+\_\+vm}} (const char $\ast$cmd, void($\ast$callback)(int, const char $\ast$))
-\item 
-void \mbox{\hyperlink{ceforth_8cpp_ae6fea408b4b287d858b4dd48c7aef229}{send\+\_\+to\+\_\+nul}} (int len, const char $\ast$rst)
+void \mbox{\hyperlink{ceforth_8cpp_aee2afe42f32feecfc4eaf245e8c9a837}{forth\+\_\+vm}} (const char $\ast$cmd, void($\ast$hook)(int, const char $\ast$))
 \item 
 int \mbox{\hyperlink{ceforth_8cpp_ac0fd47776c33f55abe0077eb4d77ce0c}{forth\+\_\+include}} (const char $\ast$fn)
 \item 
@@ -736,46 +734,37 @@ check dictionary initilized \end{quote}
 
 \begin{quote}
 compile dictionary \end{quote}
-\mbox{\Hypertarget{ceforth_8cpp_a8c87f3590669c015f51863d357c405ff}\label{ceforth_8cpp_a8c87f3590669c015f51863d357c405ff}} 
+\mbox{\Hypertarget{ceforth_8cpp_aee2afe42f32feecfc4eaf245e8c9a837}\label{ceforth_8cpp_aee2afe42f32feecfc4eaf245e8c9a837}} 
 \index{ceforth.cpp@{ceforth.cpp}!forth\_vm@{forth\_vm}}
 \index{forth\_vm@{forth\_vm}!ceforth.cpp@{ceforth.cpp}}
 \doxysubsubsection{\texorpdfstring{forth\_vm()}{forth\_vm()}}
-{\footnotesize\ttfamily void forth\+\_\+vm (\begin{DoxyParamCaption}\item[{const char $\ast$}]{cmd,  }\item[{void($\ast$)(int, const char $\ast$)}]{callback }\end{DoxyParamCaption})}
-
-\begin{quote}
-clear input stream error bit if any \end{quote}
-
-
-\begin{quote}
-feed user command into input stream \end{quote}
-
-
-\begin{quote}
-setup callback function \end{quote}
-
-
-\begin{quote}
-clean output buffer, ready for next run \end{quote}
-
+{\footnotesize\ttfamily void forth\+\_\+vm (\begin{DoxyParamCaption}\item[{const char $\ast$}]{cmd,  }\item[{void($\ast$)(int, const char $\ast$)}]{hook }\end{DoxyParamCaption})}
 
 \begin{quote}
 outer interpreter loop \end{quote}
 
 
 \begin{quote}
-single command to Forth core \end{quote}
+send word to Forth core \end{quote}
 
+
+\begin{quote}
+setup callback function \end{quote}
+
+
+$<$ input stream
+
+$<$ line command
 
 
 \begin{DoxyItemize}
+\item clean output buffer
+\item fetch one line at a time
+\item clear input stream error bit if any
+\item feed user command into input stream
+\item invoke Forth outer interpreter
 \item dump stack and display ok prompt
-\end{DoxyItemize}\mbox{\Hypertarget{ceforth_8cpp_ae6fea408b4b287d858b4dd48c7aef229}\label{ceforth_8cpp_ae6fea408b4b287d858b4dd48c7aef229}} 
-\index{ceforth.cpp@{ceforth.cpp}!send\_to\_nul@{send\_to\_nul}}
-\index{send\_to\_nul@{send\_to\_nul}!ceforth.cpp@{ceforth.cpp}}
-\doxysubsubsection{\texorpdfstring{send\_to\_nul()}{send\_to\_nul()}}
-{\footnotesize\ttfamily void send\+\_\+to\+\_\+nul (\begin{DoxyParamCaption}\item[{int}]{len,  }\item[{const char $\ast$}]{rst }\end{DoxyParamCaption})}
-
-\mbox{\Hypertarget{ceforth_8cpp_ac0fd47776c33f55abe0077eb4d77ce0c}\label{ceforth_8cpp_ac0fd47776c33f55abe0077eb4d77ce0c}} 
+\end{DoxyItemize}\mbox{\Hypertarget{ceforth_8cpp_ac0fd47776c33f55abe0077eb4d77ce0c}\label{ceforth_8cpp_ac0fd47776c33f55abe0077eb4d77ce0c}} 
 \index{ceforth.cpp@{ceforth.cpp}!forth\_include@{forth\_include}}
 \index{forth\_include@{forth\_include}!ceforth.cpp@{ceforth.cpp}}
 \doxysubsubsection{\texorpdfstring{forth\_include()}{forth\_include()}}

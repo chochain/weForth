@@ -13,6 +13,6 @@ var ceforth_8h =
     [ "IMMD", "ceforth_8h.html#ad6dfd75ba82a34385031a82feecc9a01", null ],
     [ "FPTR", "ceforth_8h.html#ad49a4a3795be934579ff11f1296c1050", null ],
     [ "forth_init", "ceforth_8h.html#a7f66d1cf6a56ed50c9abd5331ed2073e", null ],
-    [ "forth_vm", "ceforth_8h.html#a8c87f3590669c015f51863d357c405ff", null ],
+    [ "forth_vm", "ceforth_8h.html#a2acc503994a2c4c6150dccf4a9ed6424", null ],
     [ "forth_include", "ceforth_8h.html#ac0fd47776c33f55abe0077eb4d77ce0c", null ]
 ];
