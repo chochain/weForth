@@ -103,7 +103,7 @@ int streq(const char *s1, const char *s2) {
 }
 IU find(const char *s) {
     IU v = 0;
-    for (IU i = dict.idx - (compile ? 2 : 1); i > 0; --i) {
+    for (IU i = dict.idx - 1; i > 0; --i) {
         if (streq(s, dict[i].name)) { v = i; break; }
     }
 #if CC_DEBUG > 1
@@ -261,34 +261,29 @@ void s_quote(IU op) {
 ///
 void to_s(IU w, U8 *ip) {
 #if CC_DEBUG
-    auto d_addr = [](IU w, U8 *ip) {
-        fout << "( " << setfill('0') << setw(4) << (ip - MEM0) << "["; ///> addr
-        if (w==EXIT) fout << "EOW";
-        else         fout << setfill(' ') << setw(3) << w;
-        fout << "] ) ";
-    };
-    auto d_jmp = [](U8 *ip) {
-        fout << " ( " << setfill('0') << setw(4) << *(IU*)ip << " )";
-    };
-    d_addr(w, ip);                     ///> display address
-#else  // !CC_DEBUG
-    auto d_jmp  = [](U8 *ip) {}
+    fout << "( " << setfill('0') << setw(4) << (ip - MEM0) << "["; ///> addr
+    if (w==EXIT) fout << "EOW";
+    else         fout << setfill(' ') << setw(3) << w;
+    fout << "] ) ";
 #endif // CC_DEBUG
-    
     ip += sizeof(IU);                  ///> calculate next ip
     switch (w) {
     case EXIT: fout << ";";                         break;
-    case LIT:  fout << *(DU*)ip << "  ( lit )";     break;
-    case VAR:  fout << *(DU*)ip << "  ( var )";     break;
+    case LIT:  fout << *(DU*)ip << " ( lit )";      break;
+    case VAR:  fout << *(DU*)ip << " ( var )";      break;
     case STR:  fout << "s\" " << (char*)ip << '"';  break;
     case DOTQ: fout << ".\" " << (char*)ip << '"';  break;
     default:   fout << dict[w].name;                break;
     }
+#if CC_DEBUG    
     switch (w) {
     case NEXT: case LOOP:
-    case BRAN: case ZBRAN: d_jmp(ip); break;
+    case BRAN: case ZBRAN:                         ///> display jmp target
+        fout << "( " << setfill('0') << setw(4) << *(IU*)ip << " )";
+        break;
     default: /* do nothing */         break;
     }
+#endif // CC_DEBUG    
     fout << setfill(' ') << setw(-1); ///> restore output format settings
 }
 void see(IU pfa, int dp=1) {
@@ -363,10 +358,12 @@ void ss_dump() {
         if (v < 0) buf[--i]='-';
         return &buf[i];
     };
+    ss.push(top);
     for (int i=0; i<ss.idx; i++) {
         fout << rdx(ss[i], *base) << ' ';
     }
-    fout << rdx(top, *base) << " -> ok" << ENDL;
+    top = ss.pop();
+    fout << "-> ok" << ENDL;
 }
 void mem_dump(IU p0, DU sz) {
     fout << setbase(16) << setfill('0');
@@ -683,8 +680,9 @@ void dict_compile() {  ///< compile primitive words into dictionary
          forth_include((const char*)fn));   // include file
 #if DO_WASM    
     CODE("JS",    call_js())                // Javascript interface
-#endif // DO_WASM    
+#else  // !DO_WASM
     CODE("bye",   exit(0));
+#endif // DO_WASM    
     /// @}
     CODE("boot",  dict.clear(find("boot") + 1); pmem.clear(sizeof(DU)));
 }
