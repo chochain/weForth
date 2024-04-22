@@ -14,6 +14,8 @@ With WASM, the interoperability between different languages become a thing of th
    * Javascript function calling interface
    * IDE-style interactive front-end (cloud possible, i.g. JupyterLab)
 
+> <a href="https://chochain.github.io/weForth/img/weforth_logo_snip2.png" style="width:800px">sample</a>
+
 ### Build - (make sure python3 and Emscripten are installed)
 #### Bare-bone eForth on Web
 
@@ -54,7 +56,7 @@ To communicate between Forth and Javascript engine, weForth implemented a word '
 
     > 54321 s" alert('%d ... hello world!')" JS⏎
     
-> ![JS call](https://chochain.github.io/weForth/img/weforth_js.png)
+> <a href="https://chochain.github.io/weForth/img/weforth_js.png" width=604px>JS call</a>
 
 #### weforth.html - a more complex handler
 
@@ -80,8 +82,7 @@ To communicate between Forth and Javascript engine, weForth implemented a word '
     > : daz 100 0 do i color i seg loop ;⏎
     > daz⏎
     
-> ![logo demo](https://chochain.github.io/weForth/img/weforth_logo.png)
-    
+> <a href="https://chochain.github.io/weForth/img/weforth_logo.png" width=604px>Logo demo</a>
 
 ### DEBUG the WASM file (dump all functions, check with wasm-objdump in WABT kit)
 
