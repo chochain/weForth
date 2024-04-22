@@ -2,9 +2,7 @@
 /// @file
 /// @brief weForth - worker proxy to weforth.js (called by weforth.html)
 ///
-Module = {
-    print: e=>postMessage([ 'cmd', e ])
-}
+Module = { print: e=>postMessage([ 'txt', e ]) }
 var vm_dict_len = 0
 var vm_mem_addr = 0
 
@@ -71,10 +69,12 @@ function send_mem(off, len) {
 /// worker message pipeline to main thread
 ///
 self.onmessage = function(e) {                    /// * link worker input port
-    let forth = Module.cwrap('forth', null, ['number', 'string'])
     let k = e.data[0], v = e.data[1]
     switch (k) {
-    case 'cmd': forth(0, v);          break       /// * call Forth in C/C++
+    case 'cmd':
+        let forth =
+            Module.cwrap('forth', null, ['number', 'string'])
+        forth(0, v);                  break
     case 'ss' : send_ss();            break
     case 'dc' : send_dict();          break
     case 'mm' : send_mem(v[0], v[1]); break

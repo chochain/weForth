@@ -108,30 +108,30 @@
     vm.onmessage = e=>{               /// * wait for worker's response
         let k = e.data[0], v = e.data[1]
         switch (k) {
-        case 'cmd': to_txt(v);         break
+        case 'txt': to_txt(v);         break
         case 'dc' : show_dict(v);      break
         case 'us' : usr.innerHTML = v; break
         case 'ss' : ss.innerHTML  = v; break
         case 'mm' : mm.innerHTML  = v; ok=1; break
         case 'js' : ex(v);             break
-        default: console.log('onmessage.error=>'+e)
+        default: console.log('onmessage['+k+'].error=>'+e)
         }
     }
     clear_txt()
     ///
     /// Forth outer interpreter
     ///
-    function forth(cmd) {                            ///< evaludate Forth command
-        if (cmd=='clear') clear_txt()                /// * clear output console
+    function forth(cmd) {                        ///< evaludate Forth command
+        if (cmd=='clear') clear_txt()            /// * clear output console
         else if (cmd) {
-            show_cmd(cmd)
-            vm.postMessage(['cmd', cmd])
-            vm.postMessage(['ss'])
-            if (mm.style.display!='none') {
-                vm.postMessage(['mm', [0, 640]])
+            show_cmd(cmd)                        /// * display in HTML
+            vm.postMessage(['cmd', cmd])         /// * cmd to worker
+            vm.postMessage(['ss'])               /// * query ss
+            if (mm.style.display!='none') {      
+                vm.postMessage(['mm', [0, 640]]) /// * query mem
             }
         }
-        if (dc.style.display!='none') {              /// * query dictionary
+        if (dc.style.display!='none') {          /// * query dictionary
             vm.postMessage(['dc'])
         }
     }

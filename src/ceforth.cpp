@@ -748,14 +748,23 @@ void forth_init() {
     
     dict_compile();            ///> compile dictionary
 }
-void forth_vm(const char *cmd, void(*callback)(int, const char*)) {
-    fin.clear();               ///> clear input stream error bit if any
-    fin.str(cmd);              ///> feed user command into input stream
-    fout_cb = callback;        ///> setup callback function
-    fout.str("");              ///> clean output buffer, ready for next run
-    while (fin >> pad) {       ///> outer interpreter loop
-        const char *idiom = pad.c_str();
-        forth_core(idiom);     ///> single command to Forth core
+void forth_vm(const char *cmd, void(*hook)(int, const char*)) {
+    auto outer = []() {                  ///> outer interpreter loop
+        string idiom;
+        while (fin >> idiom) {           
+            forth_core(idiom.c_str());   ///> send word to Forth core
+        }
+    };
+    auto cb = [](int,const char *rst) { printf("%s", rst); };
+    fout_cb = hook ? hook : cb;          ///> setup callback function
+    
+    istringstream istm(cmd);             ///< input stream
+    string        line;                  ///< line command
+    fout.str("");                        /// * clean output buffer
+    while (getline(istm, line)) {        /// * fetch one line at a time
+        fin.clear();                     /// * clear input stream error bit if any
+        fin.str(line);                   /// * feed user command into input stream
+        outer();                         /// * invoke Forth outer interpreter
     }
 #if DO_WASM    
     if (!compile) fout << "ok" << ENDL;
@@ -778,21 +787,41 @@ void mem_stat() {
          << ")\n  mem : " << HERE     << "/" << E4_PMEM_SZ << endl;
 }
 
-#include <sstream>
-void send_to_nul(int len, const char *rst) { /* >> nul */ }
 int  forth_include(const char *fn) {
-#if DO_WASM	
-    auto load = [](void *fn, void *buf, int sz) {
-        string cmd;
-        istringstream istm((char*)buf);    ///> stream from str buffer
-        while (getline(istm, cmd)) {
-            forth_vm(cmd.c_str(), send_to_nul);
+#if DO_WASM
+    const int BUF = HERE + 64;
+    const int rst = EM_ASM_INT({
+        const xhr = new XMLHttpRequest();
+        xhr.responseType = 'text';                /// Forth script
+        xhr.open('GET', UTF8ToString($0), false); /// synchronized GET
+        xhr.send(null);
+        if (xhr.status!=200) {
+            console.log(xhr.statusText);
+            return 0;
         }
-    };
-    auto err = [](void *fn) { fout << (char*)fn << " err! " << ENDL; };
-
-    emscripten_async_wget_data(fn, (void*)fn, load, err);
-#endif // DO_WASM	
+        const wa  = wasmExports;               ///< WASM export block
+        const adr = wa.vm_mem() + $1;          ///< memory address
+        const len = xhr.responseText.length+1; ///< script + '\0'
+        const buf = new Uint8Array(wa.memory.buffer, adr, len);
+        for (var i=0; i < len; i++) {
+            buf[i] = xhr.responseText.charCodeAt(i);
+        }
+        buf[len-1] = '\0';                     /// * \0 terminated str
+        return len;
+        }, fn, BUF);
+    if (rst==0) return 0;                      /// * fetch failed, bail
+    ///
+    /// preserve I/O states, call VM, restore IO states
+    ///
+    void (*cb)(int, const char*) = fout_cb;    ///< keep output function
+    string in; getline(fin, in);               ///< keep input buffers
+    fout << ENDL;                              /// * flush output
+    
+    forth_vm((const char*)&pmem[BUF]);         /// * send script to VM
+    
+    fout_cb = cb;                              /// * restore output cb
+    fin.clear(); fin.str(in);                  /// * restore input
+#endif // DO_WASM
     return 0;
 }
 
@@ -806,11 +835,7 @@ int  main(int ac, char* av[]) {
 ///
 #if DO_WASM
 extern "C" {
-void forth(int n, char *cmd) {
-    auto rsp_to_con =
-        [](int len, const char *rst) { printf("%s", rst); };
-    forth_vm(cmd, rsp_to_con);
-}
+void forth(int n, char *cmd) { forth_vm(cmd); }
 int  vm_base()       { return *base;    }
 int  vm_ss_idx()     { return ss.idx;   }
 int  vm_dict_idx()   { return dict.idx; }
