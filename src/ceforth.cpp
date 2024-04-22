@@ -789,22 +789,38 @@ void mem_stat() {
 
 int  forth_include(const char *fn) {
 #if DO_WASM
-    auto rsp_to_nul = [](int, const char*) { /* >> nul */ };
-    void (*cb)(int, const char*) = fout_cb;      ///< keep output function
-    string in; getline(fin, in);                 ///< keep input buffers
-    fout << ENDL;                                /// * flush output
+    const int BUF = HERE + 64;
+    const int rst = EM_ASM_INT({
+        const xhr = new XMLHttpRequest();
+        xhr.responseType = 'text';                /// Forth script
+        xhr.open('GET', UTF8ToString($0), false); /// synchronized GET
+        xhr.send(null);
+        if (xhr.status!=200) {
+            console.log(xhr.statusText);
+            return 0;
+        }
+        const wa  = wasmExports;               ///< WASM export block
+        const adr = wa.vm_mem() + $1;          ///< memory address
+        const len = xhr.responseText.length+1; ///< script + '\0'
+        const buf = new Uint8Array(wa.memory.buffer, adr, len);
+        for (var i=0; i < len; i++) {
+            buf[i] = xhr.responseText.charCodeAt(i);
+        }
+        buf[len-1] = '\0';                     /// * \0 terminated str
+        return len;
+        }, fn, BUF);
+    if (rst==0) return 0;                      /// * fetch failed, bail
+    ///
+    /// preserve I/O states, call VM, restore IO states
+    ///
+    void (*cb)(int, const char*) = fout_cb;    ///< keep output function
+    string in; getline(fin, in);               ///< keep input buffers
+    fout << ENDL;                              /// * flush output
     
-    void *buf;                                   ///< memory buffer 
-    int   sz, err;                               ///< size fetch or err
-    emscripten_wget_data(fn, &buf, &sz, &err);   /// * fetch from server
-    if (err) { fout << fn << " err! " << ENDL; } /// * yelp!
-    else {
-        forth_vm((const char *)buf, rsp_to_nul); /// * process commands
-        free(buf);                               /// * must, or leak
-    }
+    forth_vm((const char*)&pmem[BUF]);         /// * send script to VM
     
-    fout_cb = cb;                                ///> restore output cb
-    fin.clear(); fin.str(in);                    ///> restore input
+    fout_cb = cb;                              /// * restore output cb
+    fin.clear(); fin.str(in);                  /// * restore input
 #endif // DO_WASM
     return 0;
 }
