@@ -1,4 +1,4 @@
-EM = em++ -Wall -sASYNCIFY -O2 # -O3 does not work
+EM = em++ -Wall -O2 # -O3 does not work
 CC = g++
 
 SRC = ./src/ceforth.cpp
