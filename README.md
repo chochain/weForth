@@ -133,6 +133,11 @@ Simple 10M tests
     Note8: Chrome is about 10% slower than FireFox
 
 ### TODO
+* 3-D (Robotic Simulation Engine)
+  + review Three.js + Ammo.js/Bullet
+    + CSG Object (with optional motion trail) [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
+    + Collision (with directional distance sensing)
+  + review raylib
 * review wasmtime (CLI), perf+hotspot (profiling)
 * review DragonRuby/mRuby (SDL)
 * review R3, Forth CPU visualizer (SDL)
@@ -143,11 +148,6 @@ Simple 10M tests
   + Character graphic (SDL_ttf or HTML5)
   + 3D graphic (GL)
   + Music (SDL_media)
-* Robotic Simulation Engine
-  + review raylib
-  + review Three.js
-  + CSG Object (with optional motion trail) [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
-  + Collision (with directional distance sensing)
 * add network system (SD_net)
 * inter-VM communication
 * use WASM stack as ss
