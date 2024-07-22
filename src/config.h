@@ -10,9 +10,10 @@
 ///
 ///@name Conditional compililation options
 ///@}
+#define APP_VERSION     "weForth v4.2"
 #define CC_DEBUG        1               /**< debug level 0|1|2      */
 #define RANGE_CHECK     0               /**< vector range check     */
-#define USE_FLOAT       0               /**< support floating point */
+#define USE_FLOAT       1               /**< support floating point */
 #define DO_WASM         __EMSCRIPTEN__  /**< for WASM output        */
 ///@}
 ///@name Memory block configuation
@@ -35,13 +36,17 @@ typedef uintptr_t       UFP;   ///< function pointer as integer
 typedef double          DU2;
 typedef float           DU;
 #define DU0             0.0f
-#define UINT(v)         (fabs(v)))
+#define DU_1            -1.0f
+#define UINT(v)         (static_cast<U32>(v))
+#define MOD(m,n)        (fmodf(m,n))
 
 #else // !USE_FLOAT
 typedef int64_t         DU2;
 typedef int32_t         DU;
 #define DU0             0
-#define UINT(v)         (abs(v))
+#define DU_1            -1
+#define UINT(v)         (static_cast<U32>(v))
+#define MOD(m,n)        ((m) % (n))
 
 #endif // USE_FLOAT
 typedef uint16_t        IU;    ///< instruction pointer unit
