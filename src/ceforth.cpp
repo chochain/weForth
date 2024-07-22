@@ -215,7 +215,8 @@ void CALL(IU w) {
 ///   * these functions can be replaced with our own implementation
 ///
 #include <iomanip>                     /// setbase, setw, setfill
-#include <sstream>                     /// iostream, stringstream
+#include <iostream>                    /// cin, cout
+#include <sstream>                     /// stringstream
 using namespace std;                   /// default to C++ standard template library
 istringstream   fin;                   ///< forth_in
 ostringstream   fout;                  ///< forth_out
@@ -682,7 +683,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
     /// @{
     CODE("mstat", mem_stat());
     CODE("ms",    PUSH(millis()));
-    CODE("delay", delay(POP()));
+    CODE("delay", delay(UINT(POP())));
     CODE("included",                        // include external file
          POP();                             // string length, not used
          U8 *fn = MEM(POP());               // file name
@@ -837,6 +838,17 @@ int  forth_include(const char *fn) {
 
 int  main(int ac, char* av[]) {
     forth_init();
+    
+#if !DO_WASM
+    cout << APP_VERSION << endl;
+    string cmd;
+    while (getline(cin, cmd)) {         ///> fetch user input
+        // printf("cmd=<%s>\n", cmd.c_str());
+        forth_vm(cmd.c_str());          ///> execute outer interpreter
+    }
+    cout << "done!" << endl;
+#endif // DO_WASM
+    
     return 0;
 }
 ///====================================================================
