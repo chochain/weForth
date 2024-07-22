@@ -180,10 +180,10 @@ void nest() {
                 dp++;                  ///> go one level deeper
             }
             else if (ix == _NXT) {     ///> cached NEXT, LIT handlers,
-                if (UINT(rs[-1] -= 1) != 0) {        ///> loop done?
-                    IP = *(IU*)MEM(IP);               ///> 10% faster on AMD, 5% on ESP32
+                if (ABS(rs[-1] -= 1) > DU_EPS) {     ///> loop done?
+                    IP = *(IU*)MEM(IP);              ///> 10% faster on AMD, 5% on ESP32
                 }
-                else { IP += sizeof(IU); rs.pop(); }  ///> perhaps due to shallow pipeline
+                else { IP += sizeof(IU); rs.pop(); } ///> perhaps due to shallow pipeline
             }
             else if (ix == _LIT) {
                 ss.push(top);
@@ -357,7 +357,7 @@ void ss_dump() {
         return buf;
 #else  // !USE_FLOAT
         int i = 33;  buf[i]='\0';         /// * C++ can do only 8,10,16
-        DU  n = v < 0 ? -v : v;           ///< handle negative
+        DU  n = ABS(v);                   ///< handle negative
         while (n && i) {                  ///> digit-by-digit
             U8 d = (U8)MOD(n,b);  n /= b;
             buf[--i] = d > 9 ? (d-10)+'a' : d+'0';
@@ -509,15 +509,15 @@ void dict_compile() {  ///< compile primitive words into dictionary
     CODE("/mod",    DU  n = ss.pop();
                     DU  t = top;
                     DU  m = MOD(n, t);
-                    ss.push(m); top = (n / t));
+                    ss.push(m); top = UINT(n / t));
     CODE("*/mod",   DU2 n = (DU2)ss.pop() * ss.pop();
                     DU2 t = top;
                     DU  m = MOD(n, t);
-                    ss.push(m); top = (DU)(n / t));
+                    ss.push(m); top = UINT(n / t));
     CODE("and",     top = UINT(top) & UINT(ss.pop()));
     CODE("or",      top = UINT(top) | UINT(ss.pop()));
     CODE("xor",     top = UINT(top) ^ UINT(ss.pop()));
-    CODE("abs",     top = top > DU0 ? top : -top);
+    CODE("abs",     top = ABS(top));
     CODE("negate",  top = -top);
     CODE("invert",  top = ~UINT(top));
     CODE("rshift",  top = UINT(ss.pop()) >> UINT(top));
