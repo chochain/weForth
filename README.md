@@ -2,16 +2,17 @@
 
 WebAssembly enpowered eForth on web browsers. Is it faster? Is it more portable? Yes, and Yes.
 
-Well, on my aged laptop, the impression is pretty exciting! It's at least 5x faster than pure Javascript implementation on a browser and at 1/2 speed of C/C++ natively compiled code on CPU. It was at 1/4 of native a year ago but as Javascript JIT improves, it now runs faster as well. Not bad at all! On the portability end, though not exactly plug-and-play but some simple alteration turned my C code web-enabled. Of course, WASM has yet to integrate with the front-end well enough, so updating DOM is a different feat if we want to venture beyond being a terminal app.
+Well, on my aged laptop, the impression is pretty exciting! It's at least 5x faster than pure Javascript implementation on a browser and at 40% speed of C/C++ natively compiled code on CPU. It was at 25% of native a year ago but as Javascript JIT improves, it now runs faster as well. Not bad at all! On the portability end, though not exactly plug-and-play but some simple alteration turned my C code web-enabled. Of course, WASM has yet to integrate with the front-end well enough, so updating DOM is a different feat. If we want to venture beyond being a terminal app some UI glue is still required.
 
-Regardless, it brought me warm smiles seeing eForth run in a browser. Better yet, it's straight from C/C++ source code. Other popular scripting languages such as Python, Ruby are trending toward WASM/WASI implementation as well. However, depending solely on JIT without built-in compiler as Forth does, the interpreter-in-an-interpreter design will likely cap the top-end performance (i.e. stuck at 1/5~1/10 of native, so far).
+Regardless, it brought me warm smiles seeing eForth run in a browser. Better yet, it's straight from C/C++ source code. Other popular scripting languages such as Python, Ruby are trending toward WASM/WASI implementation as well. However, unlike FORTH, they depend mostly on JIT without a built-in compiler, the interpreter-in-an-interpreter design will likely cap the top-end performance (i.e. stuck at 5~10% of native speed, so far).
 
-With WASM, the interoperability between different languages become a thing of the near future. If Forth can compile word directly into WASM opcodes, engage WASI to access OS and peripherals, hookup the graphic front-end (i.g. SDL or WebGL), weForth can become a worthy scripting alternative for Web.
+With WASM, the interoperability between different languages become a thing of the near future. If words can be compiled directly into WASM opcodes, OS and peripherals can be accessed through WASI, adding a graphic front-end (i.g. SDL or WebGL), weForth can become a worthy scripting alternative for Web.
 
 ### Features
-   * Forth in Web Worker threads (multi-VMs possible)
-   * Javascript access to ss, dict, and VM memory (via WebAssembly.Memory)
-   * Javascript function calling interface
+   * supports 32-bit float
+   * utilizes Web Worker threads (multi-VMs possible)
+   * have access to ss, dict, and VM memory (via WebAssembly.Memory) from Javascript
+   * call interface from FORTH into Javascript functions
    * IDE-style interactive front-end (cloud possible, i.g. JupyterLab)
 
 > <img src="https://chochain.github.io/weForth/img/weforth_logo_snip2.png" style="width:800px">sample</img>
@@ -48,7 +49,7 @@ Client-side Browser
 ### Javascript interface
 To communicate between Forth and Javascript engine, weForth implemented a word 'JS' and a function call_js(). They utilize Emscripten EM_JS macro that *postMessage* from C++ backend-side to *onmessage* on browser-side. Depends on your need, handler can be very simple to complicated.
 
-#### ceforth.html - a very simple (and dangerous) handler
+#### ceforth.html - a very simple (and dangerous) handler with the single-threaded demo
 
     this.onmessage = e=>{
         if (e.data[0]=='js') this.eval(e.data[1])
@@ -58,7 +59,7 @@ To communicate between Forth and Javascript engine, weForth implemented a word '
     
 > <img src="https://chochain.github.io/weForth/img/weforth_js.png" width=604px>JS call</img>
 
-#### weforth.html - a more complex handler
+#### weforth.html - a more complex handler with the multi-threaded web worker demo
 
     const ex = (ops)=>Function(       ///< scope limiting eval
         `"use strict"; this.update('${ops}')`
@@ -133,8 +134,8 @@ Simple 10M tests
     Note8: Chrome is about 10% slower than FireFox
 
 ### TODO
-* 3-D (Robotic Simulation Engine)
-  + review Three.js + Ammo.js/Bullet
+* Physics Engine
+  + review Three.js + (Ammo.js/Bullet, or JOLT)
     + CSG Object (with optional motion trail) [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
     + Collision (with directional distance sensing)
   + review raylib
