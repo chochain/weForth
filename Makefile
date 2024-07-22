@@ -3,7 +3,7 @@ CC = g++
 
 SRC = ./src/ceforth.cpp
 
-EXP = _main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top
+EXP = _main,_forth,_vm_base,_vm_dflt,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top
 
 HTML = \
 	template/weforth.html \
@@ -41,7 +41,7 @@ two: $(SRC)
 debug: $(SRC)
 	echo "WASM: create WASM objdump file"
 	cp $(HTML) ./tests
-	$(EM) -Wall -o tests/ceforth.html $^ --shell-file template/ceforth.html -sEXPORT_ALL=1 -sLINKABLE=1 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+	$(EM) -o tests/ceforth.html $^ --shell-file template/ceforth.html -sEXPORT_ALL=1 -sLINKABLE=1 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 	wasm-objdump -x tests/ceforth.wasm > tests/ceforth.wasm.txt -O0
 
 sdl: tests/sdl2.cpp
