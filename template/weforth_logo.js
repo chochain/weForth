@@ -38,7 +38,7 @@ class Logo {
         this.sfc = document.getElementById('sfc').getContext('2d')
         this.st  = {
             w: w, h: e.offsetHeight,
-            dir: 0, pw: 3, pen: 1, show: 1,
+            dir: 0, pw: 3, pen: 1, show: 0,
             fg: '#000', bg: '#FFF'
         }
 //        console.log('logo='+JSON.stringify(this))
@@ -81,7 +81,7 @@ class Logo {
         this.sfc.lineWidth   = t.pw
         this.eve.lineWidth   = 3
         this.eve.strokeStyle = '#F00'
-        this.draw_eve(t.fg)
+        if (t.show) this.draw_eve(t.fg)
     }
     update(ops) {
         let av = ops.split(' ')
@@ -124,6 +124,7 @@ class Logo {
         s.strokeStyle = t.fg
         s.stroke()
         if (t.show) this.draw_eve(t.fg)
+        
         console.log(JSON.stringify(t))   // CC: tracing
     }
 }
