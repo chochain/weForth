@@ -1,6 +1,6 @@
 ﻿<html>
   <head>    
-  <title>weForth v4.1</title>
+  <title>weForth v4.2</title>
   <style>
     h2    { color: #c44; margin: 0; }
     h3    { color: #fc4; margin: 0; }
@@ -89,17 +89,20 @@
     function show_ss() {
         const wa  = wasmExports
         const base= wa.vm_base()
+        const toa = (p, n)=>wa.vm_dflt()
+            ? new Float32Array(wa.memory.buffer, p, n)
+            : (base==10
+               ? new Int32Array(wa.memory.buffer, p, n)
+               : new Uint32Array(wa.memory.buffer, p, n))
         const len = wa.vm_ss_idx()>0 ? wa.vm_ss_idx() : 0
-        const ss  = base==10
-              ? new Int32Array(wa.memory.buffer, wa.vm_ss(), len)
-              : new Uint32Array(wa.memory.buffer, wa.vm_ss(), len)
-        const top = base==10
-              ? new Int32Array(wa.memory.buffer, wa.top, 1)
-              : new Uint32Array(wa.memory.buffer, wa.top, 1)
-        let div = document.getElementById('ss')
-        div.innerHTML = top[0].toString(base) + '<br/>'
+        const ss  = toa(wa.vm_ss(), len)
+        const top = toa(wa.top, 1)
+        const tos = v => Number.isInteger(v) ? v.toString(base) : Math.round(v*100000)/100000
+        
+        let   div = document.getElementById('ss')
+        div.innerHTML = tos(top[0]) + '<br/>'
         for (let i = len - 1; i >= 0; --i) {
-            div.innerHTML += ss[i].toString(base) + '<br/>'
+            div.innerHTML += tos(ss[i]) + '<br/>'
         }
     }
     function show_dict() {
