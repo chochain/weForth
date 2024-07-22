@@ -33,20 +33,25 @@ typedef uint8_t         U8;    ///< byte, unsigned character
 typedef uintptr_t       UFP;   ///< function pointer as integer
 
 #if USE_FLOAT
+#include <cmath>
 typedef double          DU2;
 typedef float           DU;
 #define DU0             0.0f
 #define DU_1            -1.0f
+#define DU_EPS          0.00001f
 #define UINT(v)         (static_cast<U32>(v))
 #define MOD(m,n)        (fmodf(m,n))
+#define ABS(v)          (fabsf(v))
 
 #else // !USE_FLOAT
 typedef int64_t         DU2;
 typedef int32_t         DU;
 #define DU0             0
 #define DU_1            -1
+#define DU_EPS          0
 #define UINT(v)         (static_cast<U32>(v))
 #define MOD(m,n)        ((m) % (n))
+#define ABS(v)          (abs(v))
 
 #endif // USE_FLOAT
 typedef uint16_t        IU;    ///< instruction pointer unit
