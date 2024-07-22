@@ -87,12 +87,13 @@ typedef enum {
 ///
 ///> VM states (single task)
 ///
-DU   top     = -1;      ///< top of stack (cached)
+DU   top     = DU_1;    ///< top of stack (cached)
 IU   IP      = 0;       ///< current instruction pointer
 bool run     = true;    ///< VM nest() control
 bool compile = false;   ///< compiler flag
 bool ucase   = false;   ///< case sensitivity control
-DU   *base;             ///< numeric radix (a pointer)
+IU   *base;             ///< numeric radix (a pointer)
+IU   *dflt;             ///< use float data unit flag
 ///
 ///====================================================================
 ///
@@ -179,8 +180,10 @@ void nest() {
                 dp++;                  ///> go one level deeper
             }
             else if (ix == _NXT) {     ///> cached NEXT, LIT handlers,
-                if ((rs[-1] -= 1) >= 0) IP = *(IU*)MEM(IP); ///> 10% faster on AMD, 5% on ESP32
-                else { IP += sizeof(IU); rs.pop(); }        ///> perhaps due to shallow pipeline
+                if (UINT(rs[-1] -= 1) != 0) {        ///> loop done?
+                    IP = *(IU*)MEM(IP);               ///> 10% faster on AMD, 5% on ESP32
+                }
+                else { IP += sizeof(IU); rs.pop(); }  ///> perhaps due to shallow pipeline
             }
             else if (ix == _LIT) {
                 ss.push(top);
@@ -347,16 +350,21 @@ void words() {
     fout << setbase(*base) << ENDL;
 }
 void ss_dump() {
-    char buf[34];
-    auto rdx = [&buf](DU v, int b) {      ///> display v by radix
+    static char buf[34];
+    auto rdx = [](DU v, int b) {      ///> display v by radix
+#if USE_FLOAT
+        sprintf(buf, "%0.6g", v);
+        return buf;
+#else  // !USE_FLOAT
         int i = 33;  buf[i]='\0';         /// * C++ can do only 8,10,16
         DU  n = v < 0 ? -v : v;           ///< handle negative
         while (n && i) {                  ///> digit-by-digit
-            U8 d = (U8)(n % b);  n /= b;
+            U8 d = (U8)MOD(n,b);  n /= b;
             buf[--i] = d > 9 ? (d-10)+'a' : d+'0';
         }
         if (v < 0) buf[--i]='-';
         return &buf[i];
+#endif // USE_FLOAT
     };
     ss.push(top);
     for (int i=0; i<ss.idx; i++) {
@@ -365,13 +373,13 @@ void ss_dump() {
     top = ss.pop();
     fout << "-> ok" << ENDL;
 }
-void mem_dump(IU p0, DU sz) {
+void mem_dump(IU p0, int sz) {
     fout << setbase(16) << setfill('0');
     for (IU i=ALIGN16(p0); i<=ALIGN16(p0+sz); i+=16) {
         fout << setw(4) << i << ": ";
         for (int j=0; j<16; j++) {
             U8 c = pmem[i+j];
-            fout << setw(2) << (int)c << (j%4==3 ? " " : "");
+            fout << setw(2) << (int)c << (MOD(j,4)==3 ? " " : "");
         }
         for (int j=0; j<16; j++) {   // print and advance to next byte
             U8 c = pmem[i+j] & 0x7f;
@@ -443,8 +451,6 @@ void call_js() {                           ///> ( n addr u -- )
 UFP Code::XT0 = ~0;    ///< init base of xt pointers (before calling CODE macros)
 
 void dict_compile() {  ///< compile primitive words into dictionary
-    base = (DU*)MEM(pmem.idx);                          ///< set pointer to base
-    add_du(10);                                         ///< default radix=10
     ///
     /// @defgroup Execution flow ops
     /// @brief - DO NOT change the sequence here (see forth_opcode enum)
@@ -498,23 +504,26 @@ void dict_compile() {  ///< compile primitive words into dictionary
     CODE("*",       top *= ss.pop());
     CODE("-",       top =  ss.pop() - top);
     CODE("/",       top =  ss.pop() / top);
-    CODE("mod",     top =  ss.pop() % top);
+    CODE("mod",     top =  MOD(ss.pop(), top));
     CODE("*/",      top =  (DU2)ss.pop() * ss.pop() / top);
-    CODE("/mod",    DU n = ss.pop(); DU t = top;
-                    ss.push(n % t); top = (n / t));
+    CODE("/mod",    DU  n = ss.pop();
+                    DU  t = top;
+                    DU  m = MOD(n, t);
+                    ss.push(m); top = (n / t));
     CODE("*/mod",   DU2 n = (DU2)ss.pop() * ss.pop();
                     DU2 t = top;
-                    ss.push((DU)(n % t)); top = (DU)(n / t));
-    CODE("and",     top &= ss.pop());
-    CODE("or",      top |= ss.pop());
-    CODE("xor",     top ^= ss.pop());
-    CODE("abs",     top = abs(top));
+                    DU  m = MOD(n, t);
+                    ss.push(m); top = (DU)(n / t));
+    CODE("and",     top = UINT(top) & UINT(ss.pop()));
+    CODE("or",      top = UINT(top) | UINT(ss.pop()));
+    CODE("xor",     top = UINT(top) ^ UINT(ss.pop()));
+    CODE("abs",     top = top > DU0 ? top : -top);
     CODE("negate",  top = -top);
-    CODE("invert",  top = ~top);
-    CODE("rshift",  top = (U32)ss.pop() >> top);
-    CODE("lshift",  top = (U32)ss.pop() << top);
-    CODE("max",     DU n=ss.pop(); top = (top>n)?top:n);
-    CODE("min",     DU n=ss.pop(); top = (top<n)?top:n);
+    CODE("invert",  top = ~UINT(top));
+    CODE("rshift",  top = UINT(ss.pop()) >> UINT(top));
+    CODE("lshift",  top = UINT(ss.pop()) << UINT(top));
+    CODE("max",     DU n=ss.pop(); top = (top>n) ? top : n);
+    CODE("min",     DU n=ss.pop(); top = (top<n) ? top : n);
     CODE("2*",      top *= 2);
     CODE("2/",      top /= 2);
     CODE("1+",      top += 1);
@@ -645,7 +654,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
     /// @}
     /// @defgroup Debug ops
     /// @{
-    CODE("abort", top = -1; ss.clear(); rs.clear());     // clear ss, rs
+    CODE("abort", top = DU_1; ss.clear(); rs.clear());          // clear ss, rs
     CODE("here",  PUSH(HERE));
     CODE("'",     IU w = find(word()); if (w) PUSH(w));
     CODE(".s",    ss_dump());
@@ -657,7 +666,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
          if (IS_UDF(w)) see(dict[w].pfa);
          else           fout << " ( primitive ) ;";
          fout << ENDL);
-    CODE("dump",  DU n = POP(); IU a = POP(); mem_dump(a, n));
+    CODE("dump",  U32 n = UINT(POP()); IU a = POP(); mem_dump(a, n));
     CODE("dict",  dict_dump());
     CODE("forget",
          IU w = find(word()); if (!w) return;
@@ -691,7 +700,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
 ///> ForthVM - Outer interpreter
 ///
 DU parse_number(const char *idiom, int *err) {
-    int b = *base;
+    int b = static_cast<int>(*base);
     switch (*idiom) {                        ///> base override
     case '%': b = 2;  idiom++; break;
     case '&':
@@ -700,13 +709,13 @@ DU parse_number(const char *idiom, int *err) {
     }
     char *p;
     *err = errno = 0;
-#if DU==float
+#if USE_FLOAT
     DU n = (b==10)
         ? static_cast<DU>(strtof(idiom, &p))
         : static_cast<DU>(strtol(idiom, &p, b));
-#else
+#else  // !USE_FLOAT
     DU n = static_cast<DU>(strtol(idiom, &p, b));
-#endif
+#endif // USE_FLOAT
     if (errno || *p != '\0') *err = 1;
     return n;
 }
@@ -742,9 +751,14 @@ int forth_core(const char *idiom) {
 ///
 void forth_init() {
     static bool init = false;
-    if (init) return;          ///> check dictionary initilized
+    if (init) return;                    ///> check dictionary initilized
     
-    dict_compile();            ///> compile dictionary
+    base = (IU*)MEM(pmem.idx);           ///< set pointer to base
+    add_iu(10);                          ///< allocate space for base
+    dflt = (IU*)MEM(pmem.idx);           ///< set pointer to dfmt
+    add_iu(USE_FLOAT);
+    
+    dict_compile();                      ///> compile dictionary
 }
 void forth_vm(const char *cmd, void(*hook)(int, const char*)) {
     auto outer = []() {                  ///> outer interpreter loop
@@ -772,8 +786,6 @@ void forth_vm(const char *cmd, void(*hook)(int, const char*)) {
 }
 ///====================================================================
 ///> WASM specific code
-///
-const char* APP_VERSION = "weForth v4.1";
 ///
 ///> Memory statistics - for heap, stack, external memory debugging
 ///
@@ -835,6 +847,7 @@ int  main(int ac, char* av[]) {
 extern "C" {
 void forth(int n, char *cmd) { forth_vm(cmd); }
 int  vm_base()       { return *base;    }
+int  vm_dflt()       { return *dflt;    }
 int  vm_ss_idx()     { return ss.idx;   }
 int  vm_dict_idx()   { return dict.idx; }
 DU   *vm_ss()        { return &ss[0];   }
