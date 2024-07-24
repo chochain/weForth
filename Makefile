@@ -11,7 +11,9 @@ HTML = \
 	template/file_io.js \
 	template/weforth_logo.js \
 	template/weforth_helper.js \
-	template/weforth_worker.js
+	template/weforth_worker.js \
+	template/jolt_core.js \
+	template/weforth_jolt.js
 
 all: zero one two
 	echo "cmd: python3 -m http.server to start local web server"
