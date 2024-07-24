@@ -64,13 +64,15 @@ function randomShape(t) {
 import initJolt from './js/jolt-physics.wasm-compat.js'
 
 (function() {
-    const view = document.getElementById('dsp')
+    const dsp = document.getElementById('dsp')
     initJolt().then(Jolt=>{
         window.Jolt = Jolt
         let jolt = new JoltCore(
-            view, window.devicePixelRatio, onUpdate)
+            dsp.offsetWidth, dsp.offsetHeight,
+            window.devicePixelRatio, onUpdate)
         console.log(jolt)
-        window.addEventListener('resize', ()=>jolt.resize(view), false)
+        window.addEventListener('resize',
+            ()=>jolt.resize(dsp.offsetWidth, dsp.offsetHeight), false)
         
         let next = PERIOD
         function onUpdate(t) {
