@@ -3,6 +3,7 @@
 /// @brief weForth - Jolt core implementation
 ///
 'use strict'
+import './js/jolt-physics.wasm-compat.js'
 
 ///> transformation macros
 const V3G = v=> new THREE.Vector3(v.GetX(), v.GetY(), v.GetZ())      // => GUI vec3
@@ -119,7 +120,7 @@ function objFactory(body, color) {
 ///> arena  - Web canvas container
 ///> update - GUI update callback
 ///
-class JoltCore {
+export default class {
     constructor(w, h, px_ratio, callback) {
         this.arena = document.getElementById('arena')
         this.arena.innerHTML = ""
@@ -177,9 +178,9 @@ class JoltCore {
         this.rndr.render(this.scene, this.cam)
         this.stats.update()
     }
-    add(shape, pos, rot, mtype, layer, color=0xffffff) {
+    add(shape, pos, rot, color=0xffffff) {
         let config = new Jolt.BodyCreationSettings(
-            shape, pos, rot, mtype, layer)
+            shape, pos, rot, Jolt.EMotionType_Dynamic, L_MOVING)
         config.mRestitution = 0.5
         let body   = this.intf.CreateBody(config)
         Jolt.destroy(config)
@@ -208,7 +209,7 @@ class JoltCore {
 
         return this._addToScene(body, color)
     }
-    addFloor(sz = 50) {
+    addFloor(sz = 50, color=0xffffff) {
         var config = new Jolt.BodyCreationSettings(
             new Jolt.BoxShape(new Jolt.Vec3(sz, 0.5, sz), 0.05, null),
             new Jolt.RVec3(0, -0.5, 0),
@@ -218,7 +219,7 @@ class JoltCore {
         let body = this.intf.CreateBody(config)
         Jolt.destroy(config)
 
-        return this._addToScene(body, 0xc7c7c7)
+        return this._addToScene(body, color)
     }
     addMeshFloor(n, sz, maxH, posX, posY, posZ) {      // nxn, sz:tileSize at pos
         // Create regular grid of triangles
@@ -344,3 +345,4 @@ class JoltCore {
         this.length -= 1                                 // CC: need a lock?
     }
 }  // class JoltCore
+
