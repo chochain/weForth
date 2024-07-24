@@ -3,6 +3,7 @@
 /// @brief weForth - Jolt interface
 ///
 'use strict'
+import JoltCore from './jolt_core.js'
 
 const MAX_OBJ  = 100
 const PERIOD   = 0.25
@@ -59,3 +60,32 @@ function randomShape(t) {
     }
     return shape
 }
+
+import initJolt from './js/jolt-physics.wasm-compat.js'
+
+(function() {
+    const view = document.getElementById('dsp')
+    initJolt().then(Jolt=>{
+        window.Jolt = Jolt
+        let jolt = new JoltCore(
+            view, window.devicePixelRatio, onUpdate)
+        console.log(jolt)
+        window.addEventListener('resize', ()=>jolt.resize(view), false)
+        
+        let next = PERIOD
+        function onUpdate(t) {
+            if (jolt.length < MAX_OBJ && t > next) {
+                let t     = Math.floor(Math.random() * MAX_TYPE)
+                let shape = randomShape(t)
+                let pos   = new Jolt.RVec3(rnd(25), 15, rnd(25))
+                let rot   = randomQuat()
+                jolt.add(shape, pos, rot, COLOR_LST[t])
+                next += PERIOD
+            }
+        }
+        ///> start Jolt engine
+        jolt.addMeshFloor(30, 1, 4, 0, 5, 0)
+        jolt.render()
+    })
+})();
+

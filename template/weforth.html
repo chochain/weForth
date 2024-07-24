@@ -10,14 +10,13 @@
   <script type='text/javascript' src='weforth_logo.js'></script>
   </head>
   <body>
-    <div id='arena'>Loading</div>
     <div class='row' style='height:100%'>
-      <div id='dir' class='col' style='display:none; z-index:1; width:15%'>
+      <div id='dir' class='col' style='display:none; z-index:3; width:15%'>
         <pre class='hdr'>Dictionary</pre>
         <pre id='usr' class='usr'></pre>
         <pre id='dc' class='usr'></pre>
       </div>
-      <div class='col' style='z-index:0; width:100%; padding:8px'>
+      <div class='col' style='z-index:2; width:100%; padding:8px'>
         <cite>
           <i class='material-icons' style='float:left' onclick='(toggle("dir"),forth(""))'>menu_open</i>
           <span style='float:left; position:fixed'>
@@ -47,6 +46,7 @@
         <div id='ss' class='ss'>[ ]</div>
       </div>
       <div id='dsp' class='dsp' style='width:70%'>
+        <div id='arena' style='z-index:20'>Jolt loading...</div>
         <pre id='mm' class='mem' style='z-index:10'></pre>
         <div id='ctx' class='layer'></div>
       </div>
@@ -157,7 +157,6 @@
     ///
     /// start up Forth interpreter
     ///
-
     window.onload = ()=>{
         setTimeout(()=>{
             logo.reset()
@@ -165,39 +164,10 @@
         }, 1000)
     }
     </script>
-    <script src='js/three/three.min.js'></script>
-    <script src='js/three/OrbitControls.js'></script>
-    <script src='js/three/WebGL.js'></script>
-    <script src='js/three/stats.min.js'></script>
-    <script src='jolt_core.js'></script>
-    <script src='weforth_jolt.js'></script>
-    <script type='module'>
-    import initJolt from './js/jolt-physics.wasm-compat.js'
-
-    initJolt().then(Jolt=>{
-        window.Jolt = Jolt
-        let jolt = new JoltCore(
-            window.innerWidth, window.innerHeight,
-            window.devicePixelRatio,
-            onUpdate)
-        console.log(jolt)
-	    window.addEventListener('resize', ()=>jolt.resize(), false)
-        
-        let next = PERIOD
-	    function onUpdate(t) {
-		    if (jolt.length < MAX_OBJ && t > next) {
-                let t     = Math.floor(Math.random() * MAX_TYPE)
-		        let shape = randomShape(t)
-	            let pos   = new Jolt.RVec3(rnd(25), 15, rnd(25))
-	            let rot   = randomQuat()
-                jolt.add(shape, pos, rot, Jolt.EMotionType_Dynamic, 2, COLOR_LST[t])
-			    next += PERIOD
-		    }
-	    }
-        ///> start Jolt engine
-        jolt.addMeshFloor(30, 1, 4, 0, 5, 0)
-        jolt.render()
-    })
-    </script>
+    <script src='./js/three/three.min.js'></script>
+    <script src='./js/three/OrbitControls.js'></script>
+    <script src='./js/three/WebGL.js'></script>
+    <script src='./js/three/stats.min.js'></script>
+    <script type='module' src='./weforth_jolt.js'></script>
   </body>
 </html>
