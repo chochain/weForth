@@ -118,20 +118,23 @@ Simple 10M tests
 |weForth  |4.1  |EM.b / C  |-O0|FF.b |348 |300|
 |         |     |          |-O2|FF.b |154 |164|
 |         |     |          |-O2|FF.b1|160 |164|
+|weForth<br/>float32|4.2  |EM.b / C  |-O2|FF.b |160 |153|
 
     FF.a = FireFox v120, FF.a1 = FF.a + 1 worker
     FF.b = FireFox v122, FF.b1 = FF.b + 1 worker
     EM.a = Emscripten v3.1.51
     EM.b = Emscripten v3.1.53
 
-    Note1: eForth.js uses JS straight, can do floating-points
-    Note2: uEforth v7 uses Asm.js, build Forth up with JS "assembly".
-    Note3: weForth v1 uses token indirected threaded
-    Note4: weForth+switch(op), is 2x slower than just function pointers.
-    Note5: weForth v1.2 without yield in nest() speeds up 3x.
-    Note6: WASM -O3 => err functions (wa.*) not found
-    Note7: FireFox v122 is vastly faster than v120
-    Note8: Chrome is about 10% slower than FireFox
+Note:
+* eForth.js uses JS straight, can do floating-points
+* uEforth v7 uses Asm.js, build Forth up with JS "assembly".
+* weForth v1 uses token indirected threaded
+* weForth+switch(op), is 2x slower than just function pointers.
+* weForth v1.2 without yield in nest(), speeds up 3x.
+* WASM -O3 => err functions (wa.*) not found
+* FireFox v122, is 2x faster than v120
+* Chrome is about 10% slower than FireFox
+* weForth 4.2 w float32-enabled, runs equally fast as int32, but why?
 
 ### TODO
 * Physics Engine
