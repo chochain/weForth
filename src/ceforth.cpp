@@ -70,7 +70,7 @@ U8  *MEM0 = &pmem[0];              ///< base of parameter memory block
 ///@{
 #define BOOL(f)   ((f)?-1:0)               /**< Forth boolean representation            */
 #define HERE      (pmem.idx)               /**< current parameter memory index          */
-#define MEM(ip)   (MEM0 + (IU)(ip))        /**< pointer to IP address fetched from pmem */
+#define MEM(ip)   (MEM0 + (IU)UINT(ip))    /**< pointer to IP address fetched from pmem */
 #define CELL(a)   (*(DU*)&pmem[a])         /**< fetch a cell from parameter memory      */
 #define SETJMP(a) (*(IU*)&pmem[a] = HERE)  /**< address offset for branching opcodes    */
 ///@}
@@ -423,10 +423,11 @@ void call_js() {                           ///> ( n addr u -- )
     auto t2s = [&n](char c) {              ///< template to string
         n.str("");                         /// * clear stream
         switch (c) {
-        case 'd': n << POP();                    break;
-        case 'x': n << "0x" << hex << POP();     break;
-        case 's': POP(); n << (char*)MEM(POP()); break;
-        default : n << c << '?';                 break;
+        case 'd': n << UINT(POP());                break;
+        case 'f': n << (DU)POP();                  break;
+        case 'x': n << "0x" << hex << UINT(POP()); break;
+        case 's': POP(); n << (char*)MEM(POP());   break;  /// also handles raw stream
+        default : n << c << '?';                   break;
         }
         return n.str();
     };
