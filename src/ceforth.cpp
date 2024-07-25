@@ -646,12 +646,15 @@ void dict_compile() {  ///< compile primitive words into dictionary
     /// be careful with memory access, especially BYTE because
     /// it could make access misaligned which slows the access speed by 2x
     ///
-    CODE("@",     IU w = POP(); PUSH(CELL(w)));                 // w -- n
-    CODE("!",     IU w = POP(); CELL(w) = POP(););              // n w --
-    CODE(",",     DU n = POP(); add_du(n));
-    CODE("allot", for (IU n = POP(), i = 0; i < n; i++) add_du(DU0)); // n --
-    CODE("+!",    IU w = POP(); CELL(w) += POP());              // n w --
-    CODE("?",     IU w = POP(); fout << CELL(w) << " ");        // w --
+    CODE("@",     IU w = UINT(POP()); PUSH(CELL(w)));           // w -- n
+    CODE("!",     IU w = UINT(POP()); CELL(w) = POP(););        // n w --
+    CODE(",",     DU n = POP(); add_du(n));                     // n -- 
+    CODE("cell",  IU i = UINT(POP()); PUSH(i * sizeof(DU)));    // n -- n'
+    CODE("allot",                                               // n --
+         IU n = UINT(POP());
+         for (int i=0; i < n; i+=sizeof(DU)) add_du(DU0));
+    CODE("+!",    IU w = UINT(POP()); CELL(w) += POP());        // n w --
+    CODE("?",     IU w = UINT(POP()); fout << CELL(w) << " ");  // w --
     /// @}
     /// @defgroup Debug ops
     /// @{
