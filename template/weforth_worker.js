@@ -4,7 +4,8 @@
 ///
 const res = (k,v)=>postMessage([ k, v ])  ///> worker response to front-end
 
-Module = { print: e=>res('txt', e) }      ///> WASM print interface
+Module = { print: e=>res('txt', e) }      ///> WASM print interface => output queue
+
 var vm_dict_len = 0
 var vm_mem_addr = 0
 
@@ -73,22 +74,18 @@ function get_mem(off, len) {
 ///
 /// worker message pipeline to main thread
 ///
-self.onmessage = function(e) {         /// * link worker input port
+self.onmessage = function(e) {         ///> worker input message queue
     let k = e.data[0], v = e.data[1]
     switch (k) {
     case 'cmd':
         let forth =
             Module.cwrap('forth', null, ['number', 'string'])
-        forth(0, v)
+        forth(0, v)                    /// * calls Module.print
         break
-    case 'dc':
-        let d = get_dict()
-        res('dc', d[0])
-        res('us', d[1])
-        break
+    case 'dc': res('dc', get_dict());            break
     case 'ss': res('ss', '[ '+ get_ss() + ' ]'); break
-    case 'mm': res(get_mem(v[0], v[1]));         break
-    case 'ui': res(get_ui());                    break
+    case 'mm': res('mm', get_mem(v[0], v[1]));   break
+    case 'ui': res('ui', get_ui());              break
     default  : res('unknown type');
     }
 }
