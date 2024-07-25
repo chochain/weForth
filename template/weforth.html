@@ -99,22 +99,26 @@
     ///
     /// Forth section
     ///
-    const vm = new Worker('weforth_worker.js')  ///< create the Forth worker thread
-    const ex = (ops)=>Function(                 ///< scope limiting eval
+    const vm = new Worker('weforth_worker.js')    ///< create the Forth worker thread
+    const logo_ex = (ops)=>Function(              ///< scope limiting eval
         `"use strict"; this.update('${ops}')`
     ).bind(logo)()
     ///
     /// setup listeners for message from worker thread
     ///
-    vm.onmessage = e=>{               /// * wait for worker's response
+    const vm_req = (k, v)=>vm.postMessage([k, v]) ///< send request to vm worker
+    vm.onmessage = e=>{                           ///< handle response from vm worker
         let k = e.data[0], v = e.data[1]
+        console.log(e)
         switch (k) {
         case 'txt': to_txt(v);         break
-        case 'dc' : show_dict(v);      break
-        case 'us' : usr.innerHTML = v; break
+        case 'dc' :
+            show_dict(v[0]);
+            usr.innerHTML = v[1];      break
         case 'ss' : ss.innerHTML  = v; break
-        case 'mm' : mm.innerHTML  = v; ok=1; break
-        case 'js' : ex(v);             break
+        case 'mm' : mm.innerHTML  = v; break
+        case 'js' : logo_ex(v);        break
+        case 'ui' : jolt_ex(v);        break
         default: console.log('onmessage['+k+'].error=>'+e)
         }
     }
@@ -126,14 +130,14 @@
         if (cmd=='clear') clear_txt()            /// * clear output console
         else if (cmd) {
             show_cmd(cmd)                        /// * display in HTML
-            vm.postMessage(['cmd', cmd])         /// * cmd to worker
-            vm.postMessage(['ss'])               /// * query ss
+            vm_req('cmd', cmd)                   /// * cmd to worker
+            vm_req('ss')                         /// * query ss
             if (mm.style.display!='none') {      
-                vm.postMessage(['mm', [0, 640]]) /// * query mem
+                vm_req('mm', [0, 640])           /// * query mem
             }
         }
         if (dc.style.display!='none') {          /// * query dictionary
-            vm.postMessage(['dc'])
+            vm_req('dc')
         }
     }
     function show_dict(div) {
@@ -160,14 +164,42 @@
     window.onload = ()=>{
         setTimeout(()=>{
             logo.reset()
-            vm.postMessage(['mm', [0, 640]])
+            vm_req('mm', [0, 640])           /// * query mem
         }, 1000)
     }
     </script>
-    <script src='./js/three/three.min.js'></script>
+    <!--script src='./js/three/three.min.js'></script>
     <script src='./js/three/OrbitControls.js'></script>
     <script src='./js/three/WebGL.js'></script>
     <script src='./js/three/stats.min.js'></script>
-    <script type='module' src='./weforth_jolt.js'></script>
+    <script type='module'>
+    import initJolt from './js/jolt-physics.wasm-compat.js'
+    import JoltCore from './jolt_core.js'
+    import new_obj  from './weforth_jolt.js'
+    const MAX_OBJ = 100
+    const PERIOD  = 0.25
+    const vu   = document.getElementById('dsp')
+    let   jolt = null
+
+    initJolt().then(Jolt=>{
+        window.Jolt = Jolt
+        jolt = new JoltCore(
+            vu.offsetWidth, vu.offsetHeight,
+            window.devicePixelRatio, onUpdate)
+        window.addEventListener('resize',
+            ()=>jolt.resize(vu.offsetWidth, vu.offsetHeight), false)
+
+        let next = PERIOD
+        function onUpdate(t) {
+            if (jolt.length < MAX_OBJ && t > next) {
+                new_obj(jolt)
+                next = t + PERIOD
+            }
+        }
+        ///> start Jolt engine
+        jolt.addMeshFloor(30, 1, 4, 0, 5, 0)
+        jolt.render()
+    })
+    </script-->
   </body>
 </html>
