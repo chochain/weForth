@@ -2,14 +2,16 @@
 /// @file
 /// @brief weForth - worker proxy to weforth.js (called by weforth.html)
 ///
-Module = { print: e=>postMessage([ 'txt', e ]) }
+const res = (k,v)=>postMessage([ k, v ])  ///> worker response to front-end
+
+Module = { print: e=>res('txt', e) }      ///> WASM print interface
 var vm_dict_len = 0
 var vm_mem_addr = 0
 
-importScripts('weforth_helper.js')  /// * vocabulary handler
-importScripts('weforth.js')         /// * load js emscripten created
+importScripts('weforth_helper.js')        /// * vocabulary handler
+importScripts('weforth.js')               /// * load js emscripten created
 
-function send_ss() {
+function get_ss() {
     const wa  = wasmExports
     const base= wa.vm_base()
     const toa = (p, n)=> wa.vm_dflt()
@@ -25,17 +27,18 @@ function send_ss() {
     let   div = []
     ss.forEach(v=>div.push(tos(v)))
     div.push(tos(top[0]))
-    postMessage([ 'ss', '[ ' + div.join(' ') + ' ]' ])
+    
+    return div.join(' ')
 }
-function send_dict() {
+function get_dict() {
     const wa  = wasmExports
     const len = wa.vm_dict_idx()
-    if (vm_dict_len == len) return             /// * dict no change, skip
+    if (vm_dict_len == len) return       /// * dict no change, skip
     
     vm_dict_len = len
     const dict = Module.cwrap('vm_dict', 'string', ['number'])
-    let nlst = []                              ///< built-in words list
-    let clst = null                            ///< colon word list
+    let nlst = []                        ///< built-in words list
+    let clst = null                      ///< colon word list
     for (let i = 0; i < len; ++i) {
         let nm = dict(i)
         if (clst) clst.push(nm)
@@ -44,10 +47,9 @@ function send_dict() {
             if (nm == 'boot') clst = []
         }
     }
-    postMessage([ 'dc', voc_tree(nlst) ])
-    postMessage([ 'us', colon_words(clst) ])
+    return [ voc_tree(nlst), colon_words(clst) ]
 }
-function send_mem(off, len) {
+function get_mem(off, len) {
     const wa = wasmExports
     const hx = '0123456789ABCDEF'
     const h2 = v=>hx[(v>>4)&0xf]+hx[v&0xf]
@@ -66,22 +68,27 @@ function send_mem(off, len) {
         div += h4(j) + ': ' + bt + tx + '\n'
         bt = '', tx = ''
     }
-    postMessage([ 'mm', div ])
+    return div
 }
 ///
 /// worker message pipeline to main thread
 ///
-self.onmessage = function(e) {                    /// * link worker input port
+self.onmessage = function(e) {         /// * link worker input port
     let k = e.data[0], v = e.data[1]
     switch (k) {
     case 'cmd':
         let forth =
             Module.cwrap('forth', null, ['number', 'string'])
-        forth(0, v);                  break
-    case 'ss' : send_ss();            break
-    case 'dc' : send_dict();          break
-    case 'mm' : send_mem(v[0], v[1]); break
-    case 'ui' : send_ui();            break
-    default: postMessage('unknown type');
+        forth(0, v)
+        break
+    case 'dc':
+        let d = get_dict()
+        res('dc', d[0])
+        res('us', d[1])
+        break
+    case 'ss': res('ss', '[ '+ get_ss() + ' ]'); break
+    case 'mm': res(get_mem(v[0], v[1]));         break
+    case 'ui': res(get_ui());                    break
+    default  : res('unknown type');
     }
 }
