@@ -3,7 +3,6 @@
 /// @brief weForth - Jolt core implementation
 ///
 'use strict'
-import './js/jolt-physics.wasm-compat.js'
 
 ///> transformation macros
 const V3G = v=> new THREE.Vector3(v.GetX(), v.GetY(), v.GetZ())      // => GUI vec3
