@@ -4,23 +4,17 @@
 ///
 'use strict'
 
-import JoltCore from './jolt_core.js'
-
-const MAX_OBJ  = 100
-const PERIOD   = 0.25
 const MAX_TYPE = 4
 const COLOR_LST= [0xff0000, 0xd9b1a3, 0x4d4139, 0xccad33 ]
 
-function rrnd(n) { return n * (Math.random() - 0.5) }
-
-function randomQuat() {
+function rnd(n) { return n * (Math.random() - 0.5) }
+function rnd_q4() {
     let v3 = new Jolt.Vec3(0.001 + Math.random(), Math.random(), Math.random())
     let q4 = Jolt.Quat.prototype.sRotation(v3.Normalized(), 2 * Math.PI * Math.random())
     Jolt.destroy(v3)
     return q4
 }
-
-function randomShape(t) {
+function rnd_shape(t) {
     if (t >= MAX_TYPE) t = 0
     let shape  = null
 
@@ -59,6 +53,16 @@ function randomShape(t) {
     return shape
 }
 
+export default function(jolt) {
+    let idx   = Math.floor(Math.random() * MAX_TYPE)
+    let shape = rnd_shape(idx)
+    let pos   = new Jolt.RVec3(rnd(20), 20, rnd(20))
+    let rot   = rnd_q4()
+    jolt.add(shape, pos, rot, COLOR_LST[idx])
+}
+
+/*
+import JoltCore from './jolt_core.js'
 import initJolt from './js/jolt-physics.wasm-compat.js'
 
 (function() {
@@ -77,7 +81,7 @@ import initJolt from './js/jolt-physics.wasm-compat.js'
             if (jolt.length < MAX_OBJ && t > next) {
                 let idx   = Math.floor(Math.random() * MAX_TYPE)
                 let shape = randomShape(idx)
-                let pos   = new Jolt.RVec3(rrnd(25), 15, rrnd(25))
+                let pos   = new Jolt.RVec3(rrnd(25), 20, rnd(25))
                 let rot   = randomQuat()
                 jolt.add(shape, pos, rot, COLOR_LST[idx])
                 next = t + PERIOD
@@ -88,4 +92,4 @@ import initJolt from './js/jolt-physics.wasm-compat.js'
         jolt.render()
     })
 })();
-
+*/
