@@ -120,10 +120,10 @@ function objFactory(body, color) {
 ///> update - GUI update callback
 ///
 export default class {
-    constructor(w, h, px_ratio, callback) {
-        this.arena = document.getElementById('arena')
-        this.arena.innerHTML = ""
-
+    constructor(div, w, h, px_ratio, callback) {
+        this.arena = document.getElementById(div)
+        this.arena.innerHTML = ''
+        
         if (WebGL.isWebGLAvailable()) {
             this.update = callback
 
