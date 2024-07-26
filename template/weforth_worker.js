@@ -8,6 +8,7 @@ Module = { print: e=>res('txt', e) }      ///> WASM print interface => output qu
 
 var vm_dict_len = 0
 var vm_mem_addr = 0
+var vm_boot_idx = 0
 
 importScripts('weforth_helper.js')        /// * vocabulary handler
 importScripts('weforth.js')               /// * load js emscripten created
@@ -23,32 +24,29 @@ function get_ss() {
     const len = wa.vm_ss_idx()>0 ? wa.vm_ss_idx() : 0
     const ss  = toa(wa.vm_ss(), len)
     const top = toa(wa.top, 1)
-    const tos = v => Number.isInteger(v) ? v.toString(base) : Math.round(v*100000)/100000
-    
+    const tos = v => Number.isInteger(v)
+          ? v.toString(base)
+          : Math.round(v*100000)/100000   /// * better than toFixed()
     let   div = []
     ss.forEach(v=>div.push(tos(v)))
     div.push(tos(top[0]))
     
     return div.join(' ')
 }
-function get_dict() {
+function get_dict(usr=false) {
     const wa  = wasmExports
     const len = wa.vm_dict_idx()
-    if (vm_dict_len == len) return       /// * dict no change, skip
+    if (vm_dict_len == len) return ''     /// * dict no change, use cached
     
     vm_dict_len = len
     const dict = Module.cwrap('vm_dict', 'string', ['number'])
-    let nlst = []                        ///< built-in words list
-    let clst = null                      ///< colon word list
-    for (let i = 0; i < len; ++i) {
+    let lst = []                          ///< built-in words list
+    for (let i = usr ? vm_boot_idx : 0; i < len; ++i) {
         let nm = dict(i)
-        if (clst) clst.push(nm)
-        else {
-            if (nm[0]!='_') nlst.push(nm)
-            if (nm == 'boot') clst = []
-        }
+        if (nm=='boot') vm_boot_idx = i+1 ///< capture the start of colon words
+        if (nm[0] != '_') lst.push(nm)    ///< collect words
     }
-    return [ voc_tree(nlst), colon_words(clst) ]
+    return usr ? colon_words(lst) : voc_tree(lst)
 }
 function get_mem(off, len) {
     const wa = wasmExports
@@ -82,10 +80,11 @@ self.onmessage = function(e) {         ///> worker input message queue
             Module.cwrap('forth', null, ['number', 'string'])
         forth(0, v)                    /// * calls Module.print
         break
-    case 'dc': res('dc', get_dict());            break
-    case 'ss': res('ss', '[ '+ get_ss() + ' ]'); break
-    case 'mm': res('mm', get_mem(v[0], v[1]));   break
-    case 'ui': res('ui', get_ui());              break
-    default  : res('unknown type');
+    case 'dc' : res('dc',  get_dict());            break
+    case 'usr': res('usr', get_dict(true));        break
+    case 'ss' : res('ss',  '[ '+ get_ss() + ' ]'); break
+    case 'mm' : res('mm',  get_mem(v[0], v[1]));   break
+    case 'ui' : res('ui',  get_ui());              break
+    default   : res('unknown type');
     }
 }

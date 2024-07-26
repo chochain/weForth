@@ -229,8 +229,8 @@ function _see(w, n=0) {
     _show_pf(w.pf2)                            /// * aft.{pf2}.next
     return div
 }
-function voc_tree(nlst) {
-    const voc = nlst.reduce((r,n)=>{
+function voc_tree(lst) {
+    const voc = lst.reduce((r,n)=>{
         const c = _category(n)                 ///< get category
         if (c) {
             if (r[c]) r[c].push(n); else r[c] = [ n ]
@@ -245,13 +245,12 @@ function voc_tree(nlst) {
     })
     return div
 }
-function colon_words(nlst) {
+function colon_words(lst) {
     let div = '<ul class="tree"><li class="open"><a href="#">User</a><ul>'
-    for (let i = nlst.length - 1;
-         i >= 0 && nlst[i] != 'boot'; --i) {
-        let xt = nlst[i] // todo: _see(nlst[i])
+    for (let i = lst.length - 1; i >= 0; --i) {
+        let xt = lst[i] // todo: _see(lst[i])
         div += '<li><a href="#"><div class="tip">' +
-            `${_esc(nlst[i])}<i>${xt}</i>` +
+            `${_esc(lst[i])}<i>${xt}</i>` +
             '</div></a></li>'
     }
     return div+'</li></ul>'
