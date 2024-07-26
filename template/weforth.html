@@ -22,7 +22,8 @@
           <span style='float:left; position:fixed'>
             <b>weForth</b> - Web eForth - <span id='fname'></span>
           </span>
-          <i class='material-icons' style='float:right' onclick='toggle("mm")'>dataset</i>
+          <i class='material-icons' style='float:right' onclick='toggle("phx")'>view_in_ar</i>
+          <i class='material-icons' style='float:right' onclick='toggle("mm")'>memory</i>
           <i class='material-icons' style='float:right' onclick='(toggle("edt"),cm_refresh())'>edit_square</i>
         </cite>
         <div id='edt' class='row' style='display:none'>
@@ -47,8 +48,8 @@
       </div>
       <div id='dsp' class='dsp' style='width:60%'>
         <div id='ctx' class='layer' style='z-index:10'></div>
-        <div id='arena' style='z-index:11; position:absolute; left:0px; top:0px'></div>
-        <pre id='mm' class='mem' style='z-index:12; display:none'></pre>
+        <div id='phx' style='z-index:11; position:absolute; left:0px; top:0px'></div>
+        <pre id='mm' class='mem' style='z-index:100; display:none'></pre>
       </div>
     <script type='text/javascript'>
     const $ = s=>s[0]=='#' && !s.includes(' ') ? /* ala jQuery */
@@ -109,17 +110,16 @@
     const vm_req = (k, v)=>vm.postMessage([k, v]) ///< send request to vm worker
     vm.onmessage = e=>{                           ///< handle response from vm worker
         let k = e.data[0], v = e.data[1]
-        console.log(e)
+        if (!v) return
         switch (k) {
         case 'txt': to_txt(v);         break
-        case 'dc' :
-            show_dict(v[0]);
-            usr.innerHTML = v[1];      break
+        case 'dc' : show_dict(v);      break
+        case 'usr': usr.innerHTML = v; break
         case 'ss' : ss.innerHTML  = v; break
         case 'mm' : mm.innerHTML  = v; break
         case 'js' : logo_ex(v);        break
         case 'ui' : jolt_ex(v);        break
-        default: console.log('onmessage['+k+'].error=>'+e)
+        default: console.log('vm_res['+k+'].error=>'+v)
         }
     }
     clear_txt()
@@ -137,7 +137,7 @@
             }
         }
         if (dc.style.display!='none') {          /// * query dictionary
-            vm_req('dc')
+            vm_req('usr')
         }
     }
     function show_dict(div) {
@@ -164,11 +164,13 @@
     window.onload = ()=>{
         setTimeout(()=>{
             logo.reset()
-            vm_req('mm', [0, 640])           /// * query mem
+            vm_req('mm', [0, 640])            /// * query parameter memory
+            vm_req('dc')                      /// * query built-in dictionary
+            vm_req('usr')
         }, 1000)
     }
     </script>
-    <!--script src='./js/three/three.min.js'></script>
+    <script src='./js/three/three.min.js'></script>
     <script src='./js/three/OrbitControls.js'></script>
     <script src='./js/three/WebGL.js'></script>
     <script src='./js/three/stats.min.js'></script>
@@ -178,16 +180,17 @@
     import new_obj  from './weforth_jolt.js'
     const MAX_OBJ = 100
     const PERIOD  = 0.25
-    const vu   = document.getElementById('dsp')
+    const dsp  = $('#dsp')
     let   jolt = null
 
     initJolt().then(Jolt=>{
         window.Jolt = Jolt
-        jolt = new JoltCore(
-            vu.offsetWidth, vu.offsetHeight,
-            window.devicePixelRatio, onUpdate)
+        jolt = new JoltCore('phx',
+            dsp.offsetWidth, dsp.offsetHeight, window.devicePixelRatio,
+            onUpdate)
+        console.log(jolt)
         window.addEventListener('resize',
-            ()=>jolt.resize(vu.offsetWidth, vu.offsetHeight), false)
+            ()=>jolt.resize(dsp.offsetWidth, dsp.offsetHeight), false)
 
         let next = PERIOD
         function onUpdate(t) {
@@ -200,6 +203,6 @@
         jolt.addMeshFloor(30, 1, 4, 0, 5, 0)
         jolt.render()
     })
-    </script-->
+    </script>
   </body>
 </html>
