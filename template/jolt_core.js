@@ -120,11 +120,15 @@ function objFactory(body, color) {
 ///> update - GUI update callback
 ///
 export default class {
-    constructor(div, w, h, px_ratio, callback) {
-        this.arena = document.getElementById(div)
-        this.arena.innerHTML = ''
+    constructor(vport, z, px_ratio, callback) {
+        this.vu    = document.getElementById(vport)
+        this.vu.innerHTML +=
+            `<div id = "phx" class='mem' style="z-index:${z}"></div>`
+        this.arena = document.getElementById('phx')
+        this.arena.innerHTML = ""
         
         if (WebGL.isWebGLAvailable()) {
+            let w = dsp.offsetWidth, h = dsp.offsetHeight
             this.update = callback
 
             this._initGraphics(w, h, px_ratio)  /// => rndr, cam, ctrl,light, scene, stats
@@ -145,7 +149,8 @@ export default class {
         this.ospace = {}
         this.length = 0
     }
-    resize(w, h) {
+    resize() {
+        let w = this.dsp.offsetWidth, h = this.dsp.offsetHeight
         this.cam.aspect = w / h
         this.cam.updateProjectionMatrix()
         this.rndr.setSize(w, h)

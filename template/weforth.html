@@ -48,7 +48,6 @@
       </div>
       <div id='dsp' class='dsp' style='width:60%'>
         <div id='ctx' class='layer' style='z-index:10'></div>
-        <div id='phx' style='z-index:11; position:absolute; left:0px; top:0px'></div>
         <pre id='mm' class='mem' style='z-index:100; display:none'></pre>
       </div>
     <script type='text/javascript'>
@@ -180,17 +179,13 @@
     import new_obj  from './weforth_jolt.js'
     const MAX_OBJ = 100
     const PERIOD  = 0.25
-    const dsp  = $('#dsp')
-    let   jolt = null
+    let   jolt    = null                      ///> physics engine handle
 
     initJolt().then(Jolt=>{
         window.Jolt = Jolt
-        jolt = new JoltCore('phx',
-            dsp.offsetWidth, dsp.offsetHeight, window.devicePixelRatio,
-            onUpdate)
+        jolt = new JoltCore('dsp', 11, window.devicePixelRatio, onUpdate)
         console.log(jolt)
-        window.addEventListener('resize',
-            ()=>jolt.resize(dsp.offsetWidth, dsp.offsetHeight), false)
+        window.addEventListener('resize', ()=>jolt.resize(), false)
 
         let next = PERIOD
         function onUpdate(t) {
