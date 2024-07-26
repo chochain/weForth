@@ -3,7 +3,7 @@ CC = g++ -Wall -O2
 
 SRC = ./src/ceforth.cpp
 
-EXP = _main,_forth,_vm_base,_vm_dflt,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top
+EXP = _main,_forth,_vm_base,_vm_dflt,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem_idx,_vm_mem,_top
 
 HTML = \
 	template/weforth.html \
