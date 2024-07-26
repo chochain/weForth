@@ -121,14 +121,14 @@ function objFactory(body, color) {
 ///
 export default class {
     constructor(vport, z, px_ratio, callback) {
-        this.vu    = document.getElementById(vport)
-        this.vu.innerHTML +=
-            `<div id = "phx" class='mem' style="z-index:${z}"></div>`
-        this.arena = document.getElementById('phx')
-        this.arena.innerHTML = ""
+        let v = this.vu    = document.getElementById(vport)
+        v.innerHTML +=
+            `<div id='phx' class='sfc' style="z-index:${z}"></div>`
+        let e = this.arena = document.getElementById('phx')
+        e.innerHTML = ''
         
         if (WebGL.isWebGLAvailable()) {
-            let w = dsp.offsetWidth, h = dsp.offsetHeight
+            let w = v.offsetWidth, h = v.offsetHeight
             this.update = callback
 
             this._initGraphics(w, h, px_ratio)  /// => rndr, cam, ctrl,light, scene, stats
@@ -136,7 +136,7 @@ export default class {
         }
         else {
             const warning = WebGL.getWebGLErrorMessage()
-            this.arena.appendChild(warning)
+            e.appendChild(warning)
         }
         // The memory profiler doesn't have an ID so we can't mess with it in css, set an ID here
         let st = document.getElementById("memoryprofiler_canvas")
@@ -150,7 +150,7 @@ export default class {
         this.length = 0
     }
     resize() {
-        let w = this.dsp.offsetWidth, h = this.dsp.offsetHeight
+        let w = this.vu.offsetWidth, h = this.vu.offsetHeight
         this.cam.aspect = w / h
         this.cam.updateProjectionMatrix()
         this.rndr.setSize(w, h)
