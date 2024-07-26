@@ -650,7 +650,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
     CODE("@",     IU w = UINT(POP()); PUSH(CELL(w)));           // w -- n
     CODE("!",     IU w = UINT(POP()); CELL(w) = POP(););        // n w --
     CODE(",",     DU n = POP(); add_du(n));                     // n -- 
-    CODE("cell",  IU i = UINT(POP()); PUSH(i * sizeof(DU)));    // n -- n'
+    CODE("cells", IU i = UINT(POP()); PUSH(i * sizeof(DU)));    // n -- n'
     CODE("allot",                                               // n --
          IU n = UINT(POP());
          for (int i=0; i < n; i+=sizeof(DU)) add_du(DU0));
@@ -758,9 +758,9 @@ void forth_init() {
     static bool init = false;
     if (init) return;                    ///> check dictionary initilized
     
-    base = (IU*)MEM(pmem.idx);           ///< set pointer to base
+    base = (IU*)MEM(HERE);               ///< set pointer to base
     add_iu(10);                          ///< allocate space for base
-    dflt = (IU*)MEM(pmem.idx);           ///< set pointer to dfmt
+    dflt = (IU*)MEM(HERE);               ///< set pointer to dfmt
     add_iu(USE_FLOAT);
     
     dict_compile();                      ///> compile dictionary
@@ -866,6 +866,7 @@ int  vm_base()       { return *base;    }
 int  vm_dflt()       { return *dflt;    }
 int  vm_ss_idx()     { return ss.idx;   }
 int  vm_dict_idx()   { return dict.idx; }
+int  vm_mem_idx()    { return pmem.idx; }       // HERE
 DU   *vm_ss()        { return &ss[0];   }
 char *vm_dict(int i) { return (char*)dict[i].name; }
 char *vm_mem()       { return (char*)&pmem[0]; }
