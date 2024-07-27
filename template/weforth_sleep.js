@@ -1,6 +1,10 @@
 /// @file
 /// @brief weForth - service worker for sleep handler
 ///
+/// Note: currently only Safari support WorkerNavigator.serviceWorker
+///       so, navigator.serviceWorker registration need to happen only in
+///       the main module (or HTML)
+///
 addEventListener('install',  () => self.skipWaiting())
 addEventListener('activate', () => self.clients.claim())
 addEventListener('fetch', e => {
