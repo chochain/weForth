@@ -60,36 +60,3 @@ export default function(jolt) {
     let rot   = rnd_q4()
     jolt.add(shape, pos, rot, COLOR_LST[idx])
 }
-
-/*
-import JoltCore from './jolt_core.js'
-import initJolt from './js/jolt-physics.wasm-compat.js'
-
-(function() {
-    const vu = document.getElementById('dsp')
-    let jolt = null
-    initJolt().then(Jolt=>{
-        window.Jolt = Jolt
-        jolt = new JoltCore(
-            vu.offsetWidth, vu.offsetHeight,
-            window.devicePixelRatio, onUpdate)
-        window.addEventListener('resize',
-            ()=>jolt.resize(vu.offsetWidth, vu.offsetHeight), false)
-
-        let next = PERIOD
-        function onUpdate(t) {
-            if (jolt.length < MAX_OBJ && t > next) {
-                let idx   = Math.floor(Math.random() * MAX_TYPE)
-                let shape = randomShape(idx)
-                let pos   = new Jolt.RVec3(rrnd(25), 20, rnd(25))
-                let rot   = randomQuat()
-                jolt.add(shape, pos, rot, COLOR_LST[idx])
-                next = t + PERIOD
-            }
-        }
-        ///> start Jolt engine
-        jolt.addMeshFloor(30, 1, 4, 0, 5, 0)
-        jolt.render()
-    })
-})();
-*/
