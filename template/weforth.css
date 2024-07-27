@@ -28,15 +28,17 @@ h3    { color: #fc4; margin: 0; }
 .code { height:36px; width:100%; font-size:24px; padding:6px; margin-bottom:3px; }
 .cmd  { color:#48f; margin:2px; }
 .txt  { display:block; padding:8px; width:auto; font-family:monospace; overflow-y:scroll; }
-.mem  {
-    padding:8px;
+/* drawing area i.e. context */
+.gui  {
+    margin:0 6px 0 6px;
+    position:relative; width:60%; height:100%;
+}
+.gui .mem {
     position:absolute; left:0; top:0; width:100%; height:100%;
     font-family:monospace; overflow-y:scroll; font-size:1.2em;
     color:#000; background-color:#fff;
     opacity:0.75;
 }
-/* drawing area i.e. context */
-.gui  { padding:8px; position:relative; width:60%; height:100%; }
 .gui .sfc {             /* overlapped context surface */
     position:absolute;
     left:0; top:0; width:100%; height:100%;
