@@ -29,15 +29,14 @@ h3    { color: #fc4; margin: 0; }
 .cmd  { color:#48f; margin:2px; }
 .txt  { display:block; padding:8px; width:auto; font-family:monospace; overflow-y:scroll; }
 .mem  {
-    position:absolute;
-    display:block; padding:8px;
-    left:0; top:0; width:100%; height:100%;
+    padding:8px;
+    position:absolute; left:0; top:0; width:100%; height:100%;
     font-family:monospace; overflow-y:scroll; font-size:1.2em;
-    color:#444;
-    opacity:0.4;
+    color:#000; background-color:#fff;
+    opacity:0.75;
 }
 /* drawing area i.e. context */
-.gui  { position:relative; width:70%; height:100%; padding:8px; }
+.gui  { padding:8px; position:relative; width:60%; height:100%; }
 .gui .sfc {             /* overlapped context surface */
     position:absolute;
     left:0; top:0; width:100%; height:100%;
