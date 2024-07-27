@@ -48,12 +48,12 @@ function get_dict(usr=false) {
     }
     return usr ? colon_words(lst) : voc_tree(lst)
 }
-function get_mem(idx, len=0x80) {
+function get_mem(idx=-1, len=0x320) {
     const wa  = wasmExports
     const hx  = '0123456789ABCDEF'
     const h2  = v=>hx[(v>>4)&0xf]+hx[v&0xf]
     const h4  = v=>h2(v>>8)+h2(v)
-    const off = idx < 0
+    const off = idx < 0                 ///> idx < 0 => use HERE
           ? (wa.vm_mem_idx() > len ? wa.vm_mem_idx() - len : 0)
           : idx
     const adr = wa.vm_mem() + off
@@ -87,7 +87,7 @@ self.onmessage = function(e) {         ///> worker input message queue
     case 'dc' : res('dc',  get_dict());            break
     case 'usr': res('usr', get_dict(true));        break
     case 'ss' : res('ss',  '[ '+ get_ss() + ' ]'); break
-    case 'mm' : res('mm',  get_mem(v[0], v[1]));   break
+    case 'mm' : res('mm',  !v ? get_mem() : get_mem(v[0], v[1])); break
     case 'ui' : res('ui',  get_ui());              break
     default   : res('unknown type');
     }

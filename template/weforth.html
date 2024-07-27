@@ -133,7 +133,7 @@
             vm_req('cmd', cmd)                   /// * cmd to worker
             vm_req('ss')                         /// * query ss
             if (mm.style.display!='none') {      
-                vm_req('mm', [-1])               /// * query mem
+                vm_req('mm')                     /// * query mem
             }
         }
         if (dc.style.display!='none') {          /// * query dictionary
@@ -164,7 +164,7 @@
     window.onload = ()=>{
         setTimeout(()=>{
             logo.reset()
-            vm_req('mm', [-1])                /// * query parameter memory
+            vm_req('mm')                      /// * query parameter memory
             vm_req('dc')                      /// * query built-in dictionary
             vm_req('usr')
         }, 1000)
