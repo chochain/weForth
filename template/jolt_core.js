@@ -120,11 +120,9 @@ function objFactory(body, color) {
 ///> update - GUI update callback
 ///
 export default class {
-    constructor(vport, z, px_ratio, callback) {
+    constructor(vport, div, px_ratio, callback) {
         let v = this.vu    = document.getElementById(vport)
-        v.innerHTML +=
-            `<div id='phx' class='sfc' style="z-index:${z}"></div>`
-        let e = this.arena = document.getElementById('phx')
+        let e = this.arena = document.getElementById(div)
         e.innerHTML = ''
         
         if (WebGL.isWebGLAvailable()) {
@@ -148,6 +146,8 @@ export default class {
         ///> create object space
         this.ospace = {}
         this.length = 0
+        
+        new ResizeObserver(e=>this.resize()).observe(e)  /// * watch canvas resizing
     }
     resize() {
         let w = this.vu.offsetWidth, h = this.vu.offsetHeight
