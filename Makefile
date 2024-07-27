@@ -12,6 +12,7 @@ HTML = \
 	template/weforth_logo.js \
 	template/weforth_helper.js \
 	template/weforth_worker.js \
+	template/weforth_sleep.js \
 	template/jolt_core.js \
 	template/weforth_jolt.js
 

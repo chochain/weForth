@@ -87,7 +87,7 @@ typedef uint16_t        IU;    ///< instruction pointer unit
     #define delay(ms)       EM_ASM({                                      \
                                 const xhr = new XMLHttpRequest();         \
                                 xhr.timeout = $0;                         \
-                                xhr.open('GET', "/SLEEP?t="+$0, false); \
+                                xhr.open('GET', "/SLEEP?t="+$0, false);   \
                                 try { xhr.send(); } catch(e) {}           \
                             }, ms)
 /*
