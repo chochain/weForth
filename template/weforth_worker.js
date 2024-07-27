@@ -48,14 +48,18 @@ function get_dict(usr=false) {
     }
     return usr ? colon_words(lst) : voc_tree(lst)
 }
-function get_mem(off, len) {
-    const wa = wasmExports
-    const hx = '0123456789ABCDEF'
-    const h2 = v=>hx[(v>>4)&0xf]+hx[v&0xf]
-    const h4 = v=>h2(v>>8)+h2(v)
+function get_mem(idx, len=0x80) {
+    const wa  = wasmExports
+    const hx  = '0123456789ABCDEF'
+    const h2  = v=>hx[(v>>4)&0xf]+hx[v&0xf]
+    const h4  = v=>h2(v>>8)+h2(v)
+    const off = idx < 0
+          ? (wa.vm_mem_idx() > len ? wa.vm_mem_idx() - len : 0)
+          : idx
     const adr = wa.vm_mem() + off
-    const mem = new Uint8Array(wa.memory.buffer, adr, len)
     const n   = (off + len + 0x10) & ~0xf
+    const mem = new Uint8Array(wa.memory.buffer, adr, len)
+    
     let div = '', bt = '', tx = ''
     for (let j = off&~0xf; j < n; j+=0x10) {
         for (let i = 0; i < 0x10; i++) {
