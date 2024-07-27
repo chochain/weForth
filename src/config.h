@@ -84,7 +84,25 @@ typedef uint16_t        IU;    ///< instruction pointer unit
 #elif  DO_WASM
     #include <emscripten.h>
     #define millis()        EM_ASM_INT({ return Date.now(); })
-    #define delay(ms)       EM_ASM({ let t = setTimeout(()=>clearTimeout(t), $0); }, ms)
+    #define delay(ms)       EM_ASM({                                      \
+                                const xhr = new XMLHttpRequest();         \
+                                xhr.timeout = $0;                         \
+                                xhr.open('GET', "/SLEEP?t="+$0, false); \
+                                try { xhr.send(); } catch(e) {}           \
+                            }, ms)
+/*
+    #define delay(ms)       EM_ASM({                                      \
+                                const t1 = Date.now() + $0;               \
+                                while(Date.now() < t1);                   \
+                            }, ms)
+    #define delay(ms)       EM_ASM({                                      \
+                                const b = wa.memory.buffer;               \
+                                const a = new Int32Array(b);              \
+                                a[0] = 0;                                 \
+                                Atomics.wait(a,0,0,$0);                   \
+                                }, ms)
+    #define delay(ms)       emscripten_sleep_with_yield(ms)
+*/
     #define yield()         /* JS is async */
 
 #else  // !(ARDUINO || ESP32) && !DO_WASM
