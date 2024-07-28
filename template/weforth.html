@@ -55,7 +55,8 @@
     const $ = s=>s[0]=='#' && !s.includes(' ') ? /* ala jQuery */
           document.querySelector(s) : document.querySelectorAll(s)
     const dir = $('#dir'), usr = $('#usr'), dc = $('#dc')
-    const tib = $('#tib'), txt = $('#txt'), ss = $('#ss'), mm = $('#mm')
+    const tib = $('#tib'), txt = $('#txt'), ss = $('#ss')
+    const mm  = $('#mm'),  phx = $('#phx')
     const cm  = CodeMirror.fromTextArea($('#cm'), {
         lineNumbers: true, styleActiveLine: true,
         mode: 'forth',                            /// * Forth language
@@ -117,8 +118,7 @@
         case 'usr': usr.innerHTML = v; break
         case 'ss' : ss.innerHTML  = v; break
         case 'mm' : mm.innerHTML  = v; break
-        case 'js' : logo_ex(v);        break
-        case 'ui' : jolt_ex(v);        break
+        case 'js' : phx.display=='none' ? logo_ex(v) : jolt_ex(v);  break
         default: console.log('vm_res['+k+'].error=>'+v)
         }
     }
@@ -179,27 +179,19 @@
     ///
     /// Physics Engine (JOLT)
     ///
-    const MAX_OBJ = 100
-    const PERIOD  = 0.25
-
     import initJolt from './js/jolt-physics.wasm-compat.js'
     import JoltCore from './jolt_core.js'
-    import new_obj  from './weforth_jolt.js'
+    import jolt_update from './weforth_jolt.js'
 
     let   jolt    = null                          ///> physics engine handle
-    let   next    = PERIOD
-    function jolt_update(t) {
-        if (jolt.length < MAX_OBJ && t > next) {
-            new_obj(jolt)
-            next = t + PERIOD
-        }
-    }
+    let   phx_q   = []
+
     initJolt().then(Jolt=>{
         window.Jolt = Jolt
         jolt = new JoltCore('vu', 'phx', window.devicePixelRatio, jolt_update)
         ///> start Jolt engine
         jolt.addMeshFloor(30, 1, 4, 0, 5, 0)
-        jolt.render()
+        jolt.render()                             ///< kick off WebGL loop (requestAnimationFrame)
     })
     const jolt_ex = (ops)=>Function(              ///< scope limiting eval
         `"use strict"; this.update('${ops}')`

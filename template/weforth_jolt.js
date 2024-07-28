@@ -53,10 +53,19 @@ function rnd_shape(t) {
     return shape
 }
 
+const MAX_OBJ = 100
+const PERIOD  = 0.25
+let   next    = 0
+
 export default function(jolt) {
+    let t = jolt.time
+    if (jolt.length >= MAX_OBJ || t < next) return
+    
     let idx   = Math.floor(Math.random() * MAX_TYPE)
     let shape = rnd_shape(idx)
     let pos   = new Jolt.RVec3(rnd(20), 20, rnd(20))
     let rot   = rnd_q4()
+    
     jolt.add(shape, pos, rot, COLOR_LST[idx])
+    next = t + PERIOD
 }
