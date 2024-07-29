@@ -87,7 +87,7 @@ typedef enum {
 ///
 ///> VM states (single task)
 ///
-DU   top     = DU_1;    ///< top of stack (cached)
+DU   top     = -DU1;    ///< top of stack (cached)
 IU   IP      = 0;       ///< current instruction pointer
 bool run     = true;    ///< VM nest() control
 bool compile = false;   ///< compiler flag
@@ -180,8 +180,8 @@ void nest() {
                 dp++;                  ///> go one level deeper
             }
             else if (ix == _NXT) {     ///> cached NEXT, LIT handlers,
-                if (ABS(rs[-1] -= 1) > DU_EPS) {     ///> loop done?
-                    IP = *(IU*)MEM(IP);              ///> 10% faster on AMD, 5% on ESP32
+                if (GT(rs[-1] -= DU1, -DU1)) {///> loop done?
+                    IP = *(IU*)MEM(IP);       ///> 10% faster on AMD, 5% on ESP32
                 }
                 else { IP += sizeof(IU); rs.pop(); } ///> perhaps due to shallow pipeline
             }
@@ -363,7 +363,7 @@ void ss_dump() {
             U8 d = (U8)MOD(n,b);  n /= b;
             buf[--i] = d > 9 ? (d-10)+'a' : d+'0';
         }
-        if (v < 0) buf[--i]='-';
+        if (v < DU0) buf[--i]='-';
         return &buf[i];
 #endif // USE_FLOAT
     };
@@ -458,12 +458,12 @@ void dict_compile() {  ///< compile primitive words into dictionary
     /// @brief - DO NOT change the sequence here (see forth_opcode enum)
     ///        - the build-in control words have extra last blank char
     /// @{
-    CODE("exit ",   {});                                // dict[0] also the storage for base
-    CODE("next ",                                       // handled in nest()
-         if ((rs[-1] -= 1) >= 0) IP = *(IU*)MEM(IP);    // rs[-1]-=1 saved 200ms/1M cycles
+    CODE("exit ",   {});                                      // dict[0] also the storage for base
+    CODE("next ",                                             // handled in nest()
+         if (GT(rs[-1] -= DU1, -DU1)) IP = *(IU*)MEM(IP);     // rs[-1]-=1 saved 200ms/1M cycles
          else { IP += sizeof(IU); rs.pop(); });
-    CODE("loop ",                                       // handled in nest()
-         if ((rs[-1] += 1) < rs[-2]) IP = *(IU*)MEM(IP);
+    CODE("loop ",                                             // handled in nest()
+         if (GT(rs[-2], rs[-1] += DU1)) IP = *(IU*)MEM(IP);
          else { IP += sizeof(IU); rs.pop(); rs.pop(); });
     CODE("lit ",    PUSH(*(DU*)MEM(IP)); IP += sizeof(DU));
     CODE("var ",    PUSH(IP);            IP += sizeof(DU));
@@ -533,15 +533,15 @@ void dict_compile() {  ///< compile primitive words into dictionary
     /// @}
     /// @defgroup Logic ops
     /// @{
-    CODE("0=",      top = BOOL(top == DU0));
-    CODE("0<",      top = BOOL(top <  DU0));
-    CODE("0>",      top = BOOL(top >  DU0));
-    CODE("=",       top = BOOL(ss.pop() == top));
-    CODE(">",       top = BOOL(ss.pop() >  top));
-    CODE("<",       top = BOOL(ss.pop() <  top));
-    CODE("<>",      top = BOOL(ss.pop() != top));
-    CODE(">=",      top = BOOL(ss.pop() >= top));
-    CODE("<=",      top = BOOL(ss.pop() <= top));
+    CODE("0=",      top = BOOL(ZEQ(top)));
+    CODE("0<",      top = BOOL(LT(top, DU0)));
+    CODE("0>",      top = BOOL(GT(top, DU0)));
+    CODE("=",       top = BOOL(EQ(ss.pop(), top)));
+    CODE(">",       top = BOOL(GT(ss.pop(), top)));
+    CODE("<",       top = BOOL(LT(ss.pop(), top)));
+    CODE("<>",      top = BOOL(!EQ(ss.pop(), top)));
+    CODE(">=",      top = BOOL(!LT(ss.pop(), top)));
+    CODE("<=",      top = BOOL(!GT(ss.pop(), top)));
     CODE("u<",      top = BOOL(UINT(ss.pop()) < UINT(top)));
     CODE("u>",      top = BOOL(UINT(ss.pop()) > UINT(top)));
     /// @}
@@ -659,7 +659,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
     /// @}
     /// @defgroup Debug ops
     /// @{
-    CODE("abort", top = DU_1; ss.clear(); rs.clear());          // clear ss, rs
+    CODE("abort", top = -DU1; ss.clear(); rs.clear());          // clear ss, rs
     CODE("here",  PUSH(HERE));
     CODE("'",     IU w = find(word()); if (w) PUSH(w));
     CODE(".s",    ss_dump());
@@ -693,7 +693,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
          U8 *fn = MEM(POP());               // file name
          forth_include((const char*)fn));   // include file
 #if DO_WASM    
-    CODE("JS",    call_js())                // Javascript interface
+    CODE("JS",    call_js());               // Javascript interface
 #else  // !DO_WASM
     CODE("bye",   exit(0));
 #endif // DO_WASM    
