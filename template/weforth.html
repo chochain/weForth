@@ -132,7 +132,7 @@
             show_cmd(cmd)                        /// * display in HTML
             vm_req('cmd', cmd)                   /// * cmd to worker
             vm_req('ss')                         /// * query ss
-            if (mm.style.display!='none') {      
+            if (mm.style.display!='none') {
                 vm_req('mm')                     /// * query mem
             }
         }
@@ -185,18 +185,17 @@
 
     const R_PX  = window.devicePixelRatio          ///> pixel ratio for WebGL
     let   jolt  = null                             ///> physics engine handle
-    let   phx_q = []
 
     jolt_init().then(Jolt=>{
         window.Jolt = Jolt
         jolt = new JoltCore('vu', 'phx', R_PX, jolt_update)
         ///> start Jolt engine
-        jolt.addMeshFloor(30, 1, 4, 0, -5, 0)
+        jolt.addMeshFloor(new Jolt.Vec3(0,-5,0), 30, 1, 0.8)
         jolt.addMarker(new Jolt.Vec3(0,0,0), 1, 0x0000ff)
         jolt.render()                             ///< kick off WebGL loop (requestAnimationFrame)
     })
-    const jolt_ex = (ops)=>Function(              ///< scope limiting eval
-        `"use strict"; this.update('${ops}')`
+    const jolt_ex = (req)=>Function(              ///< scope limiting eval
+        `"use strict"; this.enqueue('${req}')`
     ).bind(jolt)()
     </script>
   </body>
