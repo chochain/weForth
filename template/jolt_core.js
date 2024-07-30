@@ -145,6 +145,7 @@ export default class {
         this.time   = 0
         ///> create object space
         this.ospace = {}
+        this.req_q  = []
         this.length = 0
         
         new ResizeObserver(e=>this.resize()).observe(e)  /// * watch canvas resizing
@@ -156,9 +157,9 @@ export default class {
         this.rndr.setSize(w, h)
     }
     render() {
-        requestAnimationFrame(()=>this.render())        // enqueue GUI loop
+        requestAnimationFrame(()=>this.render())        // enqueue GUI event loop
 
-        if (this.update != null) this.update(this.time) // callback to front-end
+        if (this.update != null) this.update(this)      // callback to front-end
         /// update physics system
         for (let k in this.ospace) {
             let obj  = this.ospace[k]
@@ -185,11 +186,14 @@ export default class {
     add(shape, pos, rot, color=0xffffff) {
         let config = new Jolt.BodyCreationSettings(
             shape, pos, rot, Jolt.EMotionType_Dynamic, L_MOVING)
-        config.mRestitution = 0.5
+        config.mRestitution = 0.5                            // bounciness
         let body   = this.intf.CreateBody(config)
         Jolt.destroy(config)
 
         return this._addToScene(body, color)
+    }
+    enqueue(ops) {
+        this.req_q.push(ops)
     }
     addBox(pos, rot, halfExt, mtype, layer, color = 0xffffff) {
         let shape = new Jolt.BoxShape(halfExt, 0.05, null)
@@ -225,9 +229,9 @@ export default class {
 
         return this._addToScene(body, color)
     }
-    addMeshFloor(n, sz, maxH, posX, posY, posZ) {      // nxn, sz:tileSize at pos
+    addMeshFloor(pos, n, sz, h) {      // nxn, sz=tileSize, h:max_height at pos
         // Create regular grid of triangles
-        let hmap = (x, y)=> Math.sin(x / 2) * Math.cos(y / 3)
+        let hmap = (x, y)=> h * Math.sin(x / 2) * Math.cos(y / 3)
         let tlst = new Jolt.TriangleList;
         tlst.resize(n * n * 2);
         for (let x = 0; x < n; ++x) {
@@ -261,13 +265,12 @@ export default class {
         // Create body
         let config = new Jolt.BodyCreationSettings(
             shape,
-            new Jolt.RVec3(posX, posY, posZ),
-            new Jolt.Quat(0, 0, 0, 1),
+            pos, new Jolt.Quat(0, 0, 0, 1),
             Jolt.EMotionType_Static, L_STATIC)
         let body = this.intf.CreateBody(config)
         Jolt.destroy(config)
 
-        return this._addToScene(body, 0xc7c7c7)
+        return this._addToScene(body, 0xc0f0c0)
     }
     addLine(from, to, color) {
         const mati = new THREE.LineBasicMaterial({ color: color })
