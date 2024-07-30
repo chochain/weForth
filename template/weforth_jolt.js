@@ -4,8 +4,8 @@
 ///
 'use strict'
 
-const MAX_TYPE = 4
-const COLOR_LST= [0xff0000, 0xd9b1a3, 0x4d4139, 0xccad33 ]
+const MAX_TYPE = 5
+const COLOR_LST= [0xf04040, 0xa0a0f0, 0x80f080, 0xf0d080, 0xf0a0f0 ]
 
 function rnd(n) { return n * (Math.random() - 0.5) }
 function rnd_q4() {
@@ -37,7 +37,13 @@ function rnd_shape(t) {
         shape = new Jolt.CylinderShape(h2, r, 0.05, null)
         break
     }
-    case 3: {                    // Static compound shape
+    case 3: {                     // Capsule
+        let l = 1.0 + Math.random()
+        let r1= 0.5 + 0.5 * Math.random() 
+        shape = new Jolt.CapsuleShape(l, r1, 0.05, null)
+        break
+    }
+    case 4: {                    // Static compound shape
         let config = new Jolt.StaticCompoundShapeSettings()
         let l = 1.0 + Math.random()
         let r2 = 0.5 + 0.5 * Math.random()
@@ -52,12 +58,11 @@ function rnd_shape(t) {
     }
     return shape
 }
-
 const MAX_OBJ = 100
 const PERIOD  = 0.25
 let   next    = 0
 
-export default function(jolt) {
+function rnd_update(jolt) {
     let t = jolt.time
     if (jolt.length >= MAX_OBJ || t < next) return
     
@@ -69,3 +74,42 @@ export default function(jolt) {
     jolt.add(shape, pos, rot, COLOR_LST[idx])
     next = t + PERIOD
 }
+
+function get_shape(op, x) {
+    let shape = null
+    switch (op) {
+    case 'box':
+        shape = new Jolt.BoxShape(new Jolt.Vec3(x[1], x[2], x[3]), 0.05, null)
+        break
+    case 'ball':
+        shape = new Jolt.SphereShape(x[1], null)
+        break
+    case 'pipe':
+        shape = new Jolt.CylinderShape(x[1], x[2], 0.05, null)
+        break
+    case 'pill':
+        shape = new Jolt.CapsuleShape(x[1], x[2], 0.05, null)
+        break
+    default: console.log('?op:'+op); break
+    }
+    return shape
+}
+
+export default function(jolt) {
+    const req= jolt.req_q.shift()           ///> pop first ops from queue
+    if (!req) return                        /// * empty queue
+        
+    const wa = wasmExports
+    const av = req.split(' ')
+    const op = av[0], p0 = av[1], p1 = av[2]
+    const v  = Float32Array(wa.memory.buffer, p0, 8)   ///> pos, rot
+    const x  = Float32Array(wa.memory.buffer, p1, 4)   ///> sizing
+        
+    const id    = v[0]
+    const pos   = new Jolt.RVec3(v[1], v[2], v[3])
+    const rot   = new Jolt.Quat(v[4], v[5], v[6], v[7])
+    const color = x[0]
+        
+    jolt.add(get_shape(op, x), pos, rot, color)
+}
+
