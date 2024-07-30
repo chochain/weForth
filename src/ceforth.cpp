@@ -180,8 +180,8 @@ void nest() {
                 dp++;                  ///> go one level deeper
             }
             else if (ix == _NXT) {     ///> cached NEXT, LIT handlers,
-                if (GT(rs[-1] -= DU1, -DU1)) {///> loop done?
-                    IP = *(IU*)MEM(IP);       ///> 10% faster on AMD, 5% on ESP32
+                if (GT(rs[-1] -= DU1, -DU1)) {       ///> loop done?
+                    IP = *(IU*)MEM(IP);              ///> 10% faster on AMD, 5% on ESP32
                 }
                 else { IP += sizeof(IU); rs.pop(); } ///> perhaps due to shallow pipeline
             }
@@ -274,7 +274,13 @@ void to_s(IU w, U8 *ip) {
     switch (w) {
     case EXIT: fout << ";";                         break;
     case LIT:  fout << *(DU*)ip << " ( lit )";      break;
-    case VAR:  fout << *(DU*)ip << " ( var )";      break;
+    case VAR: {
+        int  n = *(IU*)ip;  ip += sizeof(IU);       ///> number of elements
+        for (int i = 0; i < n; i+=sizeof(DU)) {
+            fout << *(DU*)ip << ' '; ip += sizeof(DU);
+        }
+        fout << " ( var )";
+    } break;
     case STR:  fout << "s\" " << (char*)ip << '"';  break;
     case DOTQ: fout << ".\" " << (char*)ip << '"';  break;
     default:   fout << dict[w].name;                break;
@@ -314,7 +320,8 @@ void see(IU pfa, int dp=1) {
 
         ip += sizeof(IU);               ///> advance ip (next opcode)
         switch (w) {                    ///> extra bytes to skip
-        case LIT:   case VAR:   ip += sizeof(DU);        break;
+        case LIT:   ip += sizeof(DU);                    break;
+        case VAR:   ip += sizeof(IU) + *(IU*)ip;         break;
         case STR:   case DOTQ:  ip += STRLEN((char*)ip); break;
         case BRAN:  case ZBRAN:
         case NEXT:  case LOOP:  ip += sizeof(IU);        break;
@@ -352,7 +359,7 @@ void words() {
 }
 void ss_dump() {
     static char buf[34];
-    auto rdx = [](DU v, int b) {      ///> display v by radix
+    auto rdx = [](DU v, int b) {          ///> display v by radix
 #if USE_FLOAT
         sprintf(buf, "%0.6g", v);
         return buf;
@@ -374,7 +381,7 @@ void ss_dump() {
     top = ss.pop();
     fout << "-> ok" << ENDL;
 }
-void mem_dump(IU p0, int sz) {
+void mem_dump(U32 p0, IU sz) {
     fout << setbase(16) << setfill('0');
     for (IU i=ALIGN16(p0); i<=ALIGN16(p0+sz); i+=16) {
         fout << setw(4) << i << ": ";
@@ -423,7 +430,8 @@ void call_js() {                           ///> ( n addr u -- )
     auto t2s = [&n](char c) {              ///< template to string
         n.str("");                         /// * clear stream
         switch (c) {
-        case 'd': n << UINT(POP());                break;
+        case 'd':
+        case 'p': n << UINT(POP());                break;
         case 'f': n << (DU)POP();                  break;
         case 'x': n << "0x" << hex << UINT(POP()); break;
         case 's': POP(); n << (char*)MEM(POP());   break;  /// also handles raw stream
@@ -466,7 +474,8 @@ void dict_compile() {  ///< compile primitive words into dictionary
          if (GT(rs[-2], rs[-1] += DU1)) IP = *(IU*)MEM(IP);
          else { IP += sizeof(IU); rs.pop(); rs.pop(); });
     CODE("lit ",    PUSH(*(DU*)MEM(IP)); IP += sizeof(DU));
-    CODE("var ",    PUSH(IP);            IP += sizeof(DU));
+    CODE("var ",    PUSH(IP + sizeof(IU));                    // get var addr (skip over EXIT)
+                    IP += sizeof(IU) + *(IU*)MEM(IP));        // len + data
     CODE("str ",    const char *s = (const char*)MEM(IP);     // get string pointer
                     IU    len = STRLEN(s);
                     PUSH(IP); PUSH(len); IP += len);
@@ -623,7 +632,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
     CODE("exit",    run = false);                               // early exit the colon word
     CODE("variable",                                            // create a variable
          def_word(word());                                      // create a new word on dictionary
-         add_w(VAR); add_du(DU0);                               // dovar (+parameter field, default 0)
+         add_w(VAR); add_iu(sizeof(DU)); add_du(DU0);           // dovar (len=4, default 0)
          add_w(EXIT));
     CODE("constant",                                            // create a constant
          def_word(word());                                      // create a new word on dictionary
@@ -635,7 +644,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
     /// @brief - dict is directly used, instead of shield by macros
     /// @{
     CODE("exec",  IU w = POP(); CALL(w));                       // execute word
-    CODE("create", def_word(word()); add_w(VAR));               // dovar (+ parameter field)
+    CODE("create", def_word(word()); add_w(VAR));               // dovar (no parameter field)
     IMMD("does>", add_w(DOES));
     CODE("to",              // 3 to x                           // alter the value of a constant
          IU w = find(word()); if (!w) return;                   // to save the extra @ of a variable
@@ -652,8 +661,9 @@ void dict_compile() {  ///< compile primitive words into dictionary
     CODE(",",     DU n = POP(); add_du(n));                     // n -- 
     CODE("cells", IU i = UINT(POP()); PUSH(i * sizeof(DU)));    // n -- n'
     CODE("allot",                                               // n --
-         IU n = UINT(POP());
-         for (int i=0; i < n; i+=sizeof(DU)) add_du(DU0));
+         IU n = UINT(POP());                                    // number of elements
+         add_iu(n);                                             // encode length, default 0
+         for (IU i = 0; i < n; i+=sizeof(IU)) add_iu(0));       // Note: need EXIT manually added
     CODE("+!",    IU w = UINT(POP()); CELL(w) += POP());        // n w --
     CODE("?",     IU w = UINT(POP()); fout << CELL(w) << " ");  // w --
     /// @}
@@ -671,7 +681,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
          if (IS_UDF(w)) see(dict[w].pfa);
          else           fout << " ( primitive ) ;";
          fout << ENDL);
-    CODE("dump",  U32 n = UINT(POP()); IU a = POP(); mem_dump(a, n));
+    CODE("dump",  U32 n = UINT(POP()); mem_dump(UINT(POP()), n));
     CODE("dict",  dict_dump());
     CODE("forget",
          IU w = find(word()); if (!w) return;
