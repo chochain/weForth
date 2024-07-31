@@ -8,6 +8,7 @@
   <link rel='stylesheet' href='weforth.css'></link>
   <script type='text/javascript' src='file_io.js'></script>
   <script type='text/javascript' src='weforth_logo.js'></script>
+  <script type='text/javascript' src='weforth_jolt.js'></script>
   </head>
   <body>
     <div class='row' style='height:100%'>
@@ -118,7 +119,7 @@
         case 'usr': usr.innerHTML = v; break
         case 'ss' : ss.innerHTML  = v; break
         case 'mm' : mm.innerHTML  = v; break
-        case 'js' : phx.display=='none' ? logo_ex(v) : jolt_ex(v);  break
+        case 'js' : phx.display=='none' ? logo_ex(v) : jolt_enq(v);  break
         default: console.log('vm_res['+k+'].error=>'+v)
         }
     }
@@ -175,13 +176,13 @@
     <script src='./js/three/OrbitControls.js'></script>
     <script src='./js/three/WebGL.js'></script>
     <script src='./js/three/stats.min.js'></script>
+    <script src='./weforth.js'></script>
     <script type='module'>
     ///
     /// Physics Engine (JOLT)
     ///
-    import jolt_init   from './js/jolt-physics.wasm-compat.js'
-    import jolt_update from './weforth_jolt.js'
-    import JoltCore    from './jolt_core.js'
+    import jolt_init from './js/jolt-physics.wasm-compat.js'
+    import JoltCore  from './jolt_core.js'
 
     const R_PX  = window.devicePixelRatio          ///> pixel ratio for WebGL
     let   jolt  = null                             ///> physics engine handle
@@ -194,9 +195,6 @@
         jolt.addMarker(new Jolt.Vec3(0,0,0), 1, 0x0000ff)
         jolt.render()                             ///< kick off WebGL loop (requestAnimationFrame)
     })
-    const jolt_ex = (req)=>Function(              ///< scope limiting eval
-        `"use strict"; this.enqueue('${req}')`
-    ).bind(jolt)()
     </script>
   </body>
 </html>
