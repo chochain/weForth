@@ -145,7 +145,6 @@ export default class {
         this.time   = 0
         ///> create object space
         this.ospace = {}
-        this.req_q  = []
         this.length = 0
         
         new ResizeObserver(e=>this.resize()).observe(e)  /// * watch canvas resizing
@@ -191,9 +190,6 @@ export default class {
         Jolt.destroy(config)
 
         return this._addToScene(body, color)
-    }
-    enqueue(ops) {
-        this.req_q.push(ops)
     }
     addBox(pos, rot, halfExt, mtype, layer, color = 0xffffff) {
         let shape = new Jolt.BoxShape(halfExt, 0.05, null)
