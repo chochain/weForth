@@ -106,25 +106,24 @@ function jolt_update(jolt) {
     if (!req) return                        /// * empty queue
     
     console.log(req)
+    const v  = req.split(/\s+/)
+    const t  = v[0], px = v[2]|0, ps = v[3]|0  ///> type, geoms, shape
     const wa = wasmExports
-    const av = req.split(' ')
-    const t  = av[0], p0 = av[2], p1 = av[3]              ///> type, geoms, shape
-    const x  = new Float32Array(wa.memory.buffer, p0, 3)  ///> sizing
-    const v  = new Float32Array(wa.memory.buffer, p1, 8)  ///> id, pos, rot
+    const mem= wa.vm_mem()
+//    const x  = new Float32Array(wa.memory.buffer, mem+px, 3)  ///> dimensions
+//    const s  = new Float32Array(wa.memory.buffer, mem+ps, 8)  ///> id, pos, rot
+    const x  = new Uint8Array(wa.memory.buffer, mem+px, 12)  ///> dimensions
+    const s  = new Uint8Array(wa.memory.buffer, mem+ps, 32)  ///> id, pos, rot
     console.log(x)
-    console.log(v)
-//    const id    = v[0]
-//    const pos   = new Jolt.RVec3(v[1], v[2], v[3])
-//    const rot   = new Jolt.Quat(v[4], v[5], v[6], v[7])
-//    const color = av[1] | 0
+    console.log(s)
+//    const id    = s[0]
+//    const pos   = new Jolt.RVec3(s[1], s[2], s[3])
+//    const rot   = new Jolt.Quat(s[4], s[5], s[6], s[7])
     const pos   = new Jolt.RVec3(rnd(20), 20, rnd(20))
     const rot   = rnd_q4()
+    const color = v[1]|0
     const idx   = Math.floor(Math.random() * MAX_TYPE)
-    const color = COLOR_LST[idx]
     const shape = rnd_shape(idx)            /// get_shape(t, x)
 
-    console.log(shape)
-    console.log(color)
-        
-    jolt.add(shape, pos, rot, color)
+    jolt.add(shape, pos, rot, COLOR_LST[idx])
 }

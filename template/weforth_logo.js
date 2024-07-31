@@ -84,7 +84,7 @@ class Logo {
         if (t.show) this.draw_eve(t.fg)
     }
     update(ops) {
-        let av = ops.split(' ')
+        let av = ops.split(/\s+/)
         let op = av[0],   v = av[1]
         let t  = this.st, s = this.sfc
         this.clear_eve()
