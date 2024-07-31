@@ -75,9 +75,9 @@ function rnd_update(jolt) {
     next = t + PERIOD
 }
 
-function get_shape(op, x) {
+function get_shape(t, x) {
     let shape = null
-    switch (op) {
+    switch (t) {
     case 'box':
         shape = new Jolt.BoxShape(new Jolt.Vec3(x[1], x[2], x[3]), 0.05, null)
         break
@@ -95,21 +95,36 @@ function get_shape(op, x) {
     return shape
 }
 
-export default function(jolt) {
-    const req= jolt.req_q.shift()           ///> pop first ops from queue
-    if (!req) return                        /// * empty queue
-        
-    const wa = wasmExports
-    const av = req.split(' ')
-    const op = av[0], p0 = av[1], p1 = av[2]
-    const v  = Float32Array(wa.memory.buffer, p0, 8)   ///> pos, rot
-    const x  = Float32Array(wa.memory.buffer, p1, 4)   ///> sizing
-        
-    const id    = v[0]
-    const pos   = new Jolt.RVec3(v[1], v[2], v[3])
-    const rot   = new Jolt.Quat(v[4], v[5], v[6], v[7])
-    const color = x[0]
-        
-    jolt.add(get_shape(op, x), pos, rot, color)
+let req_q = []
+
+function jolt_enq(ops) {
+    req_q.push(ops)
 }
 
+function jolt_update(jolt) {
+    const req= req_q.shift()                ///> pop first ops from queue
+    if (!req) return                        /// * empty queue
+    
+    console.log(req)
+    const wa = wasmExports
+    const av = req.split(' ')
+    const t  = av[0], p0 = av[2], p1 = av[3]              ///> type, geoms, shape
+    const x  = new Float32Array(wa.memory.buffer, p0, 3)  ///> sizing
+    const v  = new Float32Array(wa.memory.buffer, p1, 8)  ///> id, pos, rot
+    console.log(x)
+    console.log(v)
+//    const id    = v[0]
+//    const pos   = new Jolt.RVec3(v[1], v[2], v[3])
+//    const rot   = new Jolt.Quat(v[4], v[5], v[6], v[7])
+//    const color = av[1] | 0
+    const pos   = new Jolt.RVec3(rnd(20), 20, rnd(20))
+    const rot   = rnd_q4()
+    const idx   = Math.floor(Math.random() * MAX_TYPE)
+    const color = COLOR_LST[idx]
+    const shape = rnd_shape(idx)            /// get_shape(t, x)
+
+    console.log(shape)
+    console.log(color)
+        
+    jolt.add(shape, pos, rot, color)
+}
