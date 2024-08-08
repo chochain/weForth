@@ -697,6 +697,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
     /// @{
     CODE("mstat", mem_stat());
     CODE("ms",    PUSH(millis()));
+    CODE("rnd",   PUSH(RND()));             // generate random number
     CODE("delay", delay(UINT(POP())));
     CODE("included",                        // include external file
          POP();                             // string length, not used
@@ -852,6 +853,7 @@ int  forth_include(const char *fn) {
 
 int  main(int ac, char* av[]) {
     forth_init();
+    srand(time(0));
     
 #if !DO_WASM
     cout << APP_VERSION << endl;
