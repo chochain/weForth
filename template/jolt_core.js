@@ -182,13 +182,15 @@ export default class {
         this.rndr.render(this.scene, this.cam)
         this.stats.update()
     }
-    add(shape, pos, rot, color=0xffffff) {
+    add(shape, pos, rot, color, fixed=false) {
         let config = new Jolt.BodyCreationSettings(
-            shape, pos, rot, Jolt.EMotionType_Dynamic, L_MOVING)
+            shape, pos, rot,
+            fixed ? Jolt.EMotionType_Static : Jolt.EMotionType_Dynamic,
+            fixed ? L_STATIC : L_MOVING)
         config.mRestitution = 0.5                            // bounciness
         let body   = this.intf.CreateBody(config)
         Jolt.destroy(config)
-
+        
         return this._addToScene(body, color)
     }
     addBox(pos, rot, halfExt, mtype, layer, color = 0xffffff) {
@@ -224,49 +226,6 @@ export default class {
         Jolt.destroy(config)
 
         return this._addToScene(body, color)
-    }
-    addMeshFloor(pos, n, sz, h) {      // nxn, sz=tileSize, h:max_height at pos
-        // Create regular grid of triangles
-        let hmap = (x, y)=> h * Math.sin(x / 2) * Math.cos(y / 3)
-        let tlst = new Jolt.TriangleList;
-        tlst.resize(n * n * 2);
-        for (let x = 0; x < n; ++x) {
-            for (let z = 0; z < n; ++z) {
-                let ctr= n * sz / 2
-                let x1 = sz * x - ctr
-                let z1 = sz * z - ctr
-                let x2 = x1 + sz
-                let z2 = z1 + sz
-                {
-                    let t  = tlst.at((x * n + z) * 2)
-                    let v1 = t.get_mV(0), v2 = t.get_mV(1), v3 = t.get_mV(2)
-                    v1.x = x1, v1.z = z1, v1.y = hmap(x, z)
-                    v2.x = x1, v2.z = z2, v2.y = hmap(x, z + 1)
-                    v3.x = x2, v3.z = z2, v3.y = hmap(x + 1, z + 1)
-                }
-                {
-                    let t  = tlst.at((x * n + z) * 2 + 1)
-                    let v1 = t.get_mV(0), v2 = t.get_mV(1), v3 = t.get_mV(2);
-                    v1.x = x1, v1.z = z1, v1.y = hmap(x, z)
-                    v2.x = x2, v2.z = z2, v2.y = hmap(x + 1, z + 1)
-                    v3.x = x2, v3.z = z1, v3.y = hmap(x + 1, z)
-                }
-            }
-        }
-        let mati  = new Jolt.PhysicsMaterialList;
-        let shape = new Jolt.MeshShapeSettings(tlst, mati).Create().Get();
-        Jolt.destroy(tlst);
-        Jolt.destroy(mati);
-
-        // Create body
-        let config = new Jolt.BodyCreationSettings(
-            shape,
-            pos, new Jolt.Quat(0, 0, 0, 1),
-            Jolt.EMotionType_Static, L_STATIC)
-        let body = this.intf.CreateBody(config)
-        Jolt.destroy(config)
-
-        return this._addToScene(body, 0xc0f0c0)
     }
     addLine(from, to, color) {
         const mati = new THREE.LineBasicMaterial({ color: color })

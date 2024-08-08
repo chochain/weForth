@@ -191,7 +191,6 @@
         window.Jolt = Jolt
         jolt = new JoltCore('vu', 'phx', R_PX, jolt_update)
         ///> start Jolt engine
-        jolt.addMeshFloor(new Jolt.Vec3(0,-5,0), 30, 1, 0.8)
         jolt.addMarker(new Jolt.Vec3(0,0,0), 1, 0x0000ff)
         jolt.render()                             ///< kick off WebGL loop (requestAnimationFrame)
     })
