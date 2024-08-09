@@ -119,7 +119,7 @@
         case 'usr': usr.innerHTML = v; break
         case 'ss' : ss.innerHTML  = v; break
         case 'mm' : mm.innerHTML  = v; break
-        case 'js' : phx.display=='none' ? logo_ex(v) : jolt_enq(v);  break
+        case 'js' : jolt_enq(v) || logo_ex(v); break 
         default: console.log('vm_res['+k+'].error=>'+v)
         }
     }
