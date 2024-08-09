@@ -4,7 +4,7 @@
 ///
 'use strict'
 
-const MAX_TYPE = 6
+const MAX_TYPE = 5
 const COLOR_LST= [0xc0f0c0, 0xf04040, 0xa0a0f0, 0x80f080, 0xf0d080, 0xf0a0f0 ]
 
 function rnd(n) { return n * (Math.random() - 0.5) }
@@ -50,7 +50,6 @@ function build_mesh(n, sz, h) {    // nxn, sz=tileSize, h:max_height
     return shape
 }
 function rnd_shape(t) {
-    if (t > MAX_TYPE) t = 1
     let shape  = null
 
     switch (t) {
@@ -94,6 +93,7 @@ function rnd_shape(t) {
         Jolt.destroy(config)
         break
     }
+    default: console.log('?rnd_shape t='+t); break
     }
     return shape
 }
@@ -119,19 +119,19 @@ function get_shape(t, x) {
     let shape = null
     switch (t) {
     case 'mesh':
-        shape = build_mesh(30, 1, 0.8)
+        shape = build_mesh(x[1], x[2], x[3]) ///> (n,sz,h)
         break
     case 'box':
-        shape = new Jolt.BoxShape(new Jolt.Vec3(x[1], x[2], x[3]), 0.05, null)
+        shape = new Jolt.BoxShape(new Jolt.Vec3(x[1], x[2], x[3]), 0.05, null) ///> (x,y,z)
         break
     case 'ball':
-        shape = new Jolt.SphereShape(x[1], null)
+        shape = new Jolt.SphereShape(x[1], null) ///> (r)
         break
     case 'pipe':
-        shape = new Jolt.CylinderShape(x[1], x[2], 0.05, null)
+        shape = new Jolt.CylinderShape(x[1], x[2], 0.05, null)    ///> (r,h)
         break
     case 'pill':
-        shape = new Jolt.CapsuleShape(x[1], x[2], 0.05, null)
+        shape = new Jolt.CapsuleShape(x[1], x[2], 0.05, null)     ///> (r,h)
         break
     default: console.log('?op:'+op); break
     }
@@ -158,8 +158,10 @@ function jolt_update(jolt) {
     const px = v[2]|0, ps    = v[3]|0       ///> geometry, shape
     const wa = wasmExports
     const mem= wa.vm_mem()
+
 //    const x  = new Float32Array(wa.memory.buffer, mem+px, 3)  ///> dimensions
 //    const s  = new Float32Array(wa.memory.buffer, mem+ps, 8)  ///> id, pos, rot
+    
     const x  = new Uint8Array(wa.memory.buffer, mem+px, 12)  ///> dimensions
     const s  = new Uint8Array(wa.memory.buffer, mem+ps, 32)  ///> id, pos, rot
     console.log(mem)
@@ -175,6 +177,6 @@ function jolt_update(jolt) {
     const rot   = msh ? new Jolt.Quat(0, 0, 0, 1) : rnd_q4()
     const idx   = msh ? 0 : Math.ceil(Math.random() * MAX_TYPE)
     const shape = rnd_shape(idx)            /// get_shape(t, x)
-
+    
     jolt.add(shape, pos, rot, COLOR_LST[idx], msh)
 }
