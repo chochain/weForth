@@ -140,17 +140,22 @@ function get_shape(t, x) {
 
 let req_q = []
 
-function jolt_enq(ops) {
-    req_q.push(ops)
+function jolt_enq(cmd) {
+    const req = cmd.split(/\s+/)            ///> split command into request (array)
+    if (req.length < 2) return 0            /// * skip LOGO command
+    
+    req_q.push(req)
+    return 1                                /// completed
 }
 
 function jolt_update(jolt) {
-    const req= req_q.shift()                ///> pop first ops from queue
-    if (!req) return                        /// * empty queue
+    const v = req_q.shift()                 ///> pop first ops from queue
+    if (!v) return                          /// * empty queue
     
-    console.log(req)
-    const v  = req.split(/\s+/)
-    const t  = v[0], px = v[2]|0, ps = v[3]|0  ///> type, geoms, shape
+    console.log(v)
+    
+    const t  = v[0],   color = v[1]|0       ///> type, color
+    const px = v[2]|0, ps    = v[3]|0       ///> geometry, shape
     const wa = wasmExports
     const mem= wa.vm_mem()
 //    const x  = new Float32Array(wa.memory.buffer, mem+px, 3)  ///> dimensions
@@ -168,7 +173,6 @@ function jolt_update(jolt) {
     const msh   = t=='mesh'
     const pos   = msh ? new Jolt.RVec3(0, -5, 0)  : new Jolt.RVec3(rnd(20), 20, rnd(20))
     const rot   = msh ? new Jolt.Quat(0, 0, 0, 1) : rnd_q4()
-    const color = v[1]|0
     const idx   = msh ? 0 : Math.ceil(Math.random() * MAX_TYPE)
     const shape = rnd_shape(idx)            /// get_shape(t, x)
 
