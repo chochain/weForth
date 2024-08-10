@@ -140,43 +140,32 @@ function get_shape(t, x) {
 
 let req_q = []
 
-function jolt_enq(cmd) {
+function jolt_req(vm, cmd) {
     const req = cmd.split(/\s+/)            ///> split command into request (array)
     if (req.length < 2) return 0            /// * skip LOGO command
-    
-    req_q.push(req)
-    return 1                                /// completed
+
+    vm.postMessage(['px', req ])            /// * send physics request to VM
+    return 1                                /// * success, skip LOGO dispatcher
 }
-
+function jolt_q(req) {                      ///> jolt job queue
+    req_q.push(req)
+}
 function jolt_update(jolt) {
-    const v = req_q.shift()                 ///> pop first ops from queue
-    if (!v) return                          /// * empty queue
-    
-    console.log(v)
-    
-    const t  = v[0],   color = v[1]|0       ///> type, color
-    const px = v[2]|0, ps    = v[3]|0       ///> geometry, shape
-    const wa = wasmExports
-    const mem= wa.vm_mem()
+    const v = req_q.shift()                 ///> pop from job queue
+    if (!v) return                          /// * queue empty, bail
 
-//    const x  = new Float32Array(wa.memory.buffer, mem+px, 3)  ///> dimensions
-//    const s  = new Float32Array(wa.memory.buffer, mem+ps, 8)  ///> id, pos, rot
-    
-    const x  = new Uint8Array(wa.memory.buffer, mem+px, 12)  ///> dimensions
-    const s  = new Uint8Array(wa.memory.buffer, mem+ps, 32)  ///> id, pos, rot
-    console.log(mem)
-    console.log(px.toString(16))
-    console.log(x)
-    console.log(ps.toString(16))
-    console.log(s)
+    console.log(v)
+
+    const op = v[0], c = v[1]               ///> op, color
+    const x  = v[2], s = v[3]               ///> geometry, shape
 //    const id    = s[0]
 //    const pos   = new Jolt.RVec3(s[1], s[2], s[3])
     //    const rot   = new Jolt.Quat(s[4], s[5], s[6], s[7])
-    const msh   = t=='mesh'
+    const msh   = op=='mesh'
     const pos   = msh ? new Jolt.RVec3(0, -5, 0)  : new Jolt.RVec3(rnd(20), 20, rnd(20))
     const rot   = msh ? new Jolt.Quat(0, 0, 0, 1) : rnd_q4()
     const idx   = msh ? 0 : Math.ceil(Math.random() * MAX_TYPE)
-    const shape = rnd_shape(idx)            /// get_shape(t, x)
+    const shape = rnd_shape(idx)            /// get_shape(op, x)
     
     jolt.add(shape, pos, rot, COLOR_LST[idx], msh)
 }
