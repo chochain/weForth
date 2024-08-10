@@ -58,19 +58,20 @@ function dump(off, mem) {
     const hx  = '0123456789ABCDEF'
     const h2  = v=>hx[(v>>4)&0xf]+hx[v&0xf]
     const h4  = v=>h2(v>>8)+h2(v)
+    if (dump_mem0.length == mem.length) {               /// check buffer size
+        dump_mem0 = new Uint8Array(mem.length)          /// free and realloc
+    }
     let div = ''
     for (let j = 0; j < mem.length; j+=0x10) {
         let bt = '', tx = '', en = 0
         for (let i = 0; i < 0x10; i++) {
-            let e = dump_mem0.length == mem.length
-            if (!e) dump_mem0 = new Uint8Array(mem.length)  ///> realloc
             let c0 = dump_mem0[j + i] || 0
-            let c  = dump_mem0[j + i] = mem[j + i] || 0     ///> also cache the char
+            let c  = dump_mem0[j + i] = mem[j + i] || 0 ///> also cache the char
             if (!en && c != c0) {
-                bt += '<i>'; tx += '<i>'; en = 1
+                bt += '<i>'; tx += '<i>'; en = 1        /// * enter i element
             }
             else if (en && c == c0) {
-                bt += '</i>'; tx += '</i>'; en = 0
+                bt += '</i>'; tx += '</i>'; en = 0      /// * exit <i> element
             }
             bt += `${hx[c>>4]}${hx[c&0xf]}`
             bt += ((i & 0x3)==3) ? '  ' : ' '
@@ -80,6 +81,17 @@ function dump(off, mem) {
         div += h4(off+j) + ': ' + bt + tx + '\n'
     }
     return div
+}
+function get_px(v) {
+    console.log(v)
+    const op = v[0], fg = v[1]|0  ///> opcode, foreground-color
+    const px = v[2]|0             ///> offsets to geometry buffer
+    const ps = v[3]|0             ///> offset to shape buffer
+    const wa = wasmExports
+    const mem= wa.vm_mem()
+    const x  = new Float32Array(wa.memory.buffer, mem+px, 3)  ///> x, y, z
+    const s  = new Float32Array(wa.memory.buffer, mem+ps, 8)  ///> id, pos, rot
+    return [ op, fg, x, s ]
 }
 ///
 /// worker message pipeline to main thread
@@ -105,7 +117,7 @@ self.onmessage = function(e) {                 ///> worker input message queue
             : idx
         const ma  = get_mem(off & ~0xf, len)
         res('dm', dump(off, ma));                  break
-    case 'ui' : res('ui',  get_ui());              break
+    case 'px' : res('px',  get_px(v));             break
     default   : res('unknown type');
     }
 }
