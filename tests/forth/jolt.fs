@@ -10,8 +10,8 @@
 : .POS! 4 + 3! ;                       \ position ( x y z a -- )
 : .ROT! >r r@ 3! r> 28 + ! ;           \ rotation ( x y z w a -- )
 variable fg                            \ foreground color
-V3 px                                  \ dimensions
-BODYSET ps                             \ body setting {id,pos,rot}
+V3       px                            \ [x, y, z]
+BODYSET  ps                            \ body setting [id,pos[],rot[]]
 1.1 2.2 3.3 px 3!
 $FF $80 $80 RGB fg !
 : one fg @ px ps BOX ;
