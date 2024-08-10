@@ -60,27 +60,23 @@ function dump(off, mem) {
     const h4  = v=>h2(v>>8)+h2(v)
     let div = ''
     for (let j = 0; j < mem.length; j+=0x10) {
-        let bt = '', tx = '', mx = 0
+        let bt = '', tx = '', en = 0
         for (let i = 0; i < 0x10; i++) {
             let e = dump_mem0.length == mem.length
             if (!e) dump_mem0 = new Uint8Array(mem.length)  ///> realloc
             let c0 = dump_mem0[j + i] || 0
             let c  = dump_mem0[j + i] = mem[j + i] || 0     ///> also cache the char
-            if (!mx && c != c0) {
-                bt += '<b>'
-                tx += '<b>'
-                mx = 1
+            if (!en && c != c0) {
+                bt += '<i>'; tx += '<i>'; en = 1
             }
-            else if (mx && c == c0) {
-                bt += '</b>'
-                tx += '</b>'
-                mx = 0
+            else if (en && c == c0) {
+                bt += '</i>'; tx += '</i>'; en = 0
             }
             bt += `${hx[c>>4]}${hx[c&0xf]}`
             bt += ((i & 0x3)==3) ? '  ' : ' '
             tx += (c < 0x20) ? '_' : String.fromCharCode(c)
         }
-        if (mx) { bt += '</b>'; tx += '</b>' }
+        if (en) { bt += '</i>'; tx += '</i>' }
         div += h4(off+j) + ': ' + bt + tx + '\n'
     }
     return div
