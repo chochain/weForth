@@ -7,7 +7,6 @@ const res = (k,v)=>postMessage([ k, v ])  ///> worker response to front-end
 Module = { print: e=>res('txt', e) }      ///> WASM print interface => output queue
 
 var vm_dict_len = 0
-var vm_mem_addr = 0
 var vm_boot_idx = 0
 
 importScripts('weforth_helper.js')        /// * vocabulary handler
@@ -31,7 +30,7 @@ function get_ss() {
     ss.forEach(v=>div.push(tos(v)))
     div.push(tos(top[0]))
     
-    return div.join(' ')
+    return '[ '+div.join(' ')+' ]'
 }
 function get_dict(usr=false) {
     const wa  = wasmExports
@@ -48,46 +47,68 @@ function get_dict(usr=false) {
     }
     return usr ? colon_words(lst) : voc_tree(lst)
 }
-function get_mem(idx=-1, len=0x320) {
+function get_mem(off, len) {
     const wa  = wasmExports
+    const adr = wa.vm_mem() + off
+    return new Uint8Array(wa.memory.buffer, adr, len)   /// CC: freed by caller?
+}
+
+let dump_mem0 = ''                                      /// memory cache
+function dump(off, mem) {
     const hx  = '0123456789ABCDEF'
     const h2  = v=>hx[(v>>4)&0xf]+hx[v&0xf]
     const h4  = v=>h2(v>>8)+h2(v)
-    const off = idx < 0                 ///> idx < 0 => use HERE
-          ? (wa.vm_mem_idx() > len ? wa.vm_mem_idx() - len : 0)
-          : idx
-    const adr = wa.vm_mem() + off
-    const n   = (off + len + 0x10) & ~0xf
-    const mem = new Uint8Array(wa.memory.buffer, adr, len)
-    
-    let div = '', bt = '', tx = ''
-    for (let j = off&~0xf; j < n; j+=0x10) {
+    let div = ''
+    for (let j = 0; j < mem.length; j+=0x10) {
+        let bt = '', tx = '', mx = 0
         for (let i = 0; i < 0x10; i++) {
-            let ch = mem[i+j] || 0
-            bt += `${hx[ch>>4]}${hx[ch&0xf]}`
+            let e = dump_mem0.length == mem.length
+            if (!e) dump_mem0 = new Uint8Array(mem.length)  ///> realloc
+            let c0 = dump_mem0[j + i] || 0
+            let c  = dump_mem0[j + i] = mem[j + i] || 0     ///> also cache the char
+            if (!mx && c != c0) {
+                bt += '<b>'
+                tx += '<b>'
+                mx = 1
+            }
+            else if (mx && c == c0) {
+                bt += '</b>'
+                tx += '</b>'
+                mx = 0
+            }
+            bt += `${hx[c>>4]}${hx[c&0xf]}`
             bt += ((i & 0x3)==3) ? '  ' : ' '
-            tx += (ch < 0x20) ? '_' : String.fromCharCode(ch)
+            tx += (c < 0x20) ? '_' : String.fromCharCode(c)
         }
-        div += h4(j) + ': ' + bt + tx + '\n'
-        bt = '', tx = ''
+        if (mx) { bt += '</b>'; tx += '</b>' }
+        div += h4(off+j) + ': ' + bt + tx + '\n'
     }
     return div
 }
 ///
 /// worker message pipeline to main thread
 ///
-self.onmessage = function(e) {         ///> worker input message queue
+self.onmessage = function(e) {                 ///> worker input message queue
     let k = e.data[0], v = e.data[1]
     switch (k) {
     case 'cmd':
         let forth =
             Module.cwrap('forth', null, ['number', 'string'])
-        forth(0, v)                    /// * calls Module.print
+        forth(0, v)                           /// * calls Module.print
         break
     case 'dc' : res('dc',  get_dict());            break
     case 'usr': res('usr', get_dict(true));        break
-    case 'ss' : res('ss',  '[ '+ get_ss() + ' ]'); break
-    case 'mm' : res('mm',  !v ? get_mem() : get_mem(v[0], v[1])); break
+    case 'ss' : res('ss',  get_ss());              break
+    case 'mm' : res('mm',  get_mem(v[0], v[1]));   break
+    case 'dm' :                               /// * dump memory
+        const idx = v[0], n = v[1]
+        const here= wasmExports.vm_mem_idx()
+        const len = (n + 0x10) & ~0xf         ///> 16-byte blocks
+        const off = idx < 0                   ///> idx < 0 => from 'HERE'
+            ? (here > len ? here - len : 0)
+            : idx
+        const ma  = get_mem(off & ~0xf, len)
+        res('dm', dump(off, ma));                  break
     case 'ui' : res('ui',  get_ui());              break
     default   : res('unknown type');
     }
