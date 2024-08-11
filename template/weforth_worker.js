@@ -87,8 +87,12 @@ function get_px(v) {
     const ps = v[3]|0             ///> offset to shape buffer
     const wa = wasmExports
     const mem= wa.vm_mem()
+    ///
+    /// references to WASM ArrayBuffer without copying (fast, in 1ms)
+    ///
     const x0 = new Float32Array(wa.memory.buffer, mem+px, 3)  ///> x, y, z
     const s0 = new Float32Array(wa.memory.buffer, mem+ps, 8)  ///> id, pos, rot
+
     return [ op, fg, x0, s0, v[4], Date.now()-v[4] ]
 }
 ///
@@ -96,7 +100,7 @@ function get_px(v) {
 ///
 self.onmessage = function(e) {                ///> worker input message queue
     let k = e.data[0], v = e.data[1]
-    
+
     const P = (r)=>postMessage([ k, r ])      ///> macro to response to front-end
     switch (k) {
     case 'cmd':
@@ -115,7 +119,10 @@ self.onmessage = function(e) {                ///> worker input message queue
         const off = idx < 0                   ///> idx < 0 => from 'HERE'
             ? (here > len ? here - len : 0)
             : idx
-        const ma  = get_mem(off & ~0xf, len)
+        const ma  = get_mem(off & ~0xf, len)  ///> get memory ref
+        ///
+        /// serialization, i.e. StructuredClone, is slow (24ms)
+        ///
         P(dump(ma, off));                 break
     case 'px' : P(get_px(v));             break
     default   : P('unknown type');
