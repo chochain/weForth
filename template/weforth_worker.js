@@ -2,15 +2,13 @@
 /// @file
 /// @brief weForth - worker proxy to weforth.js (called by weforth.html)
 ///
-const res = (k,v)=>postMessage([ k, v ])  ///> worker response to front-end
-
-Module = { print: e=>res('txt', e) }      ///> WASM print interface => output queue
+Module = { print: e=>postMessage(['txt',e]) }  ///> WASM print interface => output queue
 
 var vm_dict_len = 0
 var vm_boot_idx = 0
 
-importScripts('weforth_helper.js')        /// * vocabulary handler
-importScripts('weforth.js')               /// * load js emscripten created
+importScripts('weforth_helper.js')             /// * vocabulary handler
+importScripts('weforth.js')                    /// * load js emscripten created
 
 function get_ss() {
     const wa  = wasmExports
@@ -89,25 +87,27 @@ function get_px(v) {
     const ps = v[3]|0             ///> offset to shape buffer
     const wa = wasmExports
     const mem= wa.vm_mem()
-    const x  = new Float32Array(wa.memory.buffer, mem+px, 3)  ///> x, y, z
-    const s  = new Float32Array(wa.memory.buffer, mem+ps, 8)  ///> id, pos, rot
-    return [ op, fg, x, s ]
+    const x0 = new Float32Array(wa.memory.buffer, mem+px, 3)  ///> x, y, z
+    const s0 = new Float32Array(wa.memory.buffer, mem+ps, 8)  ///> id, pos, rot
+    return [ op, fg, x0, s0, v[4], Date.now()-v[4] ]
 }
 ///
 /// worker message pipeline to main thread
 ///
-self.onmessage = function(e) {                 ///> worker input message queue
+self.onmessage = function(e) {                ///> worker input message queue
     let k = e.data[0], v = e.data[1]
+    
+    const P = (r)=>postMessage([ k, r ])      ///> macro to response to front-end
     switch (k) {
     case 'cmd':
         let forth =
             Module.cwrap('forth', null, ['number', 'string'])
         forth(0, v)                           /// * calls Module.print
         break
-    case 'dc' : res('dc',  get_dict());            break
-    case 'usr': res('usr', get_dict(true));        break
-    case 'ss' : res('ss',  get_ss());              break
-    case 'mm' : res('mm',  get_mem(v[0], v[1]));   break
+    case 'dc' : P(get_dict());            break
+    case 'usr': P(get_dict(true));        break
+    case 'ss' : P(get_ss());              break
+    case 'mm' : P(get_mem(v[0], v[1]));   break
     case 'dm' :                               /// * dump memory
         const idx = v[0], n = v[1]
         const here= wasmExports.vm_mem_idx()
@@ -116,8 +116,8 @@ self.onmessage = function(e) {                 ///> worker input message queue
             ? (here > len ? here - len : 0)
             : idx
         const ma  = get_mem(off & ~0xf, len)
-        res('dm', dump(off, ma));                  break
-    case 'px' : res('px',  get_px(v));             break
-    default   : res('unknown type');
+        P(dump(off, ma));                 break
+    case 'px' : P(get_px(v));             break
+    default   : P('unknown type');
     }
 }
