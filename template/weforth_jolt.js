@@ -144,16 +144,19 @@ function jolt_req(vm, cmd) {
     const req = cmd.split(/\s+/)            ///> split command into request (array)
     if (req.length < 2) return 0            /// * skip LOGO command
 
+    req.push(Date.now())
     vm.postMessage(['px', req ])            /// * send physics request to VM
     return 1                                /// * success, skip LOGO dispatcher
 }
 function jolt_q(req) {                      ///> jolt job queue
+    req.push(Date.now() - req[4])
     req_q.push(req)
 }
 function jolt_update(jolt) {
     const v = req_q.shift()                 ///> pop from job queue
     if (!v) return                          /// * queue empty, bail
 
+    v.push(Date.now() - v[4])
     console.log(v)
 
     const op = v[0], c = v[1]               ///> op, color
