@@ -98,6 +98,24 @@
         if (htm.indexOf('<br/>')==0) htm.replace('<br/>','')  /// * remove blank lines
         to_txt(`<pre class="cmd"><em>${htm}</em></pre>`, false)
     }
+    function show_dict(div) {
+        dc.innerHTML = div
+        let tree = document.querySelectorAll('ul.tree a:not(:last-child)')
+        tree.forEach(ul=>{
+            ul.onclick = e=>{
+                var pa = e.target.parentElement
+                var cl = pa.classList
+                if(cl.contains("open")) {                    /// * toggle element on/off
+                    cl.remove('open')
+                    pa.querySelectorAll(':scope .open').forEach(c=>{
+                        c.classList.remove('open')
+                    })
+                }
+                else cl.add('open')
+                e.preventDefault()
+            }
+        })
+    }
     ///
     /// LOGO section (WebSDL)
     ///
@@ -141,24 +159,6 @@
         if (dc.style.display!='none') {          /// * query dictionary
             vm_req('usr')
         }
-    }
-    function show_dict(div) {
-        dc.innerHTML = div
-        let tree = document.querySelectorAll('ul.tree a:not(:last-child)')
-        tree.forEach(ul=>{
-            ul.onclick = e=>{
-                var pa = e.target.parentElement
-                var cl = pa.classList
-                if(cl.contains("open")) {
-                    cl.remove('open')
-                    pa.querySelectorAll(':scope .open').forEach(c=>{
-                        c.classList.remove('open')
-                    })
-                }
-                else cl.add('open')
-                e.preventDefault()
-            }
-        })
     }
     ///
     /// start up Forth interpreter
