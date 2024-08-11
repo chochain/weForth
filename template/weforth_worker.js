@@ -52,11 +52,11 @@ function get_mem(off, len) {
 }
 
 let dump_mem0 = ''                                      /// memory cache
-function dump(off, mem) {
+function dump(mem, off) {
     const hx  = '0123456789ABCDEF'
     const h2  = v=>hx[(v>>4)&0xf]+hx[v&0xf]
     const h4  = v=>h2(v>>8)+h2(v)
-    if (dump_mem0.length == mem.length) {               /// check buffer size
+    if (dump_mem0.length != mem.length) {               /// check buffer size
         dump_mem0 = new Uint8Array(mem.length)          /// free and realloc
     }
     let div = ''
@@ -116,7 +116,7 @@ self.onmessage = function(e) {                ///> worker input message queue
             ? (here > len ? here - len : 0)
             : idx
         const ma  = get_mem(off & ~0xf, len)
-        P(dump(off, ma));                 break
+        P(dump(ma, off));                 break
     case 'px' : P(get_px(v));             break
     default   : P('unknown type');
     }
