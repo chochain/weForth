@@ -124,7 +124,7 @@
         `"use strict"; this.update('${ops}')`
     ).bind(logo)()
     ///
-    /// Forth section
+    /// weForth section (worker thread and main<=>worker messaging)
     ///
     const vm     = new Worker('weforth_worker.js')///< create the Forth worker thread
     const vm_req = (k, v)=>vm.postMessage([k, v]) ///< send request to vm worker
@@ -144,8 +144,9 @@
     }
     clear_txt()
     ///
-    /// Forth outer interpreter
+    /// Forth VM outer interpreter
     ///
+    navigator.serviceWorker.register('./weforth_sleep.js')   /// * weForth sleep support
     function forth(cmd) {                        ///< evaludate Forth command
         if (cmd=='clear') clear_txt()            /// * clear output console
         else if (cmd) {
@@ -161,9 +162,8 @@
         }
     }
     ///
-    /// start up Forth interpreter
+    /// initialize UI once page loaded
     ///
-    navigator.serviceWorker.register('./weforth_sleep.js')   /// * sleep support
     window.onload = ()=>{
         setTimeout(()=>{
             logo.reset()
