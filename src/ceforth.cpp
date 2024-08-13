@@ -152,7 +152,7 @@ void add_w(IU w) {                  ///< add a word index into pmem
 void add_var() {                    ///< add a varirable header
 #if DO_WASM                         /// * WASM float needs to be 4-byte aligned
     if (sizeof(IU)==2 && (pmem.idx & 0x3)!=0) {
-        add_iu(NOP);                /// pad two bytes
+        add_w(NOP);                 /// pad two bytes
     }
 #endif // DO_WASM
     add_w(VAR);
