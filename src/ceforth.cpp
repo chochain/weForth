@@ -539,6 +539,9 @@ void dict_compile() {  ///< compile primitive words into dictionary
     CODE("2/",      top /= 2);
     CODE("1+",      top += 1);
     CODE("1-",      top -= 1);
+#if USE_FLOAT    
+    CODE("int",     top = UINT(top));         // float => integer
+#endif // USE_FLOAT    
     /// @}
     /// @defgroup Logic ops
     /// @{
@@ -704,7 +707,6 @@ void dict_compile() {  ///< compile primitive words into dictionary
          U8 *fn = MEM(POP());               // file name
          forth_include((const char*)fn));   // include file
 #if DO_WASM    
-    CODE("int",   top = UINT(top));         // float => integer
     CODE("JS",    call_js());               // Javascript interface
 #else  // !DO_WASM
     CODE("bye",   exit(0));
