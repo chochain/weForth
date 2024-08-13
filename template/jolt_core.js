@@ -156,9 +156,7 @@ export default class {
         this.rndr.setSize(w, h)
     }
     render() {
-        requestAnimationFrame(()=>this.render())        // enqueue GUI event loop
-
-        if (this.update != null) this.update(this)      // callback to front-end
+        if (this.update != null) this.update(this)             // callback to front-end
         /// update physics system
         for (let k in this.ospace) {
             let obj  = this.ospace[k]
@@ -181,6 +179,14 @@ export default class {
         this.ctrl.update(dt)
         this.rndr.render(this.scene, this.cam)
         this.stats.update()
+        /// repaint screen, (fast/slow motion by adjusting framerate)
+        requestAnimationFrame(()=>this.render())             // enqueue GUI event loop (default 60Hz)
+/*        
+        setTimeout(                                          // enqueue GUI event loop
+            ()=>requestAnimationFrame(()=>this.render()),
+            10                                               // 50=20Hz slow, 10=100Hz fast
+        )
+*/
     }
     add(shape, pos, rot, color, fixed=false) {
         let config = new Jolt.BodyCreationSettings(
