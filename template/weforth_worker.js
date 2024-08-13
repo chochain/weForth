@@ -2,15 +2,18 @@
 /// @file
 /// @brief weForth - worker proxy to weforth.js (called by weforth.html)
 ///
-Module = { print: e=>postMessage(['txt',e]) }  ///> WASM print interface => output queue
+Module = { print: s=>postMessage(['txt', s]) } ///> WASM print interface => output queue
 
 var vm_dict_len = 0
 var vm_boot_idx = 0
 
-importScripts('weforth_helper.js')             /// * vocabulary handler
-importScripts('weforth.js')                    /// * load js emscripten created
+importScripts('weforth_helper.js')             ///> vocabulary handler
+importScripts('weforth.js')                    ///> load js emscripten created
 
 function get_ss() {
+    const FX = v=>Number.isInteger(v)          ///> precision control macro
+          ? v.toString(base)
+          : Math.round(v*100000)/100000        /// * better than toFixed()
     const wa  = wasmExports
     const base= wa.vm_base()
     const toa = (p, n)=> wa.vm_dflt()
@@ -21,12 +24,9 @@ function get_ss() {
     const len = wa.vm_ss_idx()>0 ? wa.vm_ss_idx() : 0
     const ss  = toa(wa.vm_ss(), len)
     const top = toa(wa.top, 1)
-    const tos = v => Number.isInteger(v)
-          ? v.toString(base)
-          : Math.round(v*100000)/100000   /// * better than toFixed()
     let   div = []
-    ss.forEach(v=>div.push(tos(v)))
-    div.push(tos(top[0]))
+    ss.forEach(v=>div.push(FX(v)))
+    div.push(FX(top[0]))
     
     return '[ '+div.join(' ')+' ]'
 }
@@ -88,43 +88,54 @@ function get_px(v) {
     const wa = wasmExports
     const mem= wa.vm_mem()
     ///
-    /// references to WASM ArrayBuffer without copying (fast, in 1ms)
+    /// references to WASM ArrayBuffer without copying (fast, < 1ms)
     ///
-    const x0 = new Float32Array(wa.memory.buffer, mem+px, 3)  ///> x, y, z
+    const x0 = new Float32Array(wa.memory.buffer, mem+px, 3)  ///> x1, x2, x3
     const s0 = new Float32Array(wa.memory.buffer, mem+ps, 8)  ///> id, pos, rot
-
-    return [ op, fg, x0, s0, v[4], Date.now()-v[4] ]
+    ///
+    /// convert to transferable objects (F64 takes 2ms, F32 5ms)
+    ///
+    const x1 = new Float64Array(x0)
+    const s1 = new Float64Array(s0)
+    return [ op, fg, x1, s1, v[4], Date.now()-v[4] ]
 }
 ///
 /// worker message pipeline to main thread
 ///
-self.onmessage = function(e) {                ///> worker input message queue
+/// @note: serialization, i.e. structuredClone(), is slow (24ms)
+///        so prebuild a transferable object is much faster (~5ms)
+///
+self.onmessage = function(e) {                        ///> worker input message queue
     let k = e.data[0], v = e.data[1]
-
-    const P = (r)=>postMessage([ k, r ])      ///> macro to response to front-end
+    const post = (v)=>postMessage([k, v])             ///> macro to response to front-end
     switch (k) {
     case 'cmd':
         let forth =
             Module.cwrap('forth', null, ['number', 'string'])
-        forth(0, v)                           /// * calls Module.print
+        forth(0, v)                                   /// * calls Module.print
         break
-    case 'dc' : P(get_dict());            break
-    case 'usr': P(get_dict(true));        break
-    case 'ss' : P(get_ss());              break
-    case 'mm' : P(get_mem(v[0], v[1]));   break
-    case 'dm' :                               /// * dump memory
+    case 'dc' : post(get_dict());            break
+    case 'usr': post(get_dict(true));        break
+    case 'ss' : post(get_ss());              break
+    case 'dm' :                                       /// * dump memory
         const idx = v[0], n = v[1]
         const here= wasmExports.vm_mem_idx()
-        const len = (n + 0x10) & ~0xf         ///> 16-byte blocks
-        const off = idx < 0                   ///> idx < 0 => from 'HERE'
+        const len = (n + 0x10) & ~0xf                 ///> 16-byte blocks
+        const off = idx < 0                           ///> idx < 0 => from 'HERE'
             ? (here > len ? here - len : 0)
             : idx
-        const ma  = get_mem(off & ~0xf, len)  ///> get memory ref
-        ///
-        /// serialization, i.e. StructuredClone, is slow (24ms)
-        ///
-        P(dump(ma, off));                 break
-    case 'px' : P(get_px(v));             break
-    default   : P('unknown type');
+        const ma  = get_mem(off & ~0xf, len)          ///> get memory ref
+        post(dump(ma, off));                 break
+    case 'mm' :
+        const mm = get_mem(v[0], v[1])                ///> fetch memory block
+        postMessage(                                  /// * to front-end, transfer
+            [ k, mm ],
+            [ mm.buffer ]);                  break
+    case 'px' :
+        const px = get_px(v)                          ///> fetch px values from Forth
+        postMessage(                                  ///> to front-end, transfer
+            [ k, px ],
+            [ px[2].buffer, px[3].buffer ]); break
+    default   : post('unknown type');
     }
 }
