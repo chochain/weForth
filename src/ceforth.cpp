@@ -80,7 +80,7 @@ U8  *MEM0 = &pmem[0];              ///< base of parameter memory block
 /// but make sure the sequence is in-sync with word list in dict_compile
 ///
 typedef enum {
-    EXIT=0, NEXT, LOOP, LIT, VAR, STR, DOTQ, BRAN, ZBRAN, DOES, FOR, DO
+    EXIT=0, NOP, NEXT, LOOP, LIT, VAR, STR, DOTQ, BRAN, ZBRAN, DOES, FOR, DO
 } forth_opcode;
 ///
 ///====================================================================
@@ -149,6 +149,14 @@ void add_w(IU w) {                  ///< add a word index into pmem
     LOG_KX(":", c.xtoff()); LOGS(" "); LOGS(c.name); LOGS("\n");
 #endif // CC_DEBUG > 1
 }
+void add_var() {                    ///< add a varirable header
+#if DO_WASM                         /// * WASM float needs to be 4-byte aligned
+    if (sizeof(IU)==2 && (pmem.idx & 0x3)!=0) {
+        add_iu(NOP);                /// pad two bytes
+    }
+#endif // DO_WASM
+    add_w(VAR);
+}
 ///====================================================================
 ///
 ///> Forth inner interpreter (handles a colon word)
@@ -172,7 +180,7 @@ void nest() {
     while (dp >= 0) {                  ///> depth control
         IU ix = *(IU*)MEM(IP);         ///> fetch opcode, hopefully cached
         run = true;                    ///> re-enable loop control
-        while (run && ix) {            ///> loop till 0 (EXIT) hit
+        while (run && ix!=EXIT) {      ///> loop till 0 (EXIT) hit
             IP += sizeof(IU);          /// * advance inst. ptr
             if (ix & UDF_FLAG) {       ///> is it a colon word?
                 rs.push(IP);
@@ -314,14 +322,14 @@ void see(IU pfa, int dp=1) {
         IU w = pfa2opcode(*(IU*)ip);    ///> fetch word index by pfa
         if (w==(IU)-1) break;           ///> loop guard
         
-        fout << ENDL; for (int i=dp; i>0; i--) fout << "  "; ///> indent
+        fout << ENDL; for (int i=dp; i>0; i--) fout << "  ";    ///> indent
         to_s(w, ip);                    ///> display opcode
         if (w==EXIT) break;             ///> done with the colon word
 
         ip += sizeof(IU);               ///> advance ip (next opcode)
         switch (w) {                    ///> extra bytes to skip
         case LIT:   ip += sizeof(DU);                    break;
-        case VAR:   ip += sizeof(IU) + *(IU*)ip;         break;
+        case VAR:   ip += sizeof(IU) + *(IU*)ip;         break; /// * skip (n) and n cells
         case STR:   case DOTQ:  ip += STRLEN((char*)ip); break;
         case BRAN:  case ZBRAN:
         case NEXT:  case LOOP:  ip += sizeof(IU);        break;
@@ -423,7 +431,7 @@ void dict_dump() {
 #if DO_WASM
 /// function in worker thread
 EM_JS(void, js, (const char *ops), {
-        postMessage(['js', s]);
+        postMessage(['js', UTF8ToString(ops)]);
 });
 void call_js() {                           ///> ( n addr u -- )
     stringstream n;
@@ -467,6 +475,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
     ///        - the build-in control words have extra last blank char
     /// @{
     CODE("exit ",   {});                                      // dict[0] also the storage for base
+    CODE("nop ",    {});                                      // nop (VAR padding
     CODE("next ",                                             // handled in nest()
          if (GT(rs[-1] -= DU1, -DU1)) IP = *(IU*)MEM(IP);     // rs[-1]-=1 saved 200ms/1M cycles
          else { IP += sizeof(IU); rs.pop(); });
@@ -635,7 +644,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
     CODE("exit",    run = false);                               // early exit the colon word
     CODE("variable",                                            // create a variable
          def_word(word());                                      // create a new word on dictionary
-         add_w(VAR); add_iu(sizeof(DU)); add_du(DU0);           // dovar (len=4, default 0)
+         add_var(); add_iu(sizeof(DU)); add_du(DU0);            // dovar (len=4, default 0)
          add_w(EXIT));
     CODE("constant",                                            // create a constant
          def_word(word());                                      // create a new word on dictionary
@@ -647,7 +656,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
     /// @brief - dict is directly used, instead of shield by macros
     /// @{
     CODE("exec",  IU w = POP(); CALL(w));                       // execute word
-    CODE("create", def_word(word()); add_w(VAR));               // dovar (no parameter field)
+    CODE("create", def_word(word()); add_var());                // dovar (no parameter field)
     IMMD("does>", add_w(DOES));
     CODE("to",              // 3 to x                           // alter the value of a constant
          IU w = find(word()); if (!w) return;                   // to save the extra @ of a variable
@@ -706,7 +715,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
          POP();                             // string length, not used
          U8 *fn = MEM(POP());               // file name
          forth_include((const char*)fn));   // include file
-#if DO_WASM    
+#if DO_WASM
     CODE("JS",    call_js());               // Javascript interface
 #else  // !DO_WASM
     CODE("bye",   exit(0));
