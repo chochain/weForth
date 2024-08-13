@@ -423,7 +423,7 @@ void dict_dump() {
 #if DO_WASM
 /// function in worker thread
 EM_JS(void, js, (const char *ops), {
-    postMessage(['js', UTF8ToString(ops)])
+        postMessage(['js', s]);
 });
 void call_js() {                           ///> ( n addr u -- )
     stringstream n;
@@ -704,6 +704,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
          U8 *fn = MEM(POP());               // file name
          forth_include((const char*)fn));   // include file
 #if DO_WASM    
+    CODE("int",   top = UINT(top));         // float => integer
     CODE("JS",    call_js());               // Javascript interface
 #else  // !DO_WASM
     CODE("bye",   exit(0));
