@@ -433,7 +433,6 @@ EM_JS(void, js, (const char *ops), {
         const req = UTF8ToString(ops).split(/\\s+/);
         const wa  = wasmExports;
         const mem = wa.vm_mem();
-        console.log(req);
         let msg = [], tfr = [];
         for (let i=0, n=req.length; i < n; i++) {
             if (req[i]=='p') {
@@ -686,9 +685,9 @@ void dict_compile() {  ///< compile primitive words into dictionary
     /// @defgroup metacompiler
     /// @brief - dict is directly used, instead of shield by macros
     /// @{
-    CODE("exec",  IU w = POP(); CALL(w));                       // execute word
+    CODE("exec",   IU w = POP(); CALL(w));                      // execute word
     CODE("create", def_word(word()); add_var());                // dovar (no parameter field)
-    IMMD("does>", add_w(DOES));
+    IMMD("does>",  add_w(DOES));
     CODE("to",              // 3 to x                           // alter the value of a constant
          IU w = find(word()); if (!w) return;                   // to save the extra @ of a variable
          *(DU*)(MEM(dict[w].pfa) + sizeof(IU)) = POP());
@@ -701,12 +700,14 @@ void dict_compile() {  ///< compile primitive words into dictionary
     ///
     CODE("@",     IU w = UINT(POP()); PUSH(CELL(w)));           // w -- n
     CODE("!",     IU w = UINT(POP()); CELL(w) = POP(););        // n w --
-    CODE(",",     DU n = POP(); add_du(n));                     // n -- 
+    CODE(",",     DU n = POP(); add_du(n));                     // n -- , compile a cell
+    CODE("n,",    IU i = UINT(POP()); add_iu(i));               // compile a 16-bit value
     CODE("cells", IU i = UINT(POP()); PUSH(i * sizeof(DU)));    // n -- n'
     CODE("allot",                                               // n --
-         IU n = UINT(POP());                                    // number of elements
+         IU n = UINT(POP());                                    // number of bytes
          add_iu(n);                                             // encode length, default 0
-         for (IU i = 0; i < n; i+=sizeof(IU)) add_iu(0));       // Note: need EXIT manually added
+         for (int i = 0; i < n; i+=sizeof(DU)) add_du(DU0);     // zero padding
+         add_w(EXIT));                                          // endof word
     CODE("+!",    IU w = UINT(POP()); CELL(w) += POP());        // n w --
     CODE("?",     IU w = UINT(POP()); fout << CELL(w) << " ");  // w --
     /// @}
