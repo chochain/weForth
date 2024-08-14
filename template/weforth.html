@@ -137,8 +137,7 @@
         case 'usr': usr.innerHTML = v; break
         case 'ss' : ss.innerHTML  = v; break
         case 'dm' : dm.innerHTML  = v; break
-        case 'px' : jolt_q(v);         break
-        case 'js' : jolt_req(vm, v) || logo_ex(v); break 
+        case 'js' : jolt_req(v) || logo_ex(v); break
         default: console.log('vm_res['+k+'].error=>'+v)
         }
     }

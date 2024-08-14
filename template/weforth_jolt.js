@@ -140,17 +140,12 @@ function get_shape(t, x) {
 
 let req_q = []
 
-function jolt_req(vm, cmd) {
-    const req = cmd.split(/\s+/)            ///> split command into request (array)
-    if (req.length < 2) return 0            /// * skip LOGO command
-
-    req.push(Date.now())
-    vm.postMessage(['px', req ])            /// * send physics request to VM
-    return 1                                /// * success, skip LOGO dispatcher
-}
-function jolt_q(req) {                      ///> jolt job queue
+function jolt_req(req) {                    ///> jolt job queue
+    if (req.length < 3) return 0            /// * skip LOGO command
+    
     req.push(Date.now() - req[4])
     req_q.push(req)
+    return 1
 }
 function jolt_update(jolt) {
     const v = req_q.shift()                 ///> pop from job queue
