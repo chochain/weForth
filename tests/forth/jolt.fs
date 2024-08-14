@@ -14,8 +14,8 @@ V3       px                            \ [x, y, z]
 BODYSET  ps                            \ body setting [id,pos[],rot[]]
 1.1 2.2 3.3 px 3!
 $FF $80 $80 RGB fg !
-: one fg @ px ps BOX ;
+: one fg @ 3 px 8 ps BOX ;
 : ten 9 for one 250 delay next ;
 : shoot 9 for ten i 10 * . cr next ;
-fg @ px ps MESH
+fg @ 3 px 8 ps MESH
 .( JOLT loaded )
