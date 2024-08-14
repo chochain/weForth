@@ -429,20 +429,51 @@ void dict_dump() {
 ///> Javascript/WASM interface
 ///
 #if DO_WASM
-/// function in worker thread
 EM_JS(void, js, (const char *ops), {
-        postMessage(['js', UTF8ToString(ops)]);
+        const req = UTF8ToString(ops).split(/\\s+/);
+        const wa  = wasmExports;
+        const mem = wa.vm_mem();
+        console.log(req);
+        let msg = [], tfr = [];
+        for (let i=0, n=req.length; i < n; i++) {
+            if (req[i]=='p') {
+                const a = new Float32Array(     ///< create a buffer ref
+                    wa.memory.buffer,           /// * WASM ArrayBuffer
+                    mem + (req[i+1]|0),         /// * pointer address
+                    req[i+2]|0                  /// * length
+                );
+                i += 2;                         /// *  skip over addr, len
+                const t = new Float64Array(a);  ///< create a transferable
+                msg.push(t);                    /// * which speeds postMessage
+                tfr.push(t.buffer);             /// * from 20ms => 5ms
+            }
+            else msg.push(req[i]);
+        }
+        msg.push(Date.now());                   /// * t0 anchor for performance check
+        postMessage(['js', msg], tfr);
 });
+///
+///> Javascript calling, before passing to js()
+///
+///  String substitude similar to printf
+///    %d - integer
+///    %f - float
+///    %x - hex
+///    %s - string
+///    %p - pointer (memory block)
+///
 void call_js() {                           ///> ( n addr u -- )
     stringstream n;
     auto t2s = [&n](char c) {              ///< template to string
         n.str("");                         /// * clear stream
         switch (c) {
-        case 'd':
-        case 'p': n << UINT(POP());                break;
+        case 'd': n << UINT(POP());                break;
         case 'f': n << (DU)POP();                  break;
         case 'x': n << "0x" << hex << UINT(POP()); break;
         case 's': POP(); n << (char*)MEM(POP());   break;  /// also handles raw stream
+        case 'p': 
+            n << "p " << UINT(POP());
+            n << ' '  << UINT(POP());              break;
         default : n << c << '?';                   break;
         }
         return n.str();
