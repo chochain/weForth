@@ -15,10 +15,10 @@ create  fg 6 cells n,                  \ designated colors, n manually added
 $c0f0c0 , $f04040 , $a0a0f0 ,
 $80f080 , $f0d080 , $f0a0f0 , 0 n,     \ 0=EXIT, manually added
 \ randomized parameters
-: rx rnd 0.5 - * ;                     \ ( n -- n' ) random with range [-n, n)
+: rx 2* rnd 0.5 - * ;                  \ ( n -- n' ) random with range [-n, n)
 : rnd_bdy rnd 5 * 1+ int bs ! ;        \ randam shape 1:box, 2:ball, 3:pipe, 4:pill, 5:dumbbell
 : rnd_px  rnd 0.5 + rnd 0.5 + rnd 0.5 + px 3! ;  \ random parameters x0, x1, x2
-: rnd_pos 20 rx 20 20 rx bs .POS! ;              \ random position   x, y, z
+: rnd_pos 10 rx 20 10 rx bs .POS! ;              \ random position   x, y, z
 : rnd_rot rnd rnd rnd rnd 2PI * bs .ROT! ;       \ random rotation   x, y, z, w
 : MESH                                 \ mesh floor
   30 1 0.8 px 3!                       \ 30x30 mesh with cell size 1, max height=0.8
