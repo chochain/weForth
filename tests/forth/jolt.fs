@@ -11,16 +11,17 @@
 : .AV!  44 + 3! ;                      \ angular velocity ( x y z a -- )
 \ variables
 6.2832  constant 2PI
+6       constant NTYPE                 \ max types of shape
 V3      px                             \ [x0, x1, x2], parameters for shapes
 DYNASET ds                             \ dynamic setting [id,pos[3],rot[4],v[3],av[3]]
-create  fg 6 cells n,                  \ designated colors, n manually added
-$c0f0c0 , $f04040 , $a0a0f0 ,
+create  fg NTYPE 1+ cells n,           \ designated colors, n manually added
+$c0f0c0 , $f04040 , $a0a0f0 , $f0ff40 ,
 $80f080 , $f0d080 , $f0a0f0 , 0 n,     \ 0=EXIT, manually added
 \ randomized parameters
 : rx 2* rnd 0.5 - * ;                  \ ( n -- n' ) random with range [-n, n)
-: rnd_bdy
-  rnd 5 * 1+ int ds !                  \ randam shape 1:box, 2:ball, 3:pipe, 4:pill, 5:dumbbell
-  rnd 0.5 + rnd 0.5 + rnd 0.5 + px 3! ;     \ random parameters x0, x1, x2
+: rnd_bdy                              \ randam shape 1:box, 2:ball, 3:cynlinder,
+  rnd NTYPE * 1+ int ds !                   \         4:capsule, 5:tapered capsule, 6:dumbbell
+  rnd 0.5 + rnd 0.5 + rnd 0.5 + px 3! ;     \ random sizing x0, x1, x2
 : rnd_geo                              \ random geometry
   0 0 0 ds .POS!                            \ position   x, y, z
   rnd rnd rnd rnd 2PI * ds .ROT! ;          \ rotation   x, y, z, w
@@ -37,7 +38,6 @@ MESH                                   \ create a mesh floor
   rnd_bdy rnd_geo rnd_v                \ create random shape, geometry, velocity
   fg ds @ cells + @ 3 px 14 ds         \ get color, geometry, shape config
   s" body %x %p %p" JS ;               \ foreward to front-end thread
-: ten 9 for one 250 delay next ;
-: rain 9 for ten i 10 * . cr next ;
-\ shooter
+: ten  9 for one 250 delay next ;
+: spit 9 for ten i 10 * . cr next ;
 .( JOLT loaded )
