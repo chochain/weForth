@@ -39,18 +39,6 @@ function build_mesh(n, sz, h) {    // nxn, sz=tileSize, h:max_height
 
     return shape
 }
-function get_q4(
-    x=Math.random(),
-    y=Math.random(),
-    z=Math.random(),
-    w=2*Math.PI*Math.random()) {
-    let v3 = new Jolt.Vec3(0.001+x, y, z).Normalized()
-    let q4 = (x==0 && y==0 && z==0)
-        ? new Jolt.Quat(0, 0, 0, 1)
-        : Jolt.Quat.prototype.sRotation(v3, w)
-    Jolt.destroy(v3)
-    return q4
-}
 function get_shape(t, v=null) {
     const rx = ()=>0.5 + Math.random()
     let x = v || (t==0 ? [ 30, 1, 0.8 ] : [ rx(), rx(), rx() ])
@@ -121,12 +109,10 @@ function jolt_update(jolt) {
     console.log(v)                          /// * debug trace
     
     const t = v[0], c = v[1]|0              ///> t, color
-    const x = v[2], s = v[3]                ///> geometry, shape
+    const x = v[2], ds= v[3]                ///> geometry, shape dynaset
     
     const msh   = t=='mesh'
-    const pos   = new Jolt.RVec3(s[1], s[2], s[3])
-    const rot   = get_q4(s[4], s[5], s[6], s[7])
-    const shape = get_shape(msh ? 0 : s[0]|0, x)
+    const shape = get_shape(msh ? 0 : ds[0]|0, x)
     
-    jolt.add(shape, pos, rot, c, msh)
+    jolt.add(shape, ds, c, msh)
 }
