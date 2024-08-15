@@ -18,6 +18,15 @@ With WASM, the interoperability between different languages become a thing of th
 > <img src="https://chochain.github.io/weForth/img/weforth_logo_snip2.png" style="width:800px">sample</img>
 
 ### Build - (make sure python3 and Emscripten are installed)
+#### Templates
+Serving as the core of demos, the templates under ~/template directory are used in different built shown below which are organized by the Makefile
+    * eforth.html  - weForth, vanilla, single-threaded HTML
+    * ceforth.html - weForth, with an integrated editor, single-threaded HTML
+    * weforth.html - weForth runs in a worker thread
+        The following Forth scripts under ~/tests/forth can be included for GUI integration demo
+        > forth/logo.fs - Turtle Graphics
+        > forth/jolt.fs - Jolt Physics Engine
+
 #### Bare-bone eForth on Web
 
     make zero
@@ -49,7 +58,7 @@ Client-side Browser
 ### Javascript interface
 To communicate between Forth and Javascript engine, weForth implemented a word 'JS' and a function call_js(). They utilize Emscripten EM_JS macro that *postMessage* from C++ backend-side to *onmessage* on browser-side. Depends on your need, handler can be very simple to complicated.
 
-#### ceforth.html - a very simple (and dangerous) handler with the single-threaded demo
+#### in eforth.html and ceforth.html - a simple (and dangerous) handler with the single-threaded demo
 
     this.onmessage = e=>{
         if (e.data[0]=='js') this.eval(e.data[1])
@@ -59,7 +68,7 @@ To communicate between Forth and Javascript engine, weForth implemented a word '
     
 > <img src="https://chochain.github.io/weForth/img/weforth_js.png" width=604px>JS call</img>
 
-#### weforth.html - a more complex handler with the multi-threaded web worker demo
+#### weforth.html - a more complex message dispatcher with the multi-threaded web worker demo
 
     const ex = (ops)=>Function(       ///< scope limiting eval
         `"use strict"; this.update('${ops}')`
