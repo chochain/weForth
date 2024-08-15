@@ -1,9 +1,9 @@
 EM = em++ -Wall -O2 # -O3 does not work
-CC = g++
+CC = g++ -Wall -O2
 
 SRC = ./src/ceforth.cpp
 
-EXP = _main,_forth,_vm_base,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem,_top
+EXP = _main,_forth,_vm_base,_vm_dflt,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem_idx,_vm_mem,_top
 
 HTML = \
 	template/weforth.html \
@@ -11,7 +11,10 @@ HTML = \
 	template/file_io.js \
 	template/weforth_logo.js \
 	template/weforth_helper.js \
-	template/weforth_worker.js
+	template/weforth_worker.js \
+	template/weforth_sleep.js \
+	template/jolt_core.js \
+	template/weforth_jolt.js
 
 all: zero one two
 	echo "cmd: python3 -m http.server to start local web server"
@@ -41,8 +44,9 @@ two: $(SRC)
 debug: $(SRC)
 	echo "WASM: create WASM objdump file"
 	cp $(HTML) ./tests
-	$(EM) -Wall -o tests/ceforth.html $^ --shell-file template/ceforth.html -sEXPORT_ALL=1 -sLINKABLE=1 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
-	wasm-objdump -x tests/ceforth.wasm > tests/ceforth.wasm.txt -O0
+	$(CC) -o tests/eforth $^
+	$(EM) -o tests/ceforth.html $^ --shell-file template/ceforth.html -sEXPORT_ALL=1 -sLINKABLE=1 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+	wasm-objdump -x tests/ceforth.wasm > tests/ceforth.wasm.txt
 
 sdl: tests/sdl2.cpp
 	$(EM) -o tests/sdl2.js $< -sSINGLE_FILE -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS='["png"]' -sUSE_SDL_TTF=2 -sUSE_SDL_GFX=2 --preload-file tests/assets

@@ -8,21 +8,23 @@
   <link rel='stylesheet' href='weforth.css'></link>
   <script type='text/javascript' src='file_io.js'></script>
   <script type='text/javascript' src='weforth_logo.js'></script>
+  <script type='text/javascript' src='weforth_jolt.js'></script>
   </head>
   <body>
     <div class='row' style='height:100%'>
-      <div id='dir' class='col' style='display:none; z-index:1; width:15%'>
+      <div id='dir' class='col' style='display:none; z-index:3; width:15%'>
         <pre class='hdr'>Dictionary</pre>
         <pre id='usr' class='usr'></pre>
         <pre id='dc' class='usr'></pre>
       </div>
-      <div class='col' style='z-index:0; width:100%; padding:8px'>
+      <div class='col' style='z-index:2; width:40%; padding:8px'>
         <cite>
           <i class='material-icons' style='float:left' onclick='(toggle("dir"),forth(""))'>menu_open</i>
           <span style='float:left; position:fixed'>
             <b>weForth</b> - Web eForth - <span id='fname'></span>
           </span>
-          <i class='material-icons' style='float:right' onclick='toggle("mm")'>perm_media</i>
+          <i class='material-icons' style='float:right' onclick='toggle("phx")'>view_in_ar</i>
+          <i class='material-icons' style='float:right' onclick='toggle("dm")'>memory</i>
           <i class='material-icons' style='float:right' onclick='(toggle("edt"),cm_refresh())'>edit_square</i>
         </cite>
         <div id='edt' class='row' style='display:none'>
@@ -45,25 +47,26 @@
         <div style='width:auto'><input id='tib' class='code' value='' /></div>
         <div id='ss' class='ss'>[ ]</div>
       </div>
-      <div id='dsp' class='dsp' style='width:70%'>
-        <pre id='mm' class='mem' style='z-index:10'></pre>
-        <div id='ctx' class='layer'></div>
+      <div id='vu' class='gui'>
+        <pre id='dm' class='mem' style='z-index:100; display:none'></pre>
+        <div id='ctx' class='sfc' style='z-index:10'></div>
+        <div id='phx' class='sfc' style='z-index:11'></div>
       </div>
     <script type='text/javascript'>
     const $ = s=>s[0]=='#' && !s.includes(' ') ? /* ala jQuery */
           document.querySelector(s) : document.querySelectorAll(s)
     const dir = $('#dir'), usr = $('#usr'), dc = $('#dc')
-    const tib = $('#tib'), txt = $('#txt'), ss = $('#ss'), mm = $('#mm')
+    const tib = $('#tib'), txt = $('#txt'), ss = $('#ss')
+    const dm  = $('#dm'),  phx = $('#phx')
     const cm  = CodeMirror.fromTextArea($('#cm'), {
         lineNumbers: true, styleActiveLine: true,
         mode: 'forth',                            /// * Forth language
         extraKeys: { 'Ctrl-Enter': e=>forth(e.getSelection()) }
     })
-    const rz  = new ResizeObserver(e=>{           ///< adjust console height
+    new ResizeObserver(e=>{                       ///< adjust console height
         edt.style.height = cm.innerHeight
         txt.scrollTop    = txt.scrollHeight
     }).observe($('#cm'))
-    const logo = new Logo('ctx')
       
     tib.onkeydown = e=>{                          ///< console input
         if (13!=e.keyCode) return
@@ -77,7 +80,7 @@
     ///
     function toggle(id) {
         let sty = $('#'+id).style
-        sty.display = sty.display=='none' ? 'flex' : 'none'
+        sty.display = sty.display=='none' ? 'inline' : 'none'
     }
     function cm_refresh() {                       /// * fix line number issue
         $('#edt > .CodeMirror').forEach(e=>e.CodeMirror.refresh())
@@ -95,46 +98,6 @@
         if (htm.indexOf('<br/>')==0) htm.replace('<br/>','')  /// * remove blank lines
         to_txt(`<pre class="cmd"><em>${htm}</em></pre>`, false)
     }
-    ///
-    /// Forth section
-    ///
-    const vm = new Worker('weforth_worker.js')  ///< create the Forth worker thread
-    const ex = (ops)=>Function(                 ///< scope limiting eval
-        `"use strict"; this.update('${ops}')`
-    ).bind(logo)()
-    ///
-    /// setup listeners for message from worker thread
-    ///
-    vm.onmessage = e=>{               /// * wait for worker's response
-        let k = e.data[0], v = e.data[1]
-        switch (k) {
-        case 'txt': to_txt(v);         break
-        case 'dc' : show_dict(v);      break
-        case 'us' : usr.innerHTML = v; break
-        case 'ss' : ss.innerHTML  = v; break
-        case 'mm' : mm.innerHTML  = v; ok=1; break
-        case 'js' : ex(v);             break
-        default: console.log('onmessage['+k+'].error=>'+e)
-        }
-    }
-    clear_txt()
-    ///
-    /// Forth outer interpreter
-    ///
-    function forth(cmd) {                        ///< evaludate Forth command
-        if (cmd=='clear') clear_txt()            /// * clear output console
-        else if (cmd) {
-            show_cmd(cmd)                        /// * display in HTML
-            vm.postMessage(['cmd', cmd])         /// * cmd to worker
-            vm.postMessage(['ss'])               /// * query ss
-            if (mm.style.display!='none') {      
-                vm.postMessage(['mm', [0, 640]]) /// * query mem
-            }
-        }
-        if (dc.style.display!='none') {          /// * query dictionary
-            vm.postMessage(['dc'])
-        }
-    }
     function show_dict(div) {
         dc.innerHTML = div
         let tree = document.querySelectorAll('ul.tree a:not(:last-child)')
@@ -142,7 +105,7 @@
             ul.onclick = e=>{
                 var pa = e.target.parentElement
                 var cl = pa.classList
-                if(cl.contains("open")) {
+                if(cl.contains("open")) {                    /// * toggle element on/off
                     cl.remove('open')
                     pa.querySelectorAll(':scope .open').forEach(c=>{
                         c.classList.remove('open')
@@ -154,14 +117,83 @@
         })
     }
     ///
-    /// start up Forth interpreter
+    /// LOGO section (WebSDL)
+    ///
+    const logo    = new Logo('ctx')
+    const logo_ex = (ops)=>Function(              ///< scope limiting eval
+        `"use strict"; this.update('${ops}')`
+    ).bind(logo)()
+    ///
+    /// weForth section (worker thread and main<=>worker messaging)
+    ///
+    const vm     = new Worker('weforth_worker.js')///< create the Forth worker thread
+    const vm_req = (k, v)=>vm.postMessage([k, v]) ///< send request to vm worker
+    vm.onmessage = e=>{                           ///< handle response from vm worker
+        let k = e.data[0], v = e.data[1]
+        if (!v) return
+        switch (k) {
+        case 'txt': to_txt(v);         break
+        case 'dc' : show_dict(v);      break
+        case 'usr': usr.innerHTML = v; break
+        case 'ss' : ss.innerHTML  = v; break
+        case 'dm' : dm.innerHTML  = v; break
+        case 'js' : jolt_req(v) || logo_ex(v); break
+        default: console.log('vm_res['+k+'].error=>'+v)
+        }
+    }
+    clear_txt()
+    ///
+    /// Forth VM outer interpreter
+    ///
+    navigator.serviceWorker.register('./weforth_sleep.js')   /// * weForth sleep support
+    function forth(cmd) {                        ///< evaludate Forth command
+        if (cmd=='clear') clear_txt()            /// * clear output console
+        else if (cmd) {
+            show_cmd(cmd)                        /// * display in HTML
+            vm_req('cmd', cmd)                   /// * cmd to worker
+            vm_req('ss')                         /// * query ss
+            if (dm.style.display!='none') {
+                vm_req('dm', [-1, 0x400])        /// * dump mem, -1: from HERE
+            }
+        }
+        if (dc.style.display!='none') {          /// * query dictionary
+            vm_req('usr')
+        }
+    }
+    ///
+    /// initialize UI once page loaded
     ///
     window.onload = ()=>{
         setTimeout(()=>{
             logo.reset()
-            vm.postMessage(['mm', [0, 640]])
+            vm_req('dm', [-1, 0x400])         /// * query parameter memory, -1: from HERE
+            vm_req('dc')                      /// * query built-in dictionary
+            vm_req('usr')
         }, 1000)
     }
+    </script>
+    <script src='./js/three/three.min.js'></script>
+    <script src='./js/three/OrbitControls.js'></script>
+    <script src='./js/three/WebGL.js'></script>
+    <script src='./js/three/stats.min.js'></script>
+    <script src='./weforth.js'></script>
+    <script type='module'>
+    ///
+    /// Physics Engine (JOLT)
+    ///
+    import jolt_init from './js/jolt-physics.wasm-compat.js'
+    import JoltCore  from './jolt_core.js'
+
+    const R_PX  = window.devicePixelRatio          ///> pixel ratio for WebGL
+    let   jolt  = null                             ///> physics engine handle
+
+    jolt_init().then(Jolt=>{
+        window.Jolt = Jolt
+        jolt = new JoltCore('vu', 'phx', R_PX, jolt_update)
+        ///> start Jolt engine
+        jolt.addMarker(new Jolt.Vec3(0,0,0), 1, 0x0000ff)
+        jolt.render()                             ///< kick off WebGL loop (requestAnimationFrame)
+    })
     </script>
   </body>
 </html>

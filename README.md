@@ -2,21 +2,39 @@
 
 WebAssembly enpowered eForth on web browsers. Is it faster? Is it more portable? Yes, and Yes.
 
-Well, on my aged laptop, the impression is pretty exciting! It's at least 5x faster than pure Javascript implementation on a browser and at 1/2 speed of C/C++ natively compiled code on CPU. It was at 1/4 of native a year ago but as Javascript JIT improves, it now runs faster as well. Not bad at all! On the portability end, though not exactly plug-and-play but some simple alteration turned my C code web-enabled. Of course, WASM has yet to integrate with the front-end well enough, so updating DOM is a different feat if we want to venture beyond being a terminal app.
+Well, on my aged laptop, the impression is pretty exciting! It's at least 5x faster than pure Javascript implementation on a browser and at 40% speed of C/C++ natively compiled code on CPU. It was at 25% of native a year ago but as Javascript JIT improves, it now runs faster as well. Not bad at all! On the portability end, though not exactly plug-and-play but some simple alteration turned my C code web-enabled. Of course, WASM has yet to integrate with the front-end well enough, so updating DOM is a different feat. If we want to venture beyond being a terminal app some UI glue is still required.
 
-Regardless, it brought me warm smiles seeing eForth run in a browser. Better yet, it's straight from C/C++ source code. Other popular scripting languages such as Python, Ruby are trending toward WASM/WASI implementation as well. However, depending solely on JIT without built-in compiler as Forth does, the interpreter-in-an-interpreter design will likely cap the top-end performance (i.e. stuck at 1/5~1/10 of native, so far).
+Regardless, it brought me warm smiles seeing eForth run in a browser. Better yet, it's straight from C/C++ source code. Other popular scripting languages such as Python, Ruby are trending toward WASM/WASI implementation as well. However, unlike FORTH, they depend mostly on JIT without a built-in compiler, the interpreter-in-an-interpreter design will likely cap the top-end performance (i.e. stuck at 5~10% of native speed, so far).
 
-With WASM, the interoperability between different languages become a thing of the near future. If Forth can compile word directly into WASM opcodes, engage WASI to access OS and peripherals, hookup the graphic front-end (i.g. SDL or WebGL), weForth can become a worthy scripting alternative for Web.
+With WASM, the interoperability between different languages become a thing of the near future. If words can be compiled directly into WASM opcodes, OS and peripherals can be accessed through WASI, adding a graphic front-end (i.g. SDL or WebGL), weForth can become a worthy scripting alternative for Web.
 
 ### Features
-   * Forth in Web Worker threads (multi-VMs possible)
-   * Javascript access to ss, dict, and VM memory (via WebAssembly.Memory)
-   * Javascript function calling interface
+   * supports 32-bit float
+   * utilizes Web Worker threads (multi-VMs possible)
+   * have access to ss, dict, and VM memory (via WebAssembly.Memory) from Javascript
+   * call interface from FORTH into Javascript functions
    * IDE-style interactive front-end (cloud possible, i.g. JupyterLab)
 
 > <img src="https://chochain.github.io/weForth/img/weforth_logo_snip2.png" style="width:800px">sample</img>
 
 ### Build - (make sure python3 and Emscripten are installed)
+#### Templates
+Serving as the core of demos, the templates under ~/template directory are used in different built shown below. They are organized by the Makefile
+   * eforth.html  - vanilla weForth, one single-threaded HTML. A good place to start.
+   * ceforth.html - weForth, now with integrated editor, single-threaded.
+   * weforth.html - weForth runs in a worker thread, can also do fancy GUI stuffs now
+       > Javascript module/files are included in the HTML for added functionality
+       > + weforth_helper.js - vocabulary lookup table
+       > + weforth_worker.js - worker thread proxy object
+       > + weforth_sleep.js  - sleep/delay support for async environment
+       > + weforth_logo.js   - Turtle Graphic implementation
+       > + weforth_jolt.js   - Jolt Physics Engine integration
+       > + file_io.js        - file IO support
+
+       > The following Forth scripts under ~/tests/forth are also included for GUI integration demo
+       > + forth/logo.fs - Turtle Graphics
+       > + forth/jolt.fs - Jolt Physics Engine
+
 #### Bare-bone eForth on Web
 
     make zero
@@ -48,7 +66,7 @@ Client-side Browser
 ### Javascript interface
 To communicate between Forth and Javascript engine, weForth implemented a word 'JS' and a function call_js(). They utilize Emscripten EM_JS macro that *postMessage* from C++ backend-side to *onmessage* on browser-side. Depends on your need, handler can be very simple to complicated.
 
-#### ceforth.html - a very simple (and dangerous) handler
+#### in eforth.html and ceforth.html - a simple (and dangerous) handler with the single-threaded demo
 
     this.onmessage = e=>{
         if (e.data[0]=='js') this.eval(e.data[1])
@@ -58,7 +76,7 @@ To communicate between Forth and Javascript engine, weForth implemented a word '
     
 > <img src="https://chochain.github.io/weForth/img/weforth_js.png" width=604px>JS call</img>
 
-#### weforth.html - a more complex handler
+#### weforth.html - a more complex message dispatcher with the multi-threaded web worker demo
 
     const ex = (ops)=>Function(       ///< scope limiting eval
         `"use strict"; this.update('${ops}')`
@@ -117,22 +135,30 @@ Simple 10M tests
 |weForth  |4.1  |EM.b / C  |-O0|FF.b |348 |300|
 |         |     |          |-O2|FF.b |154 |164|
 |         |     |          |-O2|FF.b1|160 |164|
+|weForth<br/>float32|4.2  |EM.b / C  |-O2|FF.b |160 |153|
 
     FF.a = FireFox v120, FF.a1 = FF.a + 1 worker
     FF.b = FireFox v122, FF.b1 = FF.b + 1 worker
     EM.a = Emscripten v3.1.51
     EM.b = Emscripten v3.1.53
 
-    Note1: eForth.js uses JS straight, can do floating-points
-    Note2: uEforth v7 uses Asm.js, build Forth up with JS "assembly".
-    Note3: weForth v1 uses token indirected threaded
-    Note4: weForth+switch(op), is 2x slower than just function pointers.
-    Note5: weForth v1.2 without yield in nest() speeds up 3x.
-    Note6: WASM -O3 => err functions (wa.*) not found
-    Note7: FireFox v122 is vastly faster than v120
-    Note8: Chrome is about 10% slower than FireFox
+Note:
+* eForth.js uses JS straight, can do floating-points
+* uEforth v7 uses Asm.js, build Forth up with JS "assembly".
+* weForth v1 uses token indirected threaded
+* weForth+switch(op), is 2x slower than just function pointers.
+* weForth v1.2 without yield in nest(), speeds up 3x.
+* WASM -O3 => err functions (wa.*) not found
+* FireFox v122, is 2x faster than v120
+* Chrome is about 10% slower than FireFox
+* weForth 4.2 w float32-enabled, runs equally fast as int32, but why?
 
 ### TODO
+* Physics Engine
+  + review Three.js + (Ammo.js/Bullet, or JOLT)
+    + CSG Object (with optional motion trail) [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
+    + Collision (with directional distance sensing)
+  + review raylib
 * review wasmtime (CLI), perf+hotspot (profiling)
 * review DragonRuby/mRuby (SDL)
 * review R3, Forth CPU visualizer (SDL)
@@ -143,11 +169,6 @@ Simple 10M tests
   + Character graphic (SDL_ttf or HTML5)
   + 3D graphic (GL)
   + Music (SDL_media)
-* Robotic Simulation Engine
-  + review raylib
-  + review Three.js
-  + CSG Object (with optional motion trail) [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
-  + Collision (with directional distance sensing)
 * add network system (SD_net)
 * inter-VM communication
 * use WASM stack as ss

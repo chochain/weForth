@@ -25,20 +25,20 @@ const HSV = (h)=>{                    // 0 < h < 100
 const RAD = Math.PI / 180.0
 class Logo {
     static new_cv(n, w, z) {
-        return `<canvas id="${n}" style="z-index:${z}" `+
-            `class="sfc" width="${w}" height="${w}" `+
-            'oncontextmenu="event.preventDefault()"></canvas>'
+        return ""+
+            "<canvas class='sfc'"+
+            `id="${n}" width="${w}" height="${w}" style="z-index:${z}" `+
+            "oncontextmenu='event.preventDefault()'></canvas>"
     }
-    constructor(ctx) {
-        let e = document.getElementById(ctx)
-        let w = e.offsetWidth
+    constructor(div) {
+        let e = document.getElementById(div)
+        let w = e.offsetWidth, h = e.offsetHeight
         e.innerHTML += Logo.new_cv('eve', w, 0)
         e.innerHTML += Logo.new_cv('sfc', w, 1)
         this.eve = document.getElementById('eve').getContext('2d')
         this.sfc = document.getElementById('sfc').getContext('2d')
         this.st  = {
-            w: w, h: e.offsetHeight,
-            dir: 0, pw: 3, pen: 1, show: 1,
+            w: w, h: h, dir: 0, pw: 3, pen: 1, show: 0,
             fg: '#000', bg: '#FFF'
         }
 //        console.log('logo='+JSON.stringify(this))
@@ -81,10 +81,10 @@ class Logo {
         this.sfc.lineWidth   = t.pw
         this.eve.lineWidth   = 3
         this.eve.strokeStyle = '#F00'
-        this.draw_eve(t.fg)
+        if (t.show) this.draw_eve(t.fg)
     }
     update(ops) {
-        let av = ops.split(' ')
+        let av = ops.split(/\s+/)
         let op = av[0],   v = av[1]
         let t  = this.st, s = this.sfc
         this.clear_eve()
@@ -124,6 +124,7 @@ class Logo {
         s.strokeStyle = t.fg
         s.stroke()
         if (t.show) this.draw_eve(t.fg)
+        
         console.log(JSON.stringify(t))   // CC: tracing
     }
 }

@@ -2,7 +2,6 @@
 #define __EFORTH_SRC_CEFORTH_H
 #include <stdio.h>
 #include <stdint.h>     // uintxx_t
-#include <exception>    // try...catch, throw
 #include "config.h"     // configuation and cross-platform support
 using namespace std;
 ///
