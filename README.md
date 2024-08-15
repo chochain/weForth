@@ -19,13 +19,13 @@ With WASM, the interoperability between different languages become a thing of th
 
 ### Build - (make sure python3 and Emscripten are installed)
 #### Templates
-Serving as the core of demos, the templates under ~/template directory are used in different built shown below which are organized by the Makefile
-    * eforth.html  - weForth, vanilla, single-threaded HTML
-    * ceforth.html - weForth, with an integrated editor, single-threaded HTML
-    * weforth.html - weForth runs in a worker thread
-        The following Forth scripts under ~/tests/forth can be included for GUI integration demo
-        > forth/logo.fs - Turtle Graphics
-        > forth/jolt.fs - Jolt Physics Engine
+Serving as the core of demos, the templates under ~/template directory are used in different built shown below. They are organized by the Makefile
+   * eforth.html  - weForth, vanilla, single-threaded HTML
+   * ceforth.html - weForth, with an integrated editor, single-threaded HTML
+   * weforth.html - weForth runs in a worker thread
+     The following Forth scripts under ~/tests/forth can be included for GUI integration demo
+     + forth/logo.fs - Turtle Graphics
+     + forth/jolt.fs - Jolt Physics Engine
 
 #### Bare-bone eForth on Web
 
