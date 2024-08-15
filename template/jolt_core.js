@@ -188,49 +188,35 @@ export default class {
         )
 */
     }
-    add(shape, pos, rot, color, fixed=false) {
+    add(shape, ds, color, fixed=false) {
+        const get_q4 = (
+            x=Math.random(),
+            y=Math.random(),
+            z=Math.random(),
+            w=2*Math.PI*Math.random())=>{
+            let v3 = new Jolt.Vec3(0.001+x, y, z).Normalized()
+            let q4 = (x==0 && y==0 && z==0)
+                ? new Jolt.Quat(0, 0, 0, 1)
+                : Jolt.Quat.prototype.sRotation(v3, w)
+            Jolt.destroy(v3)
+            return q4
+        }
+        const pos  = new Jolt.RVec3(ds[1], ds[2], ds[3])
+        const rot  = get_q4(ds[4], ds[5], ds[6], ds[7])
+        const lv   = new Jolt.Vec3(ds[8], ds[9], ds[10])
+        const av   = new Jolt.Vec3(ds[11], ds[12], ds[13])
         let config = new Jolt.BodyCreationSettings(
             shape, pos, rot,
             fixed ? Jolt.EMotionType_Static : Jolt.EMotionType_Dynamic,
             fixed ? L_STATIC : L_MOVING)
         config.mRestitution = 0.5                            // bounciness
-        let body   = this.intf.CreateBody(config)
+        let body = this.intf.CreateBody(config)
         Jolt.destroy(config)
         
-        return this._addToScene(body, color)
-    }
-    addBox(pos, rot, halfExt, mtype, layer, color = 0xffffff) {
-        let shape = new Jolt.BoxShape(halfExt, 0.05, null)
-        let config= new Jolt.BodyCreationSettings(shape, pos, rot, mtype, layer)
-
-        let body  = this.intf.CreateBody(config)
-        Jolt.destroy(config)
-
-        return this._addToScene(body, color)
-    }
-    addSphere(pos, r, mtype, layer, color = 0xffffff) {
-        let shape = new Jolt.SphereShape(r, null);
-        let config= new Jolt.BodyCreationSettings(
-            shape,
-            pos,
-            Jolt.Quat.prototype.sIdentity(),
-            mtype, layer)
-
-        let body = this.intf.CreateBody(config)
-        Jolt.destroy(config)
-
-        return this._addToScene(body, color)
-    }
-    addFloor(sz = 50, color=0xffffff) {
-        var config = new Jolt.BodyCreationSettings(
-            new Jolt.BoxShape(new Jolt.Vec3(sz, 0.5, sz), 0.05, null),
-            new Jolt.RVec3(0, -0.5, 0),
-            new Jolt.Quat(0, 0, 0, 1),
-            Jolt.EMotionType_Static, L_STATIC)
-
-        let body = this.intf.CreateBody(config)
-        Jolt.destroy(config)
-
+        let id   = body.GetID()
+        this.intf.SetLinearVelocity(id, lv)
+        this.intf.SetAngularVelocity(id, av)
+        
         return this._addToScene(body, color)
     }
     addLine(from, to, color) {
