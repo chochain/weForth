@@ -21,7 +21,17 @@
           txt.innerHTML += br ? t + '<br/>' : t
           txt.scrollTop = txt.scrollHeight
       }
+      ///
+      /// WASM handler
+      ///      
       var Module = { print: to_txt }         ///< WASM global object
+      const ex = (ops)=>Function(            ///< scope limiting eval
+          `"use strict"; this.eval(${ops})`
+      ).bind(this)()
+      this.onmessage = e=>{
+          console.log(e.data)
+          if (e.data[0]=='js') ex(e.data[1])
+      }
       ///
       /// Forth outer interpreter
       ///
