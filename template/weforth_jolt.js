@@ -68,7 +68,14 @@ function get_shape(t, v=null) {
         shape = new Jolt.CapsuleShape(l, r1, 0.05, null)
         break
     }
-    case 5: {                       // Static compound shape
+    case 5: {                       // tapered capsule
+        let l = x[0], r1 = x[1] * 0.5, r2 = x[2] * 0.5
+		let config = new Jolt.TaperedCapsuleShapeSettings(l, r1, r2, null)
+        shape = config.Create().Get()
+        Jolt.destroy(config)
+        break
+    }
+    case 6: {                       // Static compound shape
         let config = new Jolt.StaticCompoundShapeSettings()
         let l = x[0], r2 = x[1] * 0.5, r1 = r2 * 0.5
         config.AddShape(
