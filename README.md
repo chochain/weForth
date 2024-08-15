@@ -24,15 +24,16 @@ Serving as the core of demos, the templates under ~/template directory are used 
    * ceforth.html - weForth, now with integrated editor, single-threaded.
    * weforth.html - weForth runs in a worker thread, can also do fancy GUI stuffs now
        > Javascript module/files are included in the HTML for added functionality
-       > + weforth_helper.js - vocabulary lookup table
-       > + weforth_worker.js - worker thread proxy object
-       > + weforth_sleep.js  - sleep/delay support for async environment
-       > + weforth_logo.js   - Turtle Graphic implementation
-       > + weforth_jolt.js   - Jolt Physics Engine integration
-       > + file_io.js        - file IO support
+       + weforth_helper.js - vocabulary lookup table
+       + weforth_worker.js - worker thread proxy object
+       + weforth_sleep.js  - sleep/delay support for async environment
+       + weforth_logo.js   - Turtle Graphic implementation
+       + weforth_jolt.js   - Jolt Physics Engine integration
+       + file_io.js        - file IO support
+
        > The following Forth scripts under ~/tests/forth are also included for GUI integration demo
-       > + forth/logo.fs - Turtle Graphics
-       > + forth/jolt.fs - Jolt Physics Engine
+       + forth/logo.fs - Turtle Graphics
+       + forth/jolt.fs - Jolt Physics Engine
 
 #### Bare-bone eForth on Web
 
