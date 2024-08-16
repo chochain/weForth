@@ -119,7 +119,7 @@ function jolt_update(jolt) {
     const x = v[2], ds= v[3]                ///> geometry, shape dynaset
     
     const msh   = t=='mesh'
-    const shape = get_shape(msh ? 0 : ds[0]|0, x)
+    const shape = get_shape(msh ? 0 : ds[1]|0, x)
     
     jolt.add(shape, ds, c, msh)
 }

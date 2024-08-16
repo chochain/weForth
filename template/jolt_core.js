@@ -201,10 +201,10 @@ export default class {
             Jolt.destroy(v3)
             return q4
         }
-        const pos  = new Jolt.RVec3(ds[1], ds[2], ds[3])
-        const rot  = get_q4(ds[4], ds[5], ds[6], ds[7])
-        const lv   = new Jolt.Vec3(ds[8], ds[9], ds[10])
-        const av   = new Jolt.Vec3(ds[11], ds[12], ds[13])
+        const pos  = new Jolt.RVec3(ds[2], ds[3], ds[4])
+        const rot  = get_q4(ds[5], ds[6], ds[7], ds[8])
+        const lv   = new Jolt.Vec3(ds[9], ds[10], ds[11])
+        const av   = new Jolt.Vec3(ds[12], ds[13], ds[14])
         let config = new Jolt.BodyCreationSettings(
             shape, pos, rot,
             fixed ? Jolt.EMotionType_Static : Jolt.EMotionType_Dynamic,
