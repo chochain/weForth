@@ -31,7 +31,7 @@ $80f080 , $f0d080 , $f0a0f0 , 0 n,     \ 0=EXIT, manually added
   0 0 0 ds .P!                             \ position   x, y, z
   rnd rnd rnd rnd 2PI * ds .R! ;           \ rotation   x, y, z, w
 : rnd_v 3 rx rnd 10 * 10 + 3 rx ds .V! ;   \ velocity   x, y, z
-: remove s" drop %d 1 1" JS ;          \ remove body from scene
+: remove s" drop %d" JS ;              \ ( id -- ) remove body from scene
 \ create mesh floor (id=0, shape=0)
 30 1 0.8 px 3!                         \ 30x30 mesh with cell size 1, max height=0.8
 0 -5 0  ds .P! 0 0 0 1 ds .R!          \ position xyz: (0,-5,0), rotation xyzw:0,0,0,-1
