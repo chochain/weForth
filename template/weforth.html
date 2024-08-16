@@ -23,8 +23,8 @@
           <span style='float:left; position:fixed'>
             <b>weForth</b> - Web eForth - <span id='fname'></span>
           </span>
-          <i class='material-icons' style='float:right' onclick='toggle("phx")'>view_in_ar</i>
-          <i class='material-icons' style='float:right' onclick='toggle("dm")'>memory</i>
+          <i class='material-icons' style='float:right' onclick='toggle("phx","inline")'>view_in_ar</i>
+          <i class='material-icons' style='float:right' onclick='toggle("dm","inline")'>memory</i>
           <i class='material-icons' style='float:right' onclick='(toggle("edt"),cm_refresh())'>edit_square</i>
         </cite>
         <div id='edt' class='row' style='display:none'>
@@ -78,9 +78,9 @@
     ///
     /// DOM manipulators
     ///
-    function toggle(id) {
+    function toggle(id, sty0='flex') {
         let sty = $('#'+id).style
-        sty.display = sty.display=='none' ? 'inline' : 'none'
+        sty.display = sty.display=='none' ? sty0 : 'none'
     }
     function cm_refresh() {                       /// * fix line number issue
         $('#edt > .CodeMirror').forEach(e=>e.CodeMirror.refresh())
