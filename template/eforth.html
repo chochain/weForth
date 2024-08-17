@@ -30,7 +30,7 @@
       ).bind(this)()
       this.onmessage = e=>{
           console.log(e.data)
-          if (e.data[0]=='js') ex(e.data[1])
+          if (e.data[0]=='js') ex(e.data[1][1])
       }
       ///
       /// Forth outer interpreter
