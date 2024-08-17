@@ -15,5 +15,6 @@
 : BG RGB s" bg %d" JS ;
 : PW s" pw %d" JS ;
 : XY $10 lshift swap $ffff and or s" xy %d" JS ;
+ST
 .( LOGO loaded )
 
