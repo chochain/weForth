@@ -158,8 +158,8 @@ export default class {
     render() {
         if (this.update != null) this.update(this)             // callback to front-end
         /// update physics system
-        for (let k in this.ospace) {
-            let obj  = this.ospace[k]
+        for (let id in this.ospace) {
+            let obj  = this.ospace[id]
             let body = obj.userData.body
 
             obj.position.copy(V3G(body.GetPosition()))
@@ -179,7 +179,7 @@ export default class {
         this.ctrl.update(dt)
         this.rndr.render(this.scene, this.cam)
         this.stats.update()
-        /// repaint screen, (fast/slow motion by adjusting framerate)
+        /// repaint screen (with frame-rate control)
         requestAnimationFrame(()=>this.render())             // enqueue GUI event loop (default 60Hz)
 /*        
         setTimeout(                                          // enqueue GUI event loop
@@ -201,10 +201,11 @@ export default class {
             Jolt.destroy(v3)
             return q4
         }
-        const pos  = new Jolt.RVec3(ds[1], ds[2], ds[3])
-        const rot  = get_q4(ds[4], ds[5], ds[6], ds[7])
-        const lv   = new Jolt.Vec3(ds[8], ds[9], ds[10])
-        const av   = new Jolt.Vec3(ds[11], ds[12], ds[13])
+        const id   = ds[0]|0                                 // Forth object id
+        const pos  = new Jolt.RVec3(ds[2], ds[3], ds[4])     // ds.slice(2,5) doesn't work?
+        const rot  = get_q4(ds[5], ds[6], ds[7], ds[8])
+        const lv   = new Jolt.Vec3(ds[9], ds[10], ds[11])
+        const av   = new Jolt.Vec3(ds[12], ds[13], ds[14])
         let config = new Jolt.BodyCreationSettings(
             shape, pos, rot,
             fixed ? Jolt.EMotionType_Static : Jolt.EMotionType_Dynamic,
@@ -213,11 +214,13 @@ export default class {
         let body = this.intf.CreateBody(config)
         Jolt.destroy(config)
         
-        let id   = body.GetID()
-        this.intf.SetLinearVelocity(id, lv)
-        this.intf.SetAngularVelocity(id, av)
+        body.SetLinearVelocity(lv)
+        body.SetAngularVelocity(av)
         
-        return this._addToScene(body, color)
+        return this._addToScene(id, body, color)
+    }
+    drop(id) {
+        return this._removeFromScene(id)
     }
     addLine(from, to, color) {
         const mati = new THREE.LineBasicMaterial({ color: color })
@@ -276,27 +279,42 @@ export default class {
         this.phyx = this.jolt.GetPhysicsSystem()         // physics system instance
         this.intf = this.phyx.GetBodyInterface()         // binding interface
     }
-    _addToScene(body, color) {
-        let id  = body.GetID()                           // JOLT assigned id
+    _addToScene(id, body, color) {
+        let bid = body.GetID()                           // JOLT assigned id
         let obj = objFactory(body, color)
 
-        this.intf.AddBody(id, Jolt.EActivation_Activate) // add to physic system
+        this.intf.AddBody(bid, Jolt.EActivation_Activate)// add to physic system
         this.scene.add(obj)                              // add to GUI
-        this.ospace[id.GetIndex()] = obj                 // keep obj in KV store for reference
-        this.length += 1                                 // CC: need a lock?
-
-        return body
+        
+        this.ospace[id] = obj                            // keep obj in KV store for reference
+        return this.ospace.length                        // CC: need a lock?
     }
-    _removeFromScene(obj) {
-        let id = obj.userData.body.GetID()               // fetch JOLT id
-        this.intf.RemoveBody(id)
-        this.intf.DestroyBody(id)
-        delete obj.userData.body                         // drop Jolt object first
+    _shakeScene() {
+        console.log('shake')
+        for (let id in this.ospace) {
+            let bid = this.ospace[id].userData.body.GetID()
+            this.intf.ActivateBody(bid)
+        }
+    }
+    _removeFromScene(id) {
+        const obj = this.ospace[id]                      // get object
+        if (!obj) return 0
+
+        let body  = obj.userData.body
+        let bid   = body.GetID()                         // fetch JOLT BodyID
+        if (body.IsStatic()) {                           // reactivate bodies if needed
+            this._shakeScene()
+        }
+        this.intf.RemoveBody(bid)
+        this.intf.DestroyBody(bid)
+
+        body = null                                      // free ref
+        delete obj.userData.body                         // drop Jolt body
 
         this.scene.remove(obj)                           // remove from GUI
+        delete this.ospace[id]                           // remove from our KV storea
 
-        delete this.ospace[id.GetIndex()]                // remove from our KV store
-        this.length -= 1                                 // CC: need a lock?
+        return this.ospace.length                        // CC: need a lock?
     }
 }  // class JoltCore
 
