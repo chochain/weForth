@@ -83,9 +83,8 @@ class Logo {
         this.eve.strokeStyle = '#F00'
         if (t.show) this.draw_eve(t.fg)
     }
-    update(ops) {
-        let av = ops.split(/\s+/)
-        let op = av[0],   v = av[1]
+    update(av) {
+        let op = av[1],   v = av[2]
         let t  = this.st, s = this.sfc
         this.clear_eve()
         s.beginPath()
@@ -117,7 +116,7 @@ class Logo {
             y |= (y & 0x8000) ? 0xffff0000 : 0      // y negative
             this.xform(t.w/2+x, t.h/2-y,
                        -t.dir, true);        break
-        default: console.log('?op:'+op);     break
+        default: return 0
         }
         if (t.pen) s.lineTo(0, 0)
         else       s.moveTo(0, 0)
@@ -126,5 +125,6 @@ class Logo {
         if (t.show) this.draw_eve(t.fg)
         
         console.log(JSON.stringify(t))   // CC: tracing
+        return 1
     }
 }
