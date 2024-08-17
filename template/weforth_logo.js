@@ -33,8 +33,10 @@ class Logo {
     constructor(div) {
         let e = document.getElementById(div)
         let w = e.offsetWidth, h = e.offsetHeight
+        e.innerHTML += '<pre id="hint">To load Turtle Graphics, type \'s" forth/logo.fs" included\'</pre>'
         e.innerHTML += Logo.new_cv('eve', w, 0)
         e.innerHTML += Logo.new_cv('sfc', w, 1)
+        this.pre = document.getElementById('hint')
         this.eve = document.getElementById('eve').getContext('2d')
         this.sfc = document.getElementById('sfc').getContext('2d')
         this.st  = {
@@ -50,6 +52,7 @@ class Logo {
         e.fillStyle = this.st.bg
         e.arc(16,0,24,0,360.0*RAD)    // circle to erase
         e.fill()
+        this.pre.style.display = 'none'
     }
     draw_eve(c) {
         const W = Math.PI/15, X = Math.PI/6
