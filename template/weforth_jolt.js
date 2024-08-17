@@ -103,9 +103,10 @@ let   req_q   = []
 const CMD_LST = [ 'mesh', 'body', 'drop' ]
 
 function jolt_req(req) {                    ///> jolt job queue
-    if (CMD_LST.indexOf(req[0])<0) return 0 /// * skip LOGO command
-    
-    req.push(Date.now() - req.at(-1))       /// * encode timediff
+    if (!req ||
+        CMD_LST.indexOf(req[1])<0) return 0 /// * not Jolt command
+    console.log(req)
+    req.push(Date.now() - req[0])           /// * encode timediff
     req_q.push(req)
     return 1
 }
@@ -113,13 +114,13 @@ function jolt_update(jolt) {
     const v = req_q.shift()                 ///> pop from job queue
     if (!v) return                          /// * queue empty, bail
 
-    v.push(Date.now() - v.at(-2))           /// * encode timediff
+    v.push(Date.now() - req[0])             /// * encode timediff
     console.log(v)                          /// * debug trace
     
-    const cmd = v[0]                        ///> Jolt command
-    const n   = v[1]|0                      ///> color or object id
-    const x   = v[2]                        ///> geometry parameters
-    const ds  = v[3]                        ///> shape dynaset
+    const cmd = v[1]                        ///> Jolt command
+    const n   = v[2]|0                      ///> color or object id
+    const x   = v[3]                        ///> geometry parameters
+    const ds  = v[4]                        ///> shape dynaset
 
     switch (CMD_LST.indexOf(cmd)) {
     case 0: return jolt.add(get_shape(0, x),       ds, n, true)   // fixed=true
