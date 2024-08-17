@@ -114,7 +114,7 @@ function jolt_update(jolt) {
     const v = req_q.shift()                 ///> pop from job queue
     if (!v) return                          /// * queue empty, bail
 
-    v.push(Date.now() - req[0])             /// * encode timediff
+    v.push(Date.now() - v[0])              /// * encode timediff
     console.log(v)                          /// * debug trace
     
     const cmd = v[1]                        ///> Jolt command
