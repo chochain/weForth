@@ -433,7 +433,7 @@ EM_JS(void, js, (const char *ops), {
         const req = UTF8ToString(ops).split(/\\s+/);
         const wa  = wasmExports;
         const mem = wa.vm_mem();
-        let msg = [], tfr = [];
+        let msg = [Date.now()], tfr = [];       ///< t0 anchor for performance
         for (let i=0, n=req.length; i < n; i++) {
             if (req[i]=='p') {
                 const a = new Float32Array(     ///< create a buffer ref
@@ -448,7 +448,6 @@ EM_JS(void, js, (const char *ops), {
             }
             else msg.push(req[i]);
         }
-        msg.push(Date.now());                   /// * t0 anchor for performance check
         postMessage(['js', msg], tfr);
 });
 ///
