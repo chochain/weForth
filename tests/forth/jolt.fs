@@ -2,9 +2,13 @@
 : V3 create 3 cells allot ;            \ geometry/vec3
 : 3! >r r@ 8 + ! r@ 4 + ! r> ! ;       \ ( x y z a -- )
 : 4! >r r@ 12 + ! r> 3! ;              \ ( x y z w a -- )
-\ shape data structure
-6 constant SMAX                        \ max types of shape 1:box, 2:ball, 3:cynlinder,
-                                       \                    4:capsule, 5:tapered capsule, 6:dumbbell
+\ shape types and default colors
+6.2832 constant 2PI                    \ 2*PI (for degree => radian calc)
+6      constant SMAX                   \ shape 1:box, 2:ball, 3:cynlinder,
+                                       \       4:capsule, 5:tapered capsule, 6:dumbbell
+create fg
+  $c0f0c0 , $f04040 , $a0a0f0 , $f0ff40 ,
+  $80f080 , $f0d080 , $f0a0f0 ,
 15 constant DSZ                        \ size of DYNASET (15 cells)
 : DYNASET create DSZ cells allot ;     \ ( "name" -- [ id, t, pos[3], rot[4], v[3], av[3] ] )
 : .T! 4 + ! ;                          \ set shape type
@@ -13,13 +17,9 @@
 : .V! 36 + 3! ;                        \ linear velocity  ( x y z a -- )
 : .W! 48 + 3! ;                        \ angular velocity ( x y z a -- )
 \ variables
-6.2832  constant 2PI
 variable id 0 id !                     \ body id counter
 V3       px                            \ [x0, x1, x2], parameters for shapes
 DYNASET  ds                            \ dynamic setting [id,pos[3],rot[4],v[3],av[3]]
-create   fg SMAX 1+ cells n,           \ designated colors, n manually added
-$c0f0c0 , $f04040 , $a0a0f0 , $f0ff40 ,
-$80f080 , $f0d080 , $f0a0f0 , 0 n,     \ 0=EXIT, manually added
 : color ds 4 + @ cells fg + @ ;        \ fetch shape color
 \ randomized parameters
 : rx 2* rnd 0.5 - * ;                  \ ( n -- n' ) random with range [-n, n)
