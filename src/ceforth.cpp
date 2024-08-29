@@ -890,7 +890,7 @@ int forth_vm(const char *line, void(*hook)(int, const char*)) {
         fin.clear();             /// * clear input stream error bit if any
         fin.str(line);           /// * reload user command into input stream
     }
-    printf("    hold=%d, [%d]%s\n", hold, (int)fin.tellg(), fin.str().c_str());
+//    printf("    hold=%d, IP=%04x, [%d]%s\n", hold, IP, (int)fin.tellg(), fin.str().c_str());
     string idiom;
     while (hold || (fin >> idiom)) {          ///> fetch a word
         if (hold) nest(0);                    /// * continue without parsing
@@ -898,7 +898,7 @@ int forth_vm(const char *line, void(*hook)(int, const char*)) {
         hold = VM==HOLD;                      /// * update return status
         if (hold) break;                      /// * pause, yield to front-end task
     }
-    printf("    => hold=%d\n", hold);
+//    printf("    => hold=%d, IP=%04x\n", hold, IP);
 #if DO_WASM
     if (!hold && !compile) fout << "ok" << ENDL;
 #else // !DO_WASM
@@ -950,7 +950,7 @@ int  forth_include(const char *fn) {
     string in; getline(fin, in);                  ///< keep input buffers
     fout << ENDL;                                 /// * flush output
     
-    forth_vm((const char*)&pmem[E4_PMEM_SZ-rst]); /// * send script to VM
+    while (forth_vm((const char*)&pmem[E4_PMEM_SZ-rst])); /// * send script to VM
     
     fout_cb = cb;                                 /// * restore output cb
     fin.clear(); fin.str(in);                     /// * restore input
