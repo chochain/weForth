@@ -132,6 +132,9 @@
         let k = e.data[0], v = e.data[1]
         if (!v) return
         switch (k) {
+        case 'cmd':                               ///< capture VM state
+            if (v==1) vm_req('cmd', tib.value)    /// * contine, if VM==HOLD
+            break
         case 'txt': to_txt(v);         break
         case 'dc' : show_dict(v);      break
         case 'usr': usr.innerHTML = v; break
