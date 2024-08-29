@@ -41,8 +41,8 @@
           if (cmd=='clear') { txt.innerHTML=''; xtib(); return }
           if (echo) to_txt('<pre class="cmd"><em>'+cmd+'</em></pre>', false)
           try {
-              var forth = Module.cwrap('forth', null, ['number', 'string'])
-              forth(0, cmd);                 /// * call Forth in C/C++
+              var forth = Module.cwrap('forth', 'int', ['number', 'string'])
+              while (forth(0, cmd));         /// * call Forth in C/C++
           }
           catch(e) { console.log(e.toString()+'\n') }
           finally  { xtib(); }
