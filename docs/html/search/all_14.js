@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['zbran_138',['ZBRAN',['../ceforth_8cpp.html#aaa0aba801a492f1b85e6e0f23e3c8553a85aab50c7e8b897e918adf1592b14a2f',1,'ceforth.cpp']]]
+  ['xt_174',['XT',['../structCode.html#ad735a0bfc1345c6d5ee006bc400c627c',1,'Code::XT(IU ix) INLINE'],['../structCode.html#adc43e6aecf68d2d068ae75decdb0ded7',1,'Code::xt()']]],
+  ['xt0_175',['XT0',['../structCode.html#a7b5d258f3dc3b41f55432cd37a9d9348',1,'Code']]]
 ];

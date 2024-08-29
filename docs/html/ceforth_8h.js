@@ -4,8 +4,8 @@ var ceforth_8h =
     [ "Code", "structCode.html", "structCode" ],
     [ "UDF_ATTR", "ceforth_8h.html#abeabbd500492ac2075ceb932a454da34", null ],
     [ "IMM_ATTR", "ceforth_8h.html#a8495127a64408f521294349c5526476e", null ],
+    [ "EXT_FLAG", "ceforth_8h.html#aec92280c39d2b899a51e92addf82ea7e", null ],
     [ "MSK_ATTR", "ceforth_8h.html#a14bbb4ecc3200a3c711b21e08cce8fa9", null ],
-    [ "UDF_FLAG", "ceforth_8h.html#a2cb5a16a51f8ed950ee79452bc14fed4", null ],
     [ "IS_UDF", "ceforth_8h.html#a533242fce93eeff8d467f57b23192a27", null ],
     [ "IS_IMM", "ceforth_8h.html#ad59eb14dcff82995aba75fff6e6919ee", null ],
     [ "ADD_CODE", "ceforth_8h.html#a63360857d379d2ff485bb343e52184ac", null ],
@@ -13,6 +13,6 @@ var ceforth_8h =
     [ "IMMD", "ceforth_8h.html#ad6dfd75ba82a34385031a82feecc9a01", null ],
     [ "FPTR", "ceforth_8h.html#ad49a4a3795be934579ff11f1296c1050", null ],
     [ "forth_init", "ceforth_8h.html#a7f66d1cf6a56ed50c9abd5331ed2073e", null ],
-    [ "forth_vm", "ceforth_8h.html#a2acc503994a2c4c6150dccf4a9ed6424", null ],
+    [ "forth_vm", "ceforth_8h.html#ad8ef8e40c4fbb1b5e1f766486ff0e22d", null ],
     [ "forth_include", "ceforth_8h.html#ac0fd47776c33f55abe0077eb4d77ce0c", null ]
 ];

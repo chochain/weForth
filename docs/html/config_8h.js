@@ -1,5 +1,6 @@
 var config_8h =
 [
+    [ "APP_VERSION", "config_8h.html#a92673e33f27532767749b79edb8ef806", null ],
     [ "CC_DEBUG", "config_8h.html#a8150f027b39e6dde27a7d73c34fe5356", null ],
     [ "RANGE_CHECK", "config_8h.html#a0c7f096b34080fdfa0a4d55e6cd8ca8a", null ],
     [ "USE_FLOAT", "config_8h.html#a5a03415e5a2d7bdc6ce680c47ddc156a", null ],
@@ -9,7 +10,16 @@ var config_8h =
     [ "E4_DICT_SZ", "config_8h.html#a3663378c5ef858dd03bc28732c610758", null ],
     [ "E4_PMEM_SZ", "config_8h.html#a0a0ff68a63bb8a53d930d405fe8624f8", null ],
     [ "DU0", "config_8h.html#ab09a231138adc0fb73bfb9ba7144b797", null ],
+    [ "DU1", "config_8h.html#a8f5350b752d7bf33f51b37b7c8e71abc", null ],
+    [ "DU_EPS", "config_8h.html#a79b3f12e18752ddba2523c158dd3e3dd", null ],
     [ "UINT", "config_8h.html#a7b3b4f9835caaf6be7bfa7f843bbec05", null ],
+    [ "MOD", "config_8h.html#ac81fbf73f1c6b049b9fbbc9743f88fac", null ],
+    [ "ABS", "config_8h.html#a33ca651e9b955dcf57c2a2a7e3365170", null ],
+    [ "ZEQ", "config_8h.html#a54ce27f625bd73c226f5256914755822", null ],
+    [ "EQ", "config_8h.html#ac07acfbb082b04f5bea72998c8976b3c", null ],
+    [ "LT", "config_8h.html#ac3333a5bb7107681836d5a17ad241c0e", null ],
+    [ "GT", "config_8h.html#ad70f566908afbab695da92d22f53953b", null ],
+    [ "RND", "config_8h.html#a910ea44cb64a1fe502a2a5c07737ebf2", null ],
     [ "INLINE", "config_8h.html#a2eb6f9e0395b47b8d5e3eeae4fe0c116", null ],
     [ "ALIGN2", "config_8h.html#a7e57896edccce561d980ab169d3b5ff7", null ],
     [ "ALIGN4", "config_8h.html#a056d3f5d159b253ad746e0111a6b40c8", null ],
@@ -18,6 +28,7 @@ var config_8h =
     [ "ALIGN", "config_8h.html#a53ee12f4dd53b3aa1de7e6aa2e3d61fe", null ],
     [ "STRLEN", "config_8h.html#a916ffefe1fc74532d08102cca55d8e34", null ],
     [ "ENDL", "config_8h.html#a90dc3f3ee970394e0080300526390a84", null ],
+    [ "DALIGN", "config_8h.html#ada73283aea6cf163aa6c60b89e51cb65", null ],
     [ "to_string", "config_8h.html#a1832a8b24c5256b9b96404f71211874b", null ],
     [ "LOGS", "config_8h.html#a23c9be2739d1f57d5e53c91a5644ef84", null ],
     [ "LOG", "config_8h.html#abb62e552165265104f181c31c7ab1027", null ],
@@ -32,7 +43,7 @@ var config_8h =
     [ "U16", "config_8h.html#a0a0a322d5fa4a546d293a77ba8b4a71f", null ],
     [ "U8", "config_8h.html#aa63ef7b996d5487ce35a5a66601f3e73", null ],
     [ "UFP", "config_8h.html#a34c9e39f868b60a2945e499befe08091", null ],
-    [ "DU2", "config_8h.html#acdee6bf4ab3aa323dd7343fd2348095b", null ],
-    [ "DU", "config_8h.html#aa37b071e9b75686518ba19bfc6526b04", null ],
-    [ "IU", "config_8h.html#aff5e3e5f0579f9bce7aeaeac9d89d33a", null ]
+    [ "IU", "config_8h.html#aff5e3e5f0579f9bce7aeaeac9d89d33a", null ],
+    [ "DU2", "config_8h.html#a2baa0cf43436d5f1f3b562cce267b54a", null ],
+    [ "DU", "config_8h.html#a57c78d17a8f015df496afc50c9ab973d", null ]
 ];

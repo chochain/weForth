@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">weForth
-   &#160;<span id="projectnumber">v1.4</span>
+   &#160;<span id="projectnumber">v4.2</span>
    </div>
   </td>
  </tr>
@@ -88,14 +88,16 @@ $(document).ready(function(){initNavTree('config_8h.html',''); initResizable(); 
 <div class="title">config.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &lt;Arduino.h&gt;</code><br />
+<div class="textblock"><code>#include &lt;cmath&gt;</code><br />
+<code>#include &lt;Arduino.h&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for config.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="config_8h__incl.png" border="0" usemap="#src_2config_8h" alt=""/></div>
 <map name="src_2config_8h" id="src_2config_8h">
-<area shape="rect" title=" " alt="" coords="5,5,101,32"/>
-<area shape="rect" title=" " alt="" coords="11,80,95,107"/>
+<area shape="rect" title=" " alt="" coords="37,5,133,32"/>
+<area shape="rect" title=" " alt="" coords="5,80,68,107"/>
+<area shape="rect" title=" " alt="" coords="92,80,176,107"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -113,11 +115,13 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
+<tr class="memitem:a92673e33f27532767749b79edb8ef806"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a92673e33f27532767749b79edb8ef806">APP_VERSION</a>&#160;&#160;&#160;&quot;weForth v4.2&quot;</td></tr>
+<tr class="separator:a92673e33f27532767749b79edb8ef806"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8150f027b39e6dde27a7d73c34fe5356"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a8150f027b39e6dde27a7d73c34fe5356">CC_DEBUG</a>&#160;&#160;&#160;1</td></tr>
 <tr class="separator:a8150f027b39e6dde27a7d73c34fe5356"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0c7f096b34080fdfa0a4d55e6cd8ca8a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a0c7f096b34080fdfa0a4d55e6cd8ca8a">RANGE_CHECK</a>&#160;&#160;&#160;0</td></tr>
 <tr class="separator:a0c7f096b34080fdfa0a4d55e6cd8ca8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5a03415e5a2d7bdc6ce680c47ddc156a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a5a03415e5a2d7bdc6ce680c47ddc156a">USE_FLOAT</a>&#160;&#160;&#160;0</td></tr>
+<tr class="memitem:a5a03415e5a2d7bdc6ce680c47ddc156a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a5a03415e5a2d7bdc6ce680c47ddc156a">USE_FLOAT</a>&#160;&#160;&#160;1</td></tr>
 <tr class="separator:a5a03415e5a2d7bdc6ce680c47ddc156a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab6d791a7c6dd6df90bf98aa8d74a0e82"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#ab6d791a7c6dd6df90bf98aa8d74a0e82">DO_WASM</a>&#160;&#160;&#160;__EMSCRIPTEN__</td></tr>
 <tr class="separator:ab6d791a7c6dd6df90bf98aa8d74a0e82"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -148,6 +152,8 @@ Macros</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Multi-platform support</div></td></tr>
 <tr class="memitem:a90dc3f3ee970394e0080300526390a84"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a90dc3f3ee970394e0080300526390a84">ENDL</a>&#160;&#160;&#160;endl; <a class="el" href="ceforth_8cpp.html#ae601152c2463f358fc585f95817fb315">fout_cb</a>(fout.str().length(), fout.str().c_str()); fout.str(&quot;&quot;)</td></tr>
 <tr class="separator:a90dc3f3ee970394e0080300526390a84"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ada73283aea6cf163aa6c60b89e51cb65"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#ada73283aea6cf163aa6c60b89e51cb65">DALIGN</a>(sz)&#160;&#160;&#160;(sz)</td></tr>
+<tr class="separator:ada73283aea6cf163aa6c60b89e51cb65"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1832a8b24c5256b9b96404f71211874b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a1832a8b24c5256b9b96404f71211874b">to_string</a>(i)&#160;&#160;&#160;string(String(i).c_str())</td></tr>
 <tr class="separator:a1832a8b24c5256b9b96404f71211874b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Logging support</div></td></tr>
@@ -170,10 +176,28 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="member-group"></a>
 Logical units (instead of physical) for type check and portability</h2></td></tr>
-<tr class="memitem:ab09a231138adc0fb73bfb9ba7144b797"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#ab09a231138adc0fb73bfb9ba7144b797">DU0</a>&#160;&#160;&#160;0</td></tr>
+<tr class="memitem:ab09a231138adc0fb73bfb9ba7144b797"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#ab09a231138adc0fb73bfb9ba7144b797">DU0</a>&#160;&#160;&#160;0.0f</td></tr>
 <tr class="separator:ab09a231138adc0fb73bfb9ba7144b797"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b3b4f9835caaf6be7bfa7f843bbec05"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a7b3b4f9835caaf6be7bfa7f843bbec05">UINT</a>(v)&#160;&#160;&#160;(abs(v))</td></tr>
+<tr class="memitem:a8f5350b752d7bf33f51b37b7c8e71abc"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a8f5350b752d7bf33f51b37b7c8e71abc">DU1</a>&#160;&#160;&#160;1.0f</td></tr>
+<tr class="separator:a8f5350b752d7bf33f51b37b7c8e71abc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a79b3f12e18752ddba2523c158dd3e3dd"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a79b3f12e18752ddba2523c158dd3e3dd">DU_EPS</a>&#160;&#160;&#160;0.00001f</td></tr>
+<tr class="separator:a79b3f12e18752ddba2523c158dd3e3dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7b3b4f9835caaf6be7bfa7f843bbec05"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a7b3b4f9835caaf6be7bfa7f843bbec05">UINT</a>(v)&#160;&#160;&#160;(static_cast&lt;<a class="el" href="config_8h.html#a696390429f2f3b644bde8d0322a24124">U32</a>&gt;(v))</td></tr>
 <tr class="separator:a7b3b4f9835caaf6be7bfa7f843bbec05"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac81fbf73f1c6b049b9fbbc9743f88fac"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#ac81fbf73f1c6b049b9fbbc9743f88fac">MOD</a>(m,  n)&#160;&#160;&#160;(fmodf(m,n))</td></tr>
+<tr class="separator:ac81fbf73f1c6b049b9fbbc9743f88fac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33ca651e9b955dcf57c2a2a7e3365170"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a33ca651e9b955dcf57c2a2a7e3365170">ABS</a>(v)&#160;&#160;&#160;(fabsf(v))</td></tr>
+<tr class="separator:a33ca651e9b955dcf57c2a2a7e3365170"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a54ce27f625bd73c226f5256914755822"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a54ce27f625bd73c226f5256914755822">ZEQ</a>(v)&#160;&#160;&#160;(<a class="el" href="config_8h.html#a33ca651e9b955dcf57c2a2a7e3365170">ABS</a>(v) &lt; <a class="el" href="config_8h.html#a79b3f12e18752ddba2523c158dd3e3dd">DU_EPS</a>)</td></tr>
+<tr class="separator:a54ce27f625bd73c226f5256914755822"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac07acfbb082b04f5bea72998c8976b3c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#ac07acfbb082b04f5bea72998c8976b3c">EQ</a>(a,  b)&#160;&#160;&#160;(<a class="el" href="config_8h.html#a54ce27f625bd73c226f5256914755822">ZEQ</a>((a) - (b)))</td></tr>
+<tr class="separator:ac07acfbb082b04f5bea72998c8976b3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac3333a5bb7107681836d5a17ad241c0e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#ac3333a5bb7107681836d5a17ad241c0e">LT</a>(a,  b)&#160;&#160;&#160;(((a) - (b)) &lt; -<a class="el" href="config_8h.html#a79b3f12e18752ddba2523c158dd3e3dd">DU_EPS</a>)</td></tr>
+<tr class="separator:ac3333a5bb7107681836d5a17ad241c0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad70f566908afbab695da92d22f53953b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#ad70f566908afbab695da92d22f53953b">GT</a>(a,  b)&#160;&#160;&#160;(((a) - (b)) &gt; <a class="el" href="config_8h.html#a79b3f12e18752ddba2523c158dd3e3dd">DU_EPS</a>)</td></tr>
+<tr class="separator:ad70f566908afbab695da92d22f53953b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a910ea44cb64a1fe502a2a5c07737ebf2"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a910ea44cb64a1fe502a2a5c07737ebf2">RND</a>()&#160;&#160;&#160;(static_cast&lt;float&gt;(rand()) / static_cast&lt;float&gt;(RAND_MAX))</td></tr>
+<tr class="separator:a910ea44cb64a1fe502a2a5c07737ebf2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a696390429f2f3b644bde8d0322a24124"><td class="memItemLeft" align="right" valign="top">typedef uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a696390429f2f3b644bde8d0322a24124">U32</a></td></tr>
 <tr class="memdesc:a696390429f2f3b644bde8d0322a24124"><td class="mdescLeft">&#160;</td><td class="mdescRight">unsigned 32-bit integer  <a href="config_8h.html#a696390429f2f3b644bde8d0322a24124">More...</a><br /></td></tr>
 <tr class="separator:a696390429f2f3b644bde8d0322a24124"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -189,15 +213,29 @@ Logical units (instead of physical) for type check and portability</h2></td></tr
 <tr class="memitem:a34c9e39f868b60a2945e499befe08091"><td class="memItemLeft" align="right" valign="top">typedef uintptr_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a34c9e39f868b60a2945e499befe08091">UFP</a></td></tr>
 <tr class="memdesc:a34c9e39f868b60a2945e499befe08091"><td class="mdescLeft">&#160;</td><td class="mdescRight">function pointer as integer  <a href="config_8h.html#a34c9e39f868b60a2945e499befe08091">More...</a><br /></td></tr>
 <tr class="separator:a34c9e39f868b60a2945e499befe08091"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acdee6bf4ab3aa323dd7343fd2348095b"><td class="memItemLeft" align="right" valign="top">typedef int64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#acdee6bf4ab3aa323dd7343fd2348095b">DU2</a></td></tr>
-<tr class="separator:acdee6bf4ab3aa323dd7343fd2348095b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa37b071e9b75686518ba19bfc6526b04"><td class="memItemLeft" align="right" valign="top">typedef int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#aa37b071e9b75686518ba19bfc6526b04">DU</a></td></tr>
-<tr class="separator:aa37b071e9b75686518ba19bfc6526b04"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff5e3e5f0579f9bce7aeaeac9d89d33a"><td class="memItemLeft" align="right" valign="top">typedef uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#aff5e3e5f0579f9bce7aeaeac9d89d33a">IU</a></td></tr>
 <tr class="memdesc:aff5e3e5f0579f9bce7aeaeac9d89d33a"><td class="mdescLeft">&#160;</td><td class="mdescRight">instruction pointer unit  <a href="config_8h.html#aff5e3e5f0579f9bce7aeaeac9d89d33a">More...</a><br /></td></tr>
 <tr class="separator:aff5e3e5f0579f9bce7aeaeac9d89d33a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2baa0cf43436d5f1f3b562cce267b54a"><td class="memItemLeft" align="right" valign="top">typedef double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a2baa0cf43436d5f1f3b562cce267b54a">DU2</a></td></tr>
+<tr class="separator:a2baa0cf43436d5f1f3b562cce267b54a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a57c78d17a8f015df496afc50c9ab973d"><td class="memItemLeft" align="right" valign="top">typedef float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a57c78d17a8f015df496afc50c9ab973d">DU</a></td></tr>
+<tr class="separator:a57c78d17a8f015df496afc50c9ab973d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="a92673e33f27532767749b79edb8ef806"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a92673e33f27532767749b79edb8ef806">&#9670;&nbsp;</a></span>APP_VERSION</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define APP_VERSION&#160;&#160;&#160;&quot;weForth v4.2&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a8150f027b39e6dde27a7d73c34fe5356"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8150f027b39e6dde27a7d73c34fe5356">&#9670;&nbsp;</a></span>CC_DEBUG</h2>
 
@@ -237,7 +275,7 @@ Logical units (instead of physical) for type check and portability</h2></td></tr
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define USE_FLOAT&#160;&#160;&#160;0</td>
+          <td class="memname">#define USE_FLOAT&#160;&#160;&#160;1</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -324,7 +362,35 @@ Logical units (instead of physical) for type check and portability</h2></td></tr
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define DU0&#160;&#160;&#160;0</td>
+          <td class="memname">#define DU0&#160;&#160;&#160;0.0f</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a8f5350b752d7bf33f51b37b7c8e71abc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8f5350b752d7bf33f51b37b7c8e71abc">&#9670;&nbsp;</a></span>DU1</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define DU1&#160;&#160;&#160;1.0f</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a79b3f12e18752ddba2523c158dd3e3dd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a79b3f12e18752ddba2523c158dd3e3dd">&#9670;&nbsp;</a></span>DU_EPS</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define DU_EPS&#160;&#160;&#160;0.00001f</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -342,7 +408,172 @@ Logical units (instead of physical) for type check and portability</h2></td></tr
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">v</td><td>)</td>
-          <td>&#160;&#160;&#160;(abs(v))</td>
+          <td>&#160;&#160;&#160;(static_cast&lt;<a class="el" href="config_8h.html#a696390429f2f3b644bde8d0322a24124">U32</a>&gt;(v))</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ac81fbf73f1c6b049b9fbbc9743f88fac"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac81fbf73f1c6b049b9fbbc9743f88fac">&#9670;&nbsp;</a></span>MOD</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define MOD</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">m, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">n&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td>&#160;&#160;&#160;(fmodf(m,n))</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a33ca651e9b955dcf57c2a2a7e3365170"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a33ca651e9b955dcf57c2a2a7e3365170">&#9670;&nbsp;</a></span>ABS</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ABS</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">v</td><td>)</td>
+          <td>&#160;&#160;&#160;(fabsf(v))</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a54ce27f625bd73c226f5256914755822"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a54ce27f625bd73c226f5256914755822">&#9670;&nbsp;</a></span>ZEQ</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ZEQ</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">v</td><td>)</td>
+          <td>&#160;&#160;&#160;(<a class="el" href="config_8h.html#a33ca651e9b955dcf57c2a2a7e3365170">ABS</a>(v) &lt; <a class="el" href="config_8h.html#a79b3f12e18752ddba2523c158dd3e3dd">DU_EPS</a>)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ac07acfbb082b04f5bea72998c8976b3c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac07acfbb082b04f5bea72998c8976b3c">&#9670;&nbsp;</a></span>EQ</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define EQ</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">a, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">b&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td>&#160;&#160;&#160;(<a class="el" href="config_8h.html#a54ce27f625bd73c226f5256914755822">ZEQ</a>((a) - (b)))</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ac3333a5bb7107681836d5a17ad241c0e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac3333a5bb7107681836d5a17ad241c0e">&#9670;&nbsp;</a></span>LT</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define LT</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">a, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">b&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td>&#160;&#160;&#160;(((a) - (b)) &lt; -<a class="el" href="config_8h.html#a79b3f12e18752ddba2523c158dd3e3dd">DU_EPS</a>)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ad70f566908afbab695da92d22f53953b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad70f566908afbab695da92d22f53953b">&#9670;&nbsp;</a></span>GT</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GT</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">a, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">b&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td>&#160;&#160;&#160;(((a) - (b)) &gt; <a class="el" href="config_8h.html#a79b3f12e18752ddba2523c158dd3e3dd">DU_EPS</a>)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a910ea44cb64a1fe502a2a5c07737ebf2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a910ea44cb64a1fe502a2a5c07737ebf2">&#9670;&nbsp;</a></span>RND</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define RND</td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td>&#160;&#160;&#160;(static_cast&lt;float&gt;(rand()) / static_cast&lt;float&gt;(RAND_MAX))</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -479,6 +710,24 @@ Logical units (instead of physical) for type check and portability</h2></td></tr
       <table class="memname">
         <tr>
           <td class="memname">#define ENDL&#160;&#160;&#160;endl; <a class="el" href="ceforth_8cpp.html#ae601152c2463f358fc585f95817fb315">fout_cb</a>(fout.str().length(), fout.str().c_str()); fout.str(&quot;&quot;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ada73283aea6cf163aa6c60b89e51cb65"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ada73283aea6cf163aa6c60b89e51cb65">&#9670;&nbsp;</a></span>DALIGN</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define DALIGN</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">sz</td><td>)</td>
+          <td>&#160;&#160;&#160;(sz)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -760,34 +1009,6 @@ Logical units (instead of physical) for type check and portability</h2></td></tr
 
 </div>
 </div>
-<a id="acdee6bf4ab3aa323dd7343fd2348095b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acdee6bf4ab3aa323dd7343fd2348095b">&#9670;&nbsp;</a></span>DU2</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef int64_t <a class="el" href="config_8h.html#acdee6bf4ab3aa323dd7343fd2348095b">DU2</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="aa37b071e9b75686518ba19bfc6526b04"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa37b071e9b75686518ba19bfc6526b04">&#9670;&nbsp;</a></span>DU</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef int32_t <a class="el" href="config_8h.html#aa37b071e9b75686518ba19bfc6526b04">DU</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
 <a id="aff5e3e5f0579f9bce7aeaeac9d89d33a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aff5e3e5f0579f9bce7aeaeac9d89d33a">&#9670;&nbsp;</a></span>IU</h2>
 
@@ -804,11 +1025,39 @@ Logical units (instead of physical) for type check and portability</h2></td></tr
 
 </div>
 </div>
+<a id="a2baa0cf43436d5f1f3b562cce267b54a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2baa0cf43436d5f1f3b562cce267b54a">&#9670;&nbsp;</a></span>DU2</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef double <a class="el" href="config_8h.html#a2baa0cf43436d5f1f3b562cce267b54a">DU2</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a57c78d17a8f015df496afc50c9ab973d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a57c78d17a8f015df496afc50c9ab973d">&#9670;&nbsp;</a></span>DU</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef float <a class="el" href="config_8h.html#a57c78d17a8f015df496afc50c9ab973d">DU</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 </div><!-- contents -->
 </div><!-- doc-content -->
-<div class="ttc" id="aconfig_8h_html_abb62e552165265104f181c31c7ab1027"><div class="ttname"><a href="config_8h.html#abb62e552165265104f181c31c7ab1027">LOG</a></div><div class="ttdeci">#define LOG(v)</div><div class="ttdef"><b>Definition:</b> config.h:95</div></div>
-<div class="ttc" id="aconfig_8h_html_a23c9be2739d1f57d5e53c91a5644ef84"><div class="ttname"><a href="config_8h.html#a23c9be2739d1f57d5e53c91a5644ef84">LOGS</a></div><div class="ttdeci">#define LOGS(s)</div><div class="ttdef"><b>Definition:</b> config.h:94</div></div>
-<div class="ttc" id="aceforth_8cpp_html_aa086a2419b6fa4292fe7a96ade49cfd4"><div class="ttname"><a href="ceforth_8cpp.html#aa086a2419b6fa4292fe7a96ade49cfd4">dict</a></div><div class="ttdeci">List&lt; Code, E4_DICT_SZ &gt; dict</div><div class="ttdoc">dictionary</div><div class="ttdef"><b>Definition:</b> ceforth.cpp:61</div></div>
+<div class="ttc" id="aconfig_8h_html_abb62e552165265104f181c31c7ab1027"><div class="ttname"><a href="config_8h.html#abb62e552165265104f181c31c7ab1027">LOG</a></div><div class="ttdeci">#define LOG(v)</div><div class="ttdef"><b>Definition:</b> config.h:137</div></div>
+<div class="ttc" id="aconfig_8h_html_a23c9be2739d1f57d5e53c91a5644ef84"><div class="ttname"><a href="config_8h.html#a23c9be2739d1f57d5e53c91a5644ef84">LOGS</a></div><div class="ttdeci">#define LOGS(s)</div><div class="ttdef"><b>Definition:</b> config.h:136</div></div>
+<div class="ttc" id="aceforth_8cpp_html_aa086a2419b6fa4292fe7a96ade49cfd4"><div class="ttname"><a href="ceforth_8cpp.html#aa086a2419b6fa4292fe7a96ade49cfd4">dict</a></div><div class="ttdeci">List&lt; Code, E4_DICT_SZ &gt; dict</div><div class="ttdoc">dictionary</div><div class="ttdef"><b>Definition:</b> ceforth.cpp:63</div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>

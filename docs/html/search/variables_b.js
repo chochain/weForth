@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['top_200',['top',['../ceforth_8cpp.html#a1dbe10e65bdf6af195b87f91d4d68bd7',1,'ceforth.cpp']]]
+  ['ss_248',['ss',['../ceforth_8cpp.html#a7dca0eae5111fa9214a2e2598f5a96b0',1,'ceforth.cpp']]]
 ];

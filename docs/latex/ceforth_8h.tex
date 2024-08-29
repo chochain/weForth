@@ -2,13 +2,13 @@
 \label{ceforth_8h}\index{src/ceforth.h@{src/ceforth.h}}
 {\ttfamily \#include $<$stdio.\+h$>$}\newline
 {\ttfamily \#include $<$stdint.\+h$>$}\newline
-{\ttfamily \#include $<$exception$>$}\newline
 {\ttfamily \#include \char`\"{}config.\+h\char`\"{}}\newline
-Include dependency graph for ceforth.\+h\+:\nopagebreak
+Include dependency graph for ceforth.\+h\+:
+\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=350pt]{ceforth_8h__incl}
+\includegraphics[width=315pt]{ceforth_8h__incl}
 \end{center}
 \end{figure}
 This graph shows which files directly or indirectly include this file\+:\nopagebreak
@@ -37,13 +37,13 @@ struct \mbox{\hyperlink{structCode}{Code}}
 \begin{Indent}\textbf{ Code flag masking options}\par
 \begin{DoxyCompactItemize}
 \item 
-\#define \mbox{\hyperlink{ceforth_8h_abeabbd500492ac2075ceb932a454da34}{U\+D\+F\+\_\+\+A\+T\+TR}}~0x0001   /$\ast$$\ast$ user defined \mbox{\hyperlink{ceforth_8cpp_af629538f3b0c84bcc653fb92698c4f05}{word}}  $\ast$/
+\#define \mbox{\hyperlink{ceforth_8h_abeabbd500492ac2075ceb932a454da34}{U\+D\+F\+\_\+\+A\+T\+TR}}~0x0001   /$\ast$$\ast$ user defined \mbox{\hyperlink{ceforth_8cpp_af629538f3b0c84bcc653fb92698c4f05}{word}}    $\ast$/
 \item 
-\#define \mbox{\hyperlink{ceforth_8h_a8495127a64408f521294349c5526476e}{I\+M\+M\+\_\+\+A\+T\+TR}}~0x0002   /$\ast$$\ast$ immediate \mbox{\hyperlink{ceforth_8cpp_af629538f3b0c84bcc653fb92698c4f05}{word}}     $\ast$/
+\#define \mbox{\hyperlink{ceforth_8h_a8495127a64408f521294349c5526476e}{I\+M\+M\+\_\+\+A\+T\+TR}}~0x0002   /$\ast$$\ast$ immediate \mbox{\hyperlink{ceforth_8cpp_af629538f3b0c84bcc653fb92698c4f05}{word}}       $\ast$/
 \item 
-\#define \mbox{\hyperlink{ceforth_8h_a14bbb4ecc3200a3c711b21e08cce8fa9}{M\+S\+K\+\_\+\+A\+T\+TR}}~$\sim$0x3
+\#define \mbox{\hyperlink{ceforth_8h_aec92280c39d2b899a51e92addf82ea7e}{E\+X\+T\+\_\+\+F\+L\+AG}}~0x8000   /$\ast$$\ast$ prim/xt/pfa selector $\ast$/
 \item 
-\#define \mbox{\hyperlink{ceforth_8h_a2cb5a16a51f8ed950ee79452bc14fed4}{U\+D\+F\+\_\+\+F\+L\+AG}}~0x0001   /$\ast$$\ast$ xt/pfa selector    $\ast$/
+\#define \mbox{\hyperlink{ceforth_8h_a14bbb4ecc3200a3c711b21e08cce8fa9}{M\+S\+K\+\_\+\+A\+T\+TR}}~$\sim$0x3     /$\ast$$\ast$ mask udf,imm bits    $\ast$/
 \item 
 \#define \mbox{\hyperlink{ceforth_8h_a533242fce93eeff8d467f57b23192a27}{I\+S\+\_\+\+U\+DF}}(w)~(\mbox{\hyperlink{ceforth_8cpp_aa086a2419b6fa4292fe7a96ade49cfd4}{dict}}\mbox{[}w\mbox{]}.attr \& \mbox{\hyperlink{ceforth_8h_abeabbd500492ac2075ceb932a454da34}{U\+D\+F\+\_\+\+A\+T\+TR}})
 \item 
@@ -60,7 +60,7 @@ typedef void($\ast$ \mbox{\hyperlink{ceforth_8h_ad49a4a3795be934579ff11f1296c105
 \item 
 void \mbox{\hyperlink{ceforth_8h_a7f66d1cf6a56ed50c9abd5331ed2073e}{forth\+\_\+init}} ()
 \item 
-void \mbox{\hyperlink{ceforth_8h_a2acc503994a2c4c6150dccf4a9ed6424}{forth\+\_\+vm}} (const char $\ast$stm, void($\ast$hook)(int, const char $\ast$)=N\+U\+LL)
+int \mbox{\hyperlink{ceforth_8h_ad8ef8e40c4fbb1b5e1f766486ff0e22d}{forth\+\_\+vm}} (const char $\ast$cmd, void($\ast$hook)(int, const char $\ast$)=N\+U\+LL)
 \item 
 int \mbox{\hyperlink{ceforth_8h_ac0fd47776c33f55abe0077eb4d77ce0c}{forth\+\_\+include}} (const char $\ast$fn)
 \end{DoxyCompactItemize}
@@ -71,25 +71,25 @@ int \mbox{\hyperlink{ceforth_8h_ac0fd47776c33f55abe0077eb4d77ce0c}{forth\+\_\+in
 \index{ceforth.h@{ceforth.h}!UDF\_ATTR@{UDF\_ATTR}}
 \index{UDF\_ATTR@{UDF\_ATTR}!ceforth.h@{ceforth.h}}
 \doxysubsubsection{\texorpdfstring{UDF\_ATTR}{UDF\_ATTR}}
-{\footnotesize\ttfamily \#define U\+D\+F\+\_\+\+A\+T\+TR~0x0001   /$\ast$$\ast$ user defined \mbox{\hyperlink{ceforth_8cpp_af629538f3b0c84bcc653fb92698c4f05}{word}}  $\ast$/}
+{\footnotesize\ttfamily \#define U\+D\+F\+\_\+\+A\+T\+TR~0x0001   /$\ast$$\ast$ user defined \mbox{\hyperlink{ceforth_8cpp_af629538f3b0c84bcc653fb92698c4f05}{word}}    $\ast$/}
 
 \mbox{\Hypertarget{ceforth_8h_a8495127a64408f521294349c5526476e}\label{ceforth_8h_a8495127a64408f521294349c5526476e}} 
 \index{ceforth.h@{ceforth.h}!IMM\_ATTR@{IMM\_ATTR}}
 \index{IMM\_ATTR@{IMM\_ATTR}!ceforth.h@{ceforth.h}}
 \doxysubsubsection{\texorpdfstring{IMM\_ATTR}{IMM\_ATTR}}
-{\footnotesize\ttfamily \#define I\+M\+M\+\_\+\+A\+T\+TR~0x0002   /$\ast$$\ast$ immediate \mbox{\hyperlink{ceforth_8cpp_af629538f3b0c84bcc653fb92698c4f05}{word}}     $\ast$/}
+{\footnotesize\ttfamily \#define I\+M\+M\+\_\+\+A\+T\+TR~0x0002   /$\ast$$\ast$ immediate \mbox{\hyperlink{ceforth_8cpp_af629538f3b0c84bcc653fb92698c4f05}{word}}       $\ast$/}
+
+\mbox{\Hypertarget{ceforth_8h_aec92280c39d2b899a51e92addf82ea7e}\label{ceforth_8h_aec92280c39d2b899a51e92addf82ea7e}} 
+\index{ceforth.h@{ceforth.h}!EXT\_FLAG@{EXT\_FLAG}}
+\index{EXT\_FLAG@{EXT\_FLAG}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{EXT\_FLAG}{EXT\_FLAG}}
+{\footnotesize\ttfamily \#define E\+X\+T\+\_\+\+F\+L\+AG~0x8000   /$\ast$$\ast$ prim/xt/pfa selector $\ast$/}
 
 \mbox{\Hypertarget{ceforth_8h_a14bbb4ecc3200a3c711b21e08cce8fa9}\label{ceforth_8h_a14bbb4ecc3200a3c711b21e08cce8fa9}} 
 \index{ceforth.h@{ceforth.h}!MSK\_ATTR@{MSK\_ATTR}}
 \index{MSK\_ATTR@{MSK\_ATTR}!ceforth.h@{ceforth.h}}
 \doxysubsubsection{\texorpdfstring{MSK\_ATTR}{MSK\_ATTR}}
-{\footnotesize\ttfamily \#define M\+S\+K\+\_\+\+A\+T\+TR~$\sim$0x3}
-
-\mbox{\Hypertarget{ceforth_8h_a2cb5a16a51f8ed950ee79452bc14fed4}\label{ceforth_8h_a2cb5a16a51f8ed950ee79452bc14fed4}} 
-\index{ceforth.h@{ceforth.h}!UDF\_FLAG@{UDF\_FLAG}}
-\index{UDF\_FLAG@{UDF\_FLAG}!ceforth.h@{ceforth.h}}
-\doxysubsubsection{\texorpdfstring{UDF\_FLAG}{UDF\_FLAG}}
-{\footnotesize\ttfamily \#define U\+D\+F\+\_\+\+F\+L\+AG~0x0001   /$\ast$$\ast$ xt/pfa selector    $\ast$/}
+{\footnotesize\ttfamily \#define M\+S\+K\+\_\+\+A\+T\+TR~$\sim$0x3     /$\ast$$\ast$ mask udf,imm bits    $\ast$/}
 
 \mbox{\Hypertarget{ceforth_8h_a533242fce93eeff8d467f57b23192a27}\label{ceforth_8h_a533242fce93eeff8d467f57b23192a27}} 
 \index{ceforth.h@{ceforth.h}!IS\_UDF@{IS\_UDF}}
@@ -146,7 +146,11 @@ function pointer
 
 \begin{quote}
 Universal functor (no S\+TL) and \mbox{\hyperlink{structCode}{Code}} class \end{quote}
-\mbox{\hyperlink{structCode}{Code}} class on 64-\/bit systems (expand pfa possible) +-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/---+-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/---+ $\vert$ $\ast$name $\vert$ xt $\vert$ +-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/---+-\/---+-\/---+-\/-\/-\/-\/-\/-\/---+ $\vert$attr$\vert$pfa $\vert$xxxxxxxxx$\vert$ +-\/---+-\/---+-\/-\/-\/-\/-\/-\/---+ \mbox{\hyperlink{structCode}{Code}} class on 32-\/bit systems (memory best utilized) +-\/-\/-\/-\/-\/-\/---+-\/-\/-\/-\/-\/-\/---+ $\vert$ $\ast$name $\vert$ xt $\vert$ +-\/-\/-\/-\/-\/-\/---+-\/---+-\/---+ $\vert$attr$\vert$pfa $\vert$ +-\/---+-\/---+ \mbox{\hyperlink{structCode}{Code}} class on W\+A\+S\+M/32-\/bit (a bit wasteful) +-\/-\/-\/-\/-\/-\/---+-\/-\/-\/-\/-\/-\/---+-\/-\/-\/-\/-\/-\/---+ $\vert$ $\ast$name $\vert$ xt $\vert$attr$\vert$xxxx$\vert$ +-\/-\/-\/-\/-\/-\/---+-\/---+-\/---+-\/-\/-\/-\/-\/-\/---+ $\vert$pfa $\vert$xxxx$\vert$ +-\/---+-\/---+ 
+\mbox{\hyperlink{structCode}{Code}} class on 64-\/bit systems (expand pfa possible) +-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/---+-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/---+ $\vert$ $\ast$name $\vert$ xt $\vert$ +-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/---+-\/---+-\/---+-\/-\/-\/-\/-\/-\/---+ $\vert$attr$\vert$pfa $\vert$xxxxxxxxx$\vert$ +-\/---+-\/---+-\/-\/-\/-\/-\/-\/---+
+
+\mbox{\hyperlink{structCode}{Code}} class on 32-\/bit systems (memory best utilized) +-\/-\/-\/-\/-\/-\/---+-\/-\/-\/-\/-\/-\/---+ $\vert$ $\ast$name $\vert$ xt $\vert$ +-\/-\/-\/-\/-\/-\/---+-\/---+-\/---+ $\vert$attr$\vert$pfa $\vert$ +-\/---+-\/---+
+
+\mbox{\hyperlink{structCode}{Code}} class on W\+A\+S\+M/32-\/bit (a bit wasteful) +-\/-\/-\/-\/-\/-\/---+-\/-\/-\/-\/-\/-\/---+-\/---+-\/---+ $\vert$ $\ast$name $\vert$ xt $\vert$attr$\vert$pfa $\vert$ +-\/-\/-\/-\/-\/-\/---+-\/-\/-\/-\/-\/-\/---+-\/---+-\/---+ 
 
 \doxysubsection{Function Documentation}
 \mbox{\Hypertarget{ceforth_8h_a7f66d1cf6a56ed50c9abd5331ed2073e}\label{ceforth_8h_a7f66d1cf6a56ed50c9abd5331ed2073e}} 
@@ -161,37 +165,63 @@ Forth VM external command processor \begin{quote}
 check dictionary initilized \end{quote}
 
 
+
+\begin{DoxyItemize}
+\item C\+O\+LD
+\item 4-\/byte aligned
+\end{DoxyItemize}
+
+$<$ set pointer to base
+
+$<$ allocate space for base
+
+$<$ set pointer to dfmt
+
+
+\begin{DoxyItemize}
+\item padding user area
+\end{DoxyItemize}
+
 \begin{quote}
 compile dictionary \end{quote}
-\mbox{\Hypertarget{ceforth_8h_a2acc503994a2c4c6150dccf4a9ed6424}\label{ceforth_8h_a2acc503994a2c4c6150dccf4a9ed6424}} 
+\mbox{\Hypertarget{ceforth_8h_ad8ef8e40c4fbb1b5e1f766486ff0e22d}\label{ceforth_8h_ad8ef8e40c4fbb1b5e1f766486ff0e22d}} 
 \index{ceforth.h@{ceforth.h}!forth\_vm@{forth\_vm}}
 \index{forth\_vm@{forth\_vm}!ceforth.h@{ceforth.h}}
 \doxysubsubsection{\texorpdfstring{forth\_vm()}{forth\_vm()}}
-{\footnotesize\ttfamily void forth\+\_\+vm (\begin{DoxyParamCaption}\item[{const char $\ast$}]{stm,  }\item[{void($\ast$)(int, const char $\ast$)}]{hook = {\ttfamily NULL} }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily int forth\+\_\+vm (\begin{DoxyParamCaption}\item[{const char $\ast$}]{cmd,  }\item[{void($\ast$)(int, const char $\ast$)}]{hook = {\ttfamily NULL} }\end{DoxyParamCaption})}
+
+$<$ serial output hook up
+
+$<$ check VM resume status
 
 \begin{quote}
-outer interpreter loop \end{quote}
+refresh buffer if not resuming \end{quote}
 
-
-\begin{quote}
-send word to Forth core \end{quote}
-
-
-\begin{quote}
-setup callback function \end{quote}
-
-
-$<$ input stream
-
-$<$ line command
 
 
 \begin{DoxyItemize}
 \item clean output buffer
-\item fetch one line at a time
 \item clear input stream error bit if any
-\item feed user command into input stream
-\item invoke Forth outer interpreter
+\item reload user command into input stream
+\end{DoxyItemize}
+
+\begin{quote}
+fetch a word \end{quote}
+
+
+
+\begin{DoxyItemize}
+\item continue without parsing
+\end{DoxyItemize}
+
+\begin{quote}
+send to Forth core \end{quote}
+
+
+
+\begin{DoxyItemize}
+\item update return status
+\item pause, yield to front-\/end task
 \item dump stack and display ok prompt
 \end{DoxyItemize}\mbox{\Hypertarget{ceforth_8h_ac0fd47776c33f55abe0077eb4d77ce0c}\label{ceforth_8h_ac0fd47776c33f55abe0077eb4d77ce0c}} 
 \index{ceforth.h@{ceforth.h}!forth\_include@{forth\_include}}
