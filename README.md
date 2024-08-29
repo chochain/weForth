@@ -2,6 +2,8 @@
 
 WebAssembly enpowered eForth on web browsers. Is it faster? Is it more portable? Yes, and Yes.
 
+<img src="https://chochain.github.io/weForth/img/weforth_jolt.png" style="width:800px"/>
+
 Well, on my aged laptop, the impression is pretty exciting! It's at least 5x faster than pure Javascript implementation on a browser and at 40% speed of C/C++ natively compiled code on CPU. It was at 25% of native a year ago but as Javascript JIT improves, it now runs faster as well. Not bad at all! On the portability end, though not exactly plug-and-play but some simple alteration turned my C code web-enabled. Of course, WASM has yet to integrate with the front-end well enough, so updating DOM is a different feat. If we want to venture beyond being a terminal app some UI glue is still required.
 
 Regardless, it brought me warm smiles seeing eForth run in a browser. Better yet, it's straight from C/C++ source code. Other popular scripting languages such as Python, Ruby are trending toward WASM/WASI implementation as well. However, unlike FORTH, they depend mostly on JIT without a built-in compiler, the interpreter-in-an-interpreter design will likely cap the top-end performance (i.e. stuck at 5~10% of native speed, so far).
@@ -10,12 +12,13 @@ With WASM, the interoperability between different languages become a thing of th
 
 ### Features
    * supports 32-bit float
-   * utilizes Web Worker threads (multi-VMs possible)
-   * have access to ss, dict, and VM memory (via WebAssembly.Memory) from Javascript
    * call interface from FORTH into Javascript functions
-   * IDE-style interactive front-end (cloud possible, i.g. JupyterLab)
+   * integrated with Web graphics (SDL2, WebGL) and Physics Engine (Jolt)
+   * built-in editor, IDE-style interactive front-end
+   * access to ss, dict, and VM memory (via WebAssembly.Memory) from Javascript
+   * can run parallel in Web Worker threads
 
-> <img src="https://chochain.github.io/weForth/img/weforth_logo_snip2.png" style="width:800px">sample</img>
+    <img src="https://chochain.github.io/weForth/img/weforth_logo_snip2.png" style="width:800px"/>
 
 ### Build - (make sure python3 and Emscripten are installed)
 #### Templates
@@ -155,27 +158,29 @@ Note:
 
 ### TODO
 * Physics Engine
-  + review Three.js + (Ammo.js/Bullet, or JOLT)
-    + CSG Object (with optional motion trail) [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
-    + Collision (with directional distance sensing)
-  + review raylib
+  + keyboard control
+  + vehicle sim
+* inter-VM communication
+* add network system (SD_net)
+* review WebSerial
 * review wasmtime (CLI), perf+hotspot (profiling)
 * review DragonRuby/mRuby (SDL)
 * review R3, Forth CPU visualizer (SDL)
-* GraFORTH spec.
+* review GraFORTH spec.
   + File system (FS/IndexedDB)
   + Editor
   + 2D graphic (SDL_gfx, SDL_image)
   + Character graphic (SDL_ttf or HTML5)
   + 3D graphic (GL)
   + Music (SDL_media)
-* add network system (SD_net)
-* inter-VM communication
 * use WASM stack as ss
 * macro-assembler
 
 ### References
 * SDL2
-  + Read first https://lyceum-allotments.github.io/2016/06/emscripten-and-sdl-2-tutorial-part-1/
-  + LazyFoo for SDL2 https://lazyfoo.net/tutorials/SDL/
-  + raylib vs SDL2 https://gist.github.com/raysan5/17392498d40e2cb281f5d09c0a4bf798
+  + [Read first](https://lyceum-allotments.github.io/2016/06/emscripten-and-sdl-2-tutorial-part-1/)
+  + [LazyFoo for SDL2](https://lazyfoo.net/tutorials/SDL/)
+  + [raylib vs SDL2](https://gist.github.com/raysan5/17392498d40e2cb281f5d09c0a4bf798)
+* Physics Engine
+  + [Jolt Physics](https://jrouwe.github.io/JoltPhysics/)
+    + CSG Object (with optional motion trail) [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
