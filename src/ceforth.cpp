@@ -23,10 +23,10 @@
 ///   * If needed, it can be readjusted.
 ///
 ///> Dictionary structure (N=E4_DICT_SZ in config.h)
-///     dict[0].xt ---------> pointer to primitive word lambda[0]
-///     dict[1].xt ---------> pointer to primitive word lambda[1]
+///     dict[0].xt ---------> pointer to build-in word lambda[0]
+///     dict[1].xt ---------> pointer to built-in word lambda[1]
 ///     ...
-///     dict[N-1].xt -------> pointer to last primitive word lambda[N-1]
+///     dict[N-1].xt -------> pointer to last built-in word lambda[N-1]
 ///
 ///> Parameter memory structure (memory block=E4_PMEM_SZ in config.h)
 ///     dict[N].xt ----+ user defined colon word)    dict[N+1].xt------+
@@ -39,22 +39,24 @@
 ///     | strlen+1     | 2-byte | 2-byte |     |      |
 ///     +--------------+--------+--------+-----+------+---- 2-byte aligned
 ///
-///> Parameter structure - 16-bit aligned (use LSB for colon word flag)
+///> Parameter structure - 16-bit aligned (use MSB for colon/primitive word flag)
 ///   * primitive word
-///     16-bit xt offset with LSB set to 0 (1 less mem lookup for xt)
-///     +--------------+-+
-///     | dict.xtoff() |0|   call (XT0 + *IP)() to execute
-///     +--------------+-+   
-///     |0| dict.xtoff() |   WASM XT0=0, xt is index to vtable
-///     +--------------+-+   
+///     16-bit xt offset with MSB set to 1, where opcode < MAX_OP
+///     +-+--------------+
+///     |1|   opcode     |   call exec_prim(opcode)
+///     +-+--------------+
 ///
 ///   * colon word (user defined)
-///     16-bit pmem offset with LSB set to 1
+///     16-bit pmem offset with MSB set to 1, where dict.pfa >= MAX_OP
 ///     +--------------+-+
-///     |  dict.pfa    |1|   next IP = *(MEM0 + (*IP & ~1))
+///     |1|   dict.pfa   |   IP = dict.pfa
 ///     +--------------+-+
-///     |1|   dict.pfa   |   WASM (32K max parameter space)
-///     +--------------+-+
+///
+///   * built-in word
+///     16-bit xt offset with MSB set to 0 (1 less mem lookup for xt)
+///     +-+--------------+
+///     |0| dict.xtoff() |   call (XT0 + *IP)() to execute
+///     +-+--------------+
 ///
 List<DU,   E4_RS_SZ>   rs;         ///< return stack
 List<DU,   E4_SS_SZ>   ss;         ///< parameter stack
@@ -70,26 +72,42 @@ U8  *MEM0 = &pmem[0];              ///< base of parameter memory block
 ///@{
 #define BOOL(f)   ((f)?-1:0)               /**< Forth boolean representation            */
 #define HERE      (pmem.idx)               /**< current parameter memory index          */
-#define MEM(ip)   (MEM0 + (IU)UINT(ip))    /**< pointer to IP address fetched from pmem */
+#define LAST      (dict[dict.idx-1])       /**< last colon word defined                 */
+#define MEM(a)    (MEM0 + (IU)UINT(a))     /**< pointer to address fetched from pmem    */
+#define IGET(ip)  (*(IU*)MEM(ip))          /**< instruction fetch from pmem+ip offset   */
 #define CELL(a)   (*(DU*)&pmem[a])         /**< fetch a cell from parameter memory      */
 #define SETJMP(a) (*(IU*)&pmem[a] = HERE)  /**< address offset for branching opcodes    */
 ///@}
 ///
-/// enum used for built-in opcode tokens to simplify compiler
-/// i.g, add_w(find("donext ")) can be reduced to add_w(NEXT)
-/// but make sure the sequence is in-sync with word list in dict_compile
+/// primitive words to simplify compiler
 ///
 typedef enum {
-    EXIT=0, NOP, NEXT, LOOP, LIT, VAR, STR, DOTQ, BRAN, ZBRAN, DOES, FOR, DO
+    EXIT=0|EXT_FLAG, NOP, NEXT, LOOP, LIT, VAR, STR, DOTQ, BRAN, ZBRAN,
+    VBRAN, DOES, FOR, DO, MAX_OP
 } forth_opcode;
+
+Code op_prim[] = {
+    Code(";",    EXIT), Code("nop",  NOP),   Code("next",  NEXT),  Code("loop",  LOOP),
+    Code("lit",  LIT),  Code("var",  VAR),   Code("str",   STR),   Code("dotq",  DOTQ),
+    Code("bran", BRAN), Code("0bran",ZBRAN), Code("vbran", VBRAN), Code("does>", DOES),
+    Code("for",  FOR),  Code("do",   DO)
+};
+#define USER_AREA  (ALIGN16(MAX_OP & ~EXT_FLAG))
+#define IS_PRIM(w) ((w & EXT_FLAG) && (w < MAX_OP))
 ///
 ///====================================================================
 ///
 ///> VM states (single task)
 ///
+typedef enum { STOP=0, HOLD, RUN } vm_state;
+
+IU   IP      = 0;       ///< instruction pointer
+IU   DP      = 0;       ///< call frame depth (iterator design)
+int  VM      = RUN;     ///< VM state
+///
+///> user variables
+///
 DU   top     = -DU1;    ///< top of stack (cached)
-IU   IP      = 0;       ///< current instruction pointer
-bool run     = true;    ///< VM nest() control
 bool compile = false;   ///< compiler flag
 bool ucase   = false;   ///< case sensitivity control
 IU   *base;             ///< numeric radix (a pointer)
@@ -104,8 +122,8 @@ int streq(const char *s1, const char *s2) {
 }
 IU find(const char *s) {
     IU v = 0;
-    for (IU i = dict.idx - 1; i > 0; --i) {
-        if (streq(s, dict[i].name)) { v = i; break; }
+    for (IU i = dict.idx - 1; !v && i > 0; --i) {
+        if (streq(s, dict[i].name)) v = i;
     }
 #if CC_DEBUG > 1
     LOG_HDR("find", s); if (v) { LOG_DIC(v); } else LOG_NA();
@@ -135,84 +153,31 @@ void add_iu(IU i) { pmem.push((U8*)&i, sizeof(IU)); }  ///< add an instruction i
 void add_du(DU v) { pmem.push((U8*)&v, sizeof(DU)); }  ///< add a cell into pmem
 int  add_str(const char *s) {       ///< add a string to pmem
     int sz = STRLEN(s);
-    pmem.push((U8*)s,  sz);
+    pmem.push((U8*)s,  sz);         /// * add string terminated with zero
     return sz;
 }
 void add_w(IU w) {                  ///< add a word index into pmem
-    Code &c = dict[w];              ///< ref to dictionary entry
-    IU   ip = c.attr & UDF_ATTR     ///< check whether colon word
-        ? (c.pfa | UDF_FLAG)        ///< pfa with colon word flag
-        : (w==EXIT ? EXIT : c.xtoff());   ///< XT offset
+    Code &c = IS_PRIM(w)
+        ? op_prim[w & ~EXT_FLAG]
+        : dict[w];                  ///< ref to dictionary entry
+    IU ip = (w & EXT_FLAG)
+        ? (UFP)c.xt                 ///< get primitive/built-in token
+        : (c.attr & UDF_ATTR        /// * colon word?
+           ? (c.pfa | EXT_FLAG)     ///< pfa with colon word flag
+           : c.xtoff());            ///< XT offset
     add_iu(ip);
 #if CC_DEBUG > 1
     LOG_KV("add_w(", w); LOG_KX(") => ", ip);
-    LOG_KX(":", c.xtoff()); LOGS(" "); LOGS(c.name); LOGS("\n");
+    LOGS(" "); LOGS(c.name); LOGS("\n");
 #endif // CC_DEBUG > 1
 }
-void add_var() {                    ///< add a varirable header
-#if DO_WASM                         /// * WASM float needs to be 4-byte aligned
-    if (sizeof(IU)==2 && (pmem.idx & 0x3)!=0) {
-        add_w(NOP);                 /// pad two bytes
-    }
+void add_var(IU op) {               ///< add a varirable header
+    add_w(op);                      /// VAR or VBRAN
+    if (op==VBRAN) add_iu(0);       /// * pad offset field
+#if DO_WASM
+    pmem.idx = DALIGN(pmem.idx);    /// * data alignment (WASM 4, other 2)
 #endif // DO_WASM
-    add_w(VAR);
-}
-///====================================================================
-///
-///> Forth inner interpreter (handles a colon word)
-///  Note:
-///  * overhead here in C call/return vs NEXT threading (in assembly)
-///  * use of dp (iterative depth control) instead of WP by Dr. Ting
-///    speeds up 8% vs recursive calls but loose the flexibity of Forth
-///  * use of cached _NXT address speeds up 10% on AMD but
-///    5% slower on ESP32 probably due to shallow pipeline
-///  * computed label runs 15% faster, but needs long macros (for enum)
-///  * use local stack speeds up 10%, but allot 4*64 bytes extra
-///
-///  TODO: performance tuning
-///    1. Just-in-time cache(ip, dp)
-///    2. Co-routine
-///
-void nest() {
-    static IU _NXT = dict[find("next ")].xtoff(); ///> cache offsets to funtion pointers
-    static IU _LIT = dict[find("lit ")].xtoff();
-    int dp = 0;                        ///> iterator implementation (instead of recursive)
-    while (dp >= 0) {                  ///> depth control
-        IU ix = *(IU*)MEM(IP);         ///> fetch opcode, hopefully cached
-        run = true;                    ///> re-enable loop control
-        while (run && ix!=EXIT) {      ///> loop till 0 (EXIT) hit
-            IP += sizeof(IU);          /// * advance inst. ptr
-            if (ix & UDF_FLAG) {       ///> is it a colon word?
-                rs.push(IP);
-                IP = ix & ~UDF_FLAG;   ///> word pfa (def masked)
-                dp++;                  ///> go one level deeper
-            }
-            else if (ix == _NXT) {     ///> cached NEXT, LIT handlers,
-                if (GT(rs[-1] -= DU1, -DU1)) {       ///> loop done?
-                    IP = *(IU*)MEM(IP);              ///> 10% faster on AMD, 5% on ESP32
-                }
-                else { IP += sizeof(IU); rs.pop(); } ///> perhaps due to shallow pipeline
-            }
-            else if (ix == _LIT) {
-                ss.push(top);
-                top = *(DU*)MEM(IP);   ///> from hot cache, hopefully
-                IP += sizeof(DU);
-            }
-            else Code::exec(ix);       ///> execute primitive word
-
-            ix = *(IU*)MEM(IP);        ///> fetch next opcode
-        }
-        if (dp-- > 0) IP = rs.pop();   ///> pop off a level
-
-        yield();                       ///> give other tasks some time
-    }
-}
-///
-///> CALL - inner-interpreter proxy (inline macro does not run faster)
-///
-void CALL(IU w) {
-    if (IS_UDF(w)) { IP = dict[w].pfa; nest(); }
-    else dict[w].call();
+    if (op==VAR)   add_du(DU0);     /// * default variable = 0
 }
 ///====================================================================
 ///
@@ -222,14 +187,13 @@ void CALL(IU w) {
 ///   * if it takes too much memory for target MCU,
 ///   * these functions can be replaced with our own implementation
 ///
-#include <iomanip>                     /// setbase, setw, setfill
-#include <iostream>                    /// cin, cout
-#include <sstream>                     /// stringstream
-using namespace std;                   /// default to C++ standard template library
-istringstream   fin;                   ///< forth_in
-ostringstream   fout;                  ///< forth_out
-string          pad;                   ///< input string buffer
-void (*fout_cb)(int, const char*);     ///< forth output callback function (see ENDL macro)
+#include <iomanip>                  /// setbase, setw, setfill
+#include <sstream>                  /// iostream, stringstream
+using namespace std;                /// default to C++ standard template library
+istringstream   fin;                ///< forth_in
+ostringstream   fout;               ///< forth_out
+string          pad;                ///< input string buffer
+void (*fout_cb)(int, const char*);  ///< forth output callback function (see ENDL macro)
 ///====================================================================
 ///
 /// macros to reduce verbosity
@@ -251,17 +215,114 @@ inline void PUSH(DU v) { ss.push(top); top = v; }
 inline DU   POP()      { DU n=top; top=ss.pop(); return n; }
 ///====================================================================
 ///
+///> Forth inner interpreter (handles a colon word)
+///  Note:
+///  * overhead here in C call/return vs NEXT threading (in assembly)
+///  * use of dp (iterative depth control) instead of WP by Dr. Ting
+///    speeds up 8% vs recursive calls but loose the flexibity of Forth
+///  * use of cached _NXT address speeds up 10% on AMD but
+///    5% slower on ESP32 probably due to shallow pipeline
+///  * computed label runs 15% faster, but needs long macros (for enum)
+///  * use local stack speeds up 10%, but allot 4*64 bytes extra
+///
+///  TODO: performance tuning
+///    1. Just-in-time cache(ip, dp)
+///    2. Co-routine
+///
+#define DISPATCH(op) switch(op)
+#define CASE(op, g)  case op : { g; } break
+#define OTHER(g)     default : { g; } break
+#define RETURN()                                    \
+    if (--DP > 0) { IP=UINT(rs.pop()); VM=HOLD; }   \
+    else VM = STOP
+
+void nest(IU pfa) {
+    if (VM != HOLD) { IP = pfa; DP = 1; }            /// * reset IP & depth counter
+    VM = RUN;                                        /// * activate VM
+
+    while (VM==RUN) {
+        IU ix = IGET(IP);                            ///> fetched opcode, hopefully in register
+//        printf("DP=%d, [%4x]:%4x", DP, IP, ix);
+        IP += sizeof(IU);
+        DISPATCH(ix) {                               /// * opcode dispatcher
+        CASE(EXIT, RETURN());
+        CASE(NOP,  { /* do nothing */});
+        CASE(NEXT,
+             if (GT(rs[-1] -= DU1, -DU1)) {          ///> loop done?
+                 IP = IGET(IP);                      /// * no, loop back
+             }
+             else {                                  /// * yes, loop done!
+                 rs.pop();                           /// * pop off loop counter
+                 IP += sizeof(IU);                   /// * next instr.
+             });
+        CASE(LOOP,
+             if (GT(rs[-2], rs[-1] += DU1)) {        ///> loop done?
+                 IP = IGET(IP);                      /// * no, loop back
+             }
+             else {                                  /// * yes, done
+                 rs.pop(); rs.pop();                 /// * pop off counters
+                 IP += sizeof(IU);                   /// * next instr.
+             });
+        CASE(LIT,
+             ss.push(top);
+             top = *(DU*)MEM(IP);                    ///> from hot cache, hopefully
+             IP += sizeof(DU));                      /// * hop over the stored value
+        CASE(VAR, PUSH(DALIGN(IP)); RETURN());       ///> get var addr, alignment?
+        CASE(STR,
+             const char *s = (const char*)MEM(IP);   // get string pointer
+             IU    len = STRLEN(s);
+             PUSH(IP); PUSH(len); IP += len);
+        CASE(DOTQ,                                   /// ." ..."
+             const char *s = (const char*)MEM(IP);   /// * get string pointer
+             fout << s;  IP += STRLEN(s));           /// * send to output console
+        CASE(BRAN, IP = IGET(IP));                   /// * unconditional branch
+        CASE(ZBRAN,                                  /// * conditional branch
+             IP = POP() ? IP+sizeof(IU) : IGET(IP));
+        CASE(VBRAN,
+             PUSH(DALIGN(IP + sizeof(IU)));          /// * skip target address
+             IP = IGET(IP));                         /// * create..
+        CASE(DOES,
+             IU *p = (IU*)MEM(LAST.pfa);             ///> memory pointer to pfa 
+             *(p+1) = IP;                            /// * encode current IP, and bail
+             RETURN());
+        CASE(FOR,  rs.push(POP()));                  /// * setup FOR..NEXT call frame
+        CASE(DO,                                     /// * setup DO..LOOP call frame
+             rs.push(ss.pop()); rs.push(POP()));
+        OTHER(
+            if (ix & EXT_FLAG) {                     /// * colon word?
+                rs.push(IP);                         /// * setup call frame
+                DP++;
+                IP = ix & ~EXT_FLAG;                 /// * IP = word.pfa
+            }
+            else {
+                Code::exec(ix);                      ///> execute built-in word
+                if (VM==STOP) { RETURN(); }
+            });
+        }
+//        printf("   =>DP=%d, IP=%4x, rs.idx=%d, VM=%d\n", DP, IP, rs.idx, VM);
+    }
+}
+///
+///> CALL - inner-interpreter proxy (inline macro does not run faster)
+///
+void CALL(IU w) {
+    VM = RUN;
+    if (IS_UDF(w)) nest(dict[w].pfa);   /// colon word
+    else           dict[w].call();      /// built-in word
+}
+///====================================================================
+///
 ///> IO & debug functions
 ///
 void spaces(int n)  { for (int i = 0; i < n; i++) fout << " "; }
-void s_quote(IU op) {
+void s_quote(forth_opcode op) {
     const char *s = scan('"')+1;       ///> string skip first blank
     if (compile) {
         add_w(op);                     ///> dostr, (+parameter field)
         add_str(s);                    ///> byte0, byte1, byte2, ..., byteN
     }
     else {                             ///> use PAD ad TEMP storage
-        IU h0  = HERE;
+        IU h0  = HERE;                 ///> keep current memory addr
         DU len = add_str(s);           ///> write string to PAD
         PUSH(h0);                      ///> push string address
         PUSH(len);                     ///> push string length
@@ -271,73 +332,88 @@ void s_quote(IU op) {
 ///
 /// recursively disassemble colon word
 ///
+#define TONAME(w) (dict[w].pfa - STRLEN(dict[w].name))
+int pfa2didx(IU ix) {                          ///> reverse lookup
+    if (IS_PRIM(ix)) return (int)ix;           ///> primitives
+    IU   pfa = ix & ~EXT_FLAG;                 ///> pfa (mask colon word)
+    FPTR xt  = Code::XT(pfa);                  ///> lambda pointer
+    for (int i = dict.idx - 1; i > 0; --i) {
+//        printf("dict[%d].pfa=%x == %x\n", i, dict[i].pfa, pfa);
+        if (ix & EXT_FLAG) {                   /// colon word?
+            if (dict[i].pfa == pfa) return i;  ///> compare pfa in PMEM
+        }
+        else if (dict[i].xt == xt) return i;   ///> compare xt (built-in words)
+    }
+    return 0;                                  /// * not found
+}
+int  pfa2nvar(IU pfa) {
+    IU  w  = IGET(pfa);
+//    printf("pfa=%x, w=%x", pfa, w);
+    if (w != VAR && w != VBRAN) return 0;
+    
+    IU  i0 = pfa2didx(pfa | EXT_FLAG);
+//    printf(" => i0=%d", i0);
+    if (!i0) return 0;
+    IU  p1 = (i0+1) < dict.idx ? TONAME(i0+1) : HERE;
+    int n  = p1 - pfa - sizeof(IU) * (w==VAR ? 1 : 2);    ///> CC: calc # of elements
+//    printf(", p1=%x, n=%d\n", p1, n);
+    return n;
+}
 void to_s(IU w, U8 *ip) {
 #if CC_DEBUG
     fout << "( " << setfill('0') << setw(4) << (ip - MEM0) << "["; ///> addr
-    if (w==EXIT) fout << "EOW";
-    else         fout << setfill(' ') << setw(3) << w;
+    fout << setfill(' ') << setw(4) << w;
     fout << "] ) ";
 #endif // CC_DEBUG
+    
     ip += sizeof(IU);                  ///> calculate next ip
     switch (w) {
-    case EXIT: fout << ";";                         break;
     case LIT:  fout << *(DU*)ip << " ( lit )";      break;
-    case VAR: {
-        int  n = *(IU*)ip;  ip += sizeof(IU);       ///> number of elements
-        for (int i = 0; i < n; i+=sizeof(DU)) {
-            fout << *(DU*)ip << ' '; ip += sizeof(DU);
-        }
-        fout << " ( var )";
-    } break;
     case STR:  fout << "s\" " << (char*)ip << '"';  break;
     case DOTQ: fout << ".\" " << (char*)ip << '"';  break;
-    default:   fout << dict[w].name;                break;
+    case VAR:
+    case VBRAN: {
+        int n  = pfa2nvar(UINT(ip - MEM0 - sizeof(IU)));
+        IU  ix = (IU)(ip - MEM0 + (w==VAR ? 0 : sizeof(IU)));
+        for (int i = 0, a=DALIGN(ix); i < n; i+=sizeof(DU)) {
+            fout << *(DU*)MEM(a + i) << ' ';
+        }
+    }                                               /// no break, fall through
+    default:
+        Code &c = IS_PRIM(w) ? op_prim[w & ~EXT_FLAG] : dict[w];
+        fout << c.name; break;
     }
-#if CC_DEBUG    
     switch (w) {
     case NEXT: case LOOP:
-    case BRAN: case ZBRAN:                         ///> display jmp target
-        fout << "( " << setfill('0') << setw(4) << *(IU*)ip << " )";
+    case BRAN: case ZBRAN: case VBRAN:             ///> display jmp target
+        fout << ' ' << setfill('0') << setw(4) << *(IU*)ip;
         break;
-    default: /* do nothing */         break;
+    default: /* do nothing */ break;
     }
-#endif // CC_DEBUG    
     fout << setfill(' ') << setw(-1); ///> restore output format settings
 }
 void see(IU pfa, int dp=1) {
-    auto pfa2opcode = [](IU ix) {                  ///> reverse lookup
-        if (ix==EXIT) return (int)EXIT;            ///> end of word handler
-        IU   pfa = ix & ~UDF_FLAG;                 ///> pfa (mask colon word)
-        FPTR xt  = Code::XT(pfa);                  ///> lambda pointer
-        for (int i = dict.idx - 1; i > 0; --i) {
-            if (ix & UDF_FLAG) {
-                if (dict[i].pfa == pfa) return i;  ///> compare pfa in PMEM
-            }
-            else if (dict[i].xt == xt) return i;   ///> compare xt
-        }
-        return -1;                                 /// * not found
-    };
     U8 *ip = MEM(pfa);
     while (1) {
-        IU w = pfa2opcode(*(IU*)ip);    ///> fetch word index by pfa
-        if (w==(IU)-1) break;           ///> loop guard
+        IU w = pfa2didx(*(IU*)ip);      ///> fetch word index by pfa
+        if (!w) break;                  ///> loop guard
         
-        fout << ENDL; for (int i=dp; i>0; i--) fout << "  ";    ///> indent
+        fout << ENDL; for (int i=DP; i>0; i--) fout << "  ";    ///> indent
         to_s(w, ip);                    ///> display opcode
-        if (w==EXIT) break;             ///> done with the colon word
-
+        if (w==EXIT || w==VAR) return;  ///> end of word
+        
         ip += sizeof(IU);               ///> advance ip (next opcode)
         switch (w) {                    ///> extra bytes to skip
-        case LIT:   ip += sizeof(DU);                    break;
-        case VAR:   ip += sizeof(IU) + *(IU*)ip;         break; /// * skip (n) and n cells
+        case LIT:   ip += sizeof(DU);                    break; /// alignment?
         case STR:   case DOTQ:  ip += STRLEN((char*)ip); break;
         case BRAN:  case ZBRAN:
         case NEXT:  case LOOP:  ip += sizeof(IU);        break;
+        case VBRAN: ip = MEM(*(IU*)ip);                  break;
         }
 #if CC_DEBUG > 1
         ///> walk recursively
-        if (IS_UDF(w) && dp < 2) {      ///> is a colon word
-            see(dict[w].pfa, dp+1);     ///> recursive into child
+        if (!IS_PRIM(w) && IS_UDF(w) && DP < 2) {      ///> is a colon word
+            see(dict[w].pfa, DP+1);                    ///> recursive into child
         }
 #endif // CC_DEBUG > 1
     }
@@ -353,7 +429,7 @@ void words() {
         if (nm[0]) {
 #else  //  CC_DEBUG > 1
         if (nm[len-1] != ' ') {
-#endif // CC_DEBUG > 1           
+#endif // CC_DEBUG > 1
             sz += len + 2;
             fout << "  " << nm;
         }
@@ -371,13 +447,13 @@ void ss_dump() {
 #if USE_FLOAT
         sprintf(buf, "%0.6g", v);
         return buf;
-#else  // !USE_FLOAT
-        int i = 33;  buf[i]='\0';         /// * C++ can do only 8,10,16
+#else // !USE_FLOAT
+        int i = 33;  buf[i]='\0';         /// * C++ can do only base=8,10,16
         DU  n = ABS(v);                   ///< handle negative
-        while (n && i) {                  ///> digit-by-digit
+        do {                              ///> digit-by-digit
             U8 d = (U8)MOD(n,b);  n /= b;
             buf[--i] = d > 9 ? (d-10)+'a' : d+'0';
-        }
+        } while (n && i);
         if (v < DU0) buf[--i]='-';
         return &buf[i];
 #endif // USE_FLOAT
@@ -405,6 +481,13 @@ void mem_dump(U32 p0, IU sz) {
         yield();
     }
     fout << setbase(*base) << setfill(' ');
+}
+void load(const char* fn) {
+//	printf("load save VM=%d, IP=%04x, DP=%d, rs.idx=%d\n", VM, IP, DP, rs.idx);
+    rs.push(VM); rs.push(DP); rs.push(IP);                         // save context
+    forth_include(fn);                                             // include file
+    IP = UINT(rs.pop()); DP = UINT(rs.pop()); VM = UINT(rs.pop()); // restore
+//	printf("load restore VM=%d, IP=%04x, DP=%d, rs.idx=%d\n", VM, IP, DP, rs.idx);
 }
 ///====================================================================
 ///
@@ -469,7 +552,7 @@ void call_js() {                           ///> ( n addr u -- )
         case 'f': n << (DU)POP();                  break;
         case 'x': n << "0x" << hex << UINT(POP()); break;
         case 's': POP(); n << (char*)MEM(POP());   break;  /// also handles raw stream
-        case 'p': 
+        case 'p':
             n << "p " << UINT(POP());
             n << ' '  << UINT(POP());              break;
         default : n << c << '?';                   break;
@@ -497,35 +580,9 @@ void call_js() {                           ///> ( n addr u -- )
 ///
 UFP Code::XT0 = ~0;    ///< init base of xt pointers (before calling CODE macros)
 
-void dict_compile() {  ///< compile primitive words into dictionary
+void dict_compile() {  ///< compile built-in words into dictionary
+    CODE("nul ",    {});                  /// dict[0], not used, simplify find()
     ///
-    /// @defgroup Execution flow ops
-    /// @brief - DO NOT change the sequence here (see forth_opcode enum)
-    ///        - the build-in control words have extra last blank char
-    /// @{
-    CODE("exit ",   {});                                      // dict[0] also the storage for base
-    CODE("nop ",    {});                                      // nop (VAR padding
-    CODE("next ",                                             // handled in nest()
-         if (GT(rs[-1] -= DU1, -DU1)) IP = *(IU*)MEM(IP);     // rs[-1]-=1 saved 200ms/1M cycles
-         else { IP += sizeof(IU); rs.pop(); });
-    CODE("loop ",                                             // handled in nest()
-         if (GT(rs[-2], rs[-1] += DU1)) IP = *(IU*)MEM(IP);
-         else { IP += sizeof(IU); rs.pop(); rs.pop(); });
-    CODE("lit ",    PUSH(*(DU*)MEM(IP)); IP += sizeof(DU));
-    CODE("var ",    PUSH(IP + sizeof(IU));                    // get var addr (skip over EXIT)
-                    IP += sizeof(IU) + *(IU*)MEM(IP));        // len + data
-    CODE("str ",    const char *s = (const char*)MEM(IP);     // get string pointer
-                    IU    len = STRLEN(s);
-                    PUSH(IP); PUSH(len); IP += len);
-    CODE("dotq ",   const char *s = (const char*)MEM(IP);     // get string pointer
-                    fout << s;  IP += STRLEN(s));             // send to output console
-    CODE("bran " ,  IP = *(IU*)MEM(IP));                      // unconditional branch
-    CODE("0bran ",  IP = POP() ? IP + sizeof(IU) : *(IU*)MEM(IP)); // conditional branch
-    CODE("does> ",  add_w(BRAN); add_iu(IP); run = false);    // encode current IP, and bail
-    CODE("for ",    rs.push(POP()));
-    CODE("do ",     rs.push(ss.pop()); rs.push(POP()));       // DO..LOOP control
-    /// - DO NOT change the sequence above (see forth_opcode enum)
-    /// @}
     /// @defgroup Stack ops
     /// @brief - opcode sequence can be changed below this line
     /// @{
@@ -577,9 +634,9 @@ void dict_compile() {  ///< compile primitive words into dictionary
     CODE("2/",      top /= 2);
     CODE("1+",      top += 1);
     CODE("1-",      top -= 1);
-#if USE_FLOAT    
+#if USE_FLOAT
     CODE("int",     top = UINT(top));         // float => integer
-#endif // USE_FLOAT    
+#endif // USE_FLOAT
     /// @}
     /// @defgroup Logic ops
     /// @{
@@ -657,24 +714,21 @@ void dict_compile() {  ///< compile primitive words into dictionary
     /// @{
     IMMD("do" ,     add_w(DO); PUSH(HERE));                     // for ( -- here )
     CODE("i",       PUSH(rs[-1]));
-    CODE("leave",   rs.pop(); rs.pop(); run = false);           // quit DO..LOOP
+    CODE("leave",   rs.pop(); rs.pop(); VM = STOP);             // quit DO..LOOP
     IMMD("loop",    add_w(LOOP); add_iu(POP()));                // next ( here -- )
     /// @}
     /// @defgrouop return stack ops
     /// @{
     CODE(">r",      rs.push(POP()));
     CODE("r>",      PUSH(rs.pop()));
-    CODE("r@",      PUSH(rs[-1]));                      // same as I (the loop counter)
+    CODE("r@",      PUSH(rs[-1]));                              // same as I (the loop counter)
     /// @}
     /// @defgrouop Compiler ops
     /// @{
     CODE(":",       compile = def_word(word()));
     IMMD(";",       add_w(EXIT); compile = false);
-    CODE("exit",    run = false);                               // early exit the colon word
-    CODE("variable",                                            // create a variable
-         def_word(word());                                      // create a new word on dictionary
-         add_var(); add_iu(sizeof(DU)); add_du(DU0);            // dovar (len=4, default 0)
-         add_w(EXIT));
+    CODE("exit",    VM = STOP);                                 // early exit the colon word
+    CODE("variable",def_word(word()); add_var(VAR));            // create a variable
     CODE("constant",                                            // create a constant
          def_word(word());                                      // create a new word on dictionary
          add_w(LIT); add_du(POP());                             // dovar (+parameter field)
@@ -685,7 +739,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
     /// @brief - dict is directly used, instead of shield by macros
     /// @{
     CODE("exec",   IU w = POP(); CALL(w));                      // execute word
-    CODE("create", def_word(word()); add_var());                // dovar (no parameter field)
+    CODE("create", def_word(word()); add_var(VBRAN));           // bran + offset field
     IMMD("does>",  add_w(DOES));
     CODE("to",              // 3 to x                           // alter the value of a constant
          IU w = find(word()); if (!w) return;                   // to save the extra @ of a variable
@@ -704,9 +758,8 @@ void dict_compile() {  ///< compile primitive words into dictionary
     CODE("cells", IU i = UINT(POP()); PUSH(i * sizeof(DU)));    // n -- n'
     CODE("allot",                                               // n --
          IU n = UINT(POP());                                    // number of bytes
-         add_iu(n);                                             // encode length, default 0
-         for (int i = 0; i < n; i+=sizeof(DU)) add_du(DU0);     // zero padding
-         add_w(EXIT));                                          // endof word
+         for (int i = 0; i < n; i+=sizeof(DU)) add_du(DU0));    // zero padding
+    CODE("th",    IU n = POP(); top += n * sizeof(DU));         // w i -- w'
     CODE("+!",    IU w = UINT(POP()); CELL(w) += POP());        // n w --
     CODE("?",     IU w = UINT(POP()); fout << CELL(w) << " ");  // w --
     /// @}
@@ -717,23 +770,27 @@ void dict_compile() {  ///< compile primitive words into dictionary
     CODE("'",     IU w = find(word()); if (w) PUSH(w));
     CODE(".s",    ss_dump());
     CODE("depth", PUSH(ss.idx));
+    CODE("r",     PUSH(rs.idx));
     CODE("words", words());
     CODE("see",
          IU w = find(word()); if (!w) return;
          fout << ": " << dict[w].name;
          if (IS_UDF(w)) see(dict[w].pfa);
-         else           fout << " ( primitive ) ;";
+         else           fout << " ( built-ins ) ;";
          fout << ENDL);
     CODE("dump",  U32 n = UINT(POP()); mem_dump(UINT(POP()), n));
     CODE("dict",  dict_dump());
     CODE("forget",
-         IU w = find(word()); if (!w) return;
+         IU w = find(word()); if (!w) return;                  // bail, if not found
          IU b = find("boot")+1;
-         if (w > b) {
+         if (w > b) {                                          // clear to specified word
              pmem.clear(dict[w].pfa - STRLEN(dict[w].name));
              dict.clear(w);
          }
-         else { dict.clear(b); pmem.clear(sizeof(DU)); }
+         else {                                                // clear to 'boot'
+             pmem.clear(USER_AREA);
+             dict.clear(b);
+         }
     );
     /// @}
     /// @defgroup OS ops
@@ -744,8 +801,7 @@ void dict_compile() {  ///< compile primitive words into dictionary
     CODE("delay", delay(UINT(POP())));
     CODE("included",                        // include external file
          POP();                             // string length, not used
-         U8 *fn = MEM(POP());               // file name
-         forth_include((const char*)fn));   // include file
+         load((const char*)MEM(POP())));    // include external file
 #if DO_WASM
     CODE("JS",    call_js());               // Javascript interface
 #else  // !DO_WASM
@@ -779,14 +835,14 @@ DU parse_number(const char *idiom, int *err) {
     return n;
 }
 
-int forth_core(const char *idiom) {
+void forth_core(const char *idiom) {
     IU w = find(idiom);                  ///> * get token by searching through dict
     if (w) {                             ///> * word found?
         if (compile && !IS_IMM(w)) {     /// * in compile mode?
             add_w(w);                    /// * add to colon word
         }
         else CALL(w);                    /// * execute forth word
-        return 0;
+        return;
     }
     // try as a number
     int err = 0;
@@ -794,7 +850,7 @@ int forth_core(const char *idiom) {
     if (err) {                           /// * not number
         fout << idiom << "? " << ENDL;   ///> display error prompt
         compile = false;                 ///> reset to interpreter mode
-        return 1;                        ///> skip the entire input buffer
+        VM      = STOP;                  ///> skip the entire input buffer
     }
     // is a number
     if (compile) {                       /// * a number in compile mode?
@@ -802,7 +858,6 @@ int forth_core(const char *idiom) {
         add_du(n);
     }
     else PUSH(n);                        ///> or, add value onto data stack
-    return 0;
 }
 ///====================================================================
 ///
@@ -810,38 +865,46 @@ int forth_core(const char *idiom) {
 ///
 void forth_init() {
     static bool init = false;
-    if (init) return;                    ///> check dictionary initilized
-    
-    base = (IU*)MEM(HERE);               ///< set pointer to base
-    add_iu(10);                          ///< allocate space for base
-    dflt = (IU*)MEM(HERE);               ///< set pointer to dfmt
+    if (init) return;            ///> check dictionary initilized
+
+    add_w(EXIT);                 /// * COLD
+    if (sizeof(IU)==2) add_iu(0);/// * 4-byte aligned
+
+    base = &IGET(HERE);          ///< set pointer to base
+    add_iu(10);                  ///< allocate space for base
+    dflt = &IGET(HERE);          ///< set pointer to dfmt
     add_iu(USE_FLOAT);
     
+    for (int i=pmem.idx; i<USER_AREA; i+=sizeof(IU)) {
+        add_iu(EXIT);            /// * padding user area
+    }
     dict_compile();                      ///> compile dictionary
 }
-void forth_vm(const char *cmd, void(*hook)(int, const char*)) {
-    auto outer = []() {                  ///> outer interpreter loop
-        string idiom;
-        while (fin >> idiom) {           
-            forth_core(idiom.c_str());   ///> send word to Forth core
-        }
-    };
-    auto cb = [](int,const char *rst) { printf("%s", rst); };
-    fout_cb = hook ? hook : cb;          ///> setup callback function
-    
-    istringstream istm(cmd);             ///< input stream
-    string        line;                  ///< line command
-    fout.str("");                        /// * clean output buffer
-    while (getline(istm, line)) {        /// * fetch one line at a time
-        fin.clear();                     /// * clear input stream error bit if any
-        fin.str(line);                   /// * feed user command into input stream
-        outer();                         /// * invoke Forth outer interpreter
+int forth_vm(const char *line, void(*hook)(int, const char*)) {
+    auto cb = [](int, const char *rst) { printf("%s", rst); };
+    fout_cb = hook ? hook : cb;  ///< serial output hook up
+
+    bool hold = VM==HOLD;        ///< check VM resume status
+    if (!hold) {                 ///> refresh buffer if not resuming
+        fout.str("");            /// * clean output buffer
+        fin.clear();             /// * clear input stream error bit if any
+        fin.str(line);           /// * reload user command into input stream
     }
-#if DO_WASM    
-    if (!compile) fout << "ok" << ENDL;
-#else
-    if (!compile) ss_dump();   /// * dump stack and display ok prompt
+//    printf("    hold=%d, IP=%04x, [%d]%s\n", hold, IP, (int)fin.tellg(), fin.str().c_str());
+    string idiom;
+    while (hold || (fin >> idiom)) {          ///> fetch a word
+        if (hold) nest(0);                    /// * continue without parsing
+        else      forth_core(idiom.c_str());  ///> send to Forth core
+        hold = VM==HOLD;                      /// * update return status
+        if (hold) break;                      /// * pause, yield to front-end task
+    }
+//    printf("    => hold=%d, IP=%04x\n", hold, IP);
+#if DO_WASM
+    if (!hold && !compile) fout << "ok" << ENDL;
+#else // !DO_WASM
+    if (!hold && !compile) ss_dump();         /// * dump stack and display ok prompt
 #endif  // DO_WASM
+    return hold;
 }
 ///====================================================================
 ///> WASM specific code
@@ -887,7 +950,7 @@ int  forth_include(const char *fn) {
     string in; getline(fin, in);                  ///< keep input buffers
     fout << ENDL;                                 /// * flush output
     
-    forth_vm((const char*)&pmem[E4_PMEM_SZ-rst]); /// * send script to VM
+    while (forth_vm((const char*)&pmem[E4_PMEM_SZ-rst])); /// * send script to VM
     
     fout_cb = cb;                                 /// * restore output cb
     fin.clear(); fin.str(in);                     /// * restore input
@@ -895,6 +958,7 @@ int  forth_include(const char *fn) {
     return 0;
 }
 
+#include <iostream>
 int  main(int ac, char* av[]) {
     forth_init();
     srand(time(0));
@@ -904,7 +968,7 @@ int  main(int ac, char* av[]) {
     string cmd;
     while (getline(cin, cmd)) {         ///> fetch user input
         // printf("cmd=<%s>\n", cmd.c_str());
-        forth_vm(cmd.c_str());          ///> execute outer interpreter
+        while (forth_vm(cmd.c_str()));  ///> execute outer interpreter
     }
     cout << "done!" << endl;
 #endif // DO_WASM
@@ -917,7 +981,7 @@ int  main(int ac, char* av[]) {
 ///
 #if DO_WASM
 extern "C" {
-void forth(int n, char *cmd) { forth_vm(cmd); }
+int  forth(int n, char *cmd) { return forth_vm(cmd); }
 int  vm_base()       { return *base;    }
 int  vm_dflt()       { return *dflt;    }
 int  vm_ss_idx()     { return ss.idx;   }

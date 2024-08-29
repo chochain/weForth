@@ -47,14 +47,13 @@ struct List {
 ///
 ///@name Code flag masking options
 ///@{
-#define UDF_ATTR   0x0001   /** user defined word  */
-#define IMM_ATTR   0x0002   /** immediate word     */
+#define UDF_ATTR   0x0001   /** user defined word    */
+#define IMM_ATTR   0x0002   /** immediate word       */
+#define EXT_FLAG   0x8000   /** prim/xt/pfa selector */
 #if DO_WASM
-#define MSK_ATTR   ~0x0     /** no masking         */
-#define UDF_FLAG   0x8000   /** xt/pfa selector    */
+#define MSK_ATTR   ~0x0     /** no masking needed    */
 #else  // !DO_WASM
-#define MSK_ATTR   ~0x3
-#define UDF_FLAG   0x0001   /** xt/pfa selector    */
+#define MSK_ATTR   ~0x3     /** mask udf,imm bits    */
 #endif // DO_WASM
 
 #define IS_UDF(w) (dict[w].attr & UDF_ATTR)
@@ -68,29 +67,27 @@ struct List {
 ///  +-------------------+----+----+---------+
 ///                      |attr|pfa |xxxxxxxxx|
 ///                      +----+----+---------+
+///
 ///  Code class on 32-bit systems (memory best utilized)
 ///  +---------+---------+
 ///  |  *name  |   xt    |
 ///  +---------+----+----+
 ///            |attr|pfa |
 ///            +----+----+
+///
 ///  Code class on WASM/32-bit (a bit wasteful)
-///  +---------+---------+---------+
-///  |  *name  |   xt    |attr|xxxx|
-///  +---------+----+----+---------+
-///            |pfa |xxxx|
-///            +----+----+
+///  +---------+---------+----+----+
+///  |  *name  |   xt    |attr|pfa |
+///  +---------+---------+----+----+
 ///
 typedef void (*FPTR)();     ///< function pointer
 struct Code {
     static UFP XT0;         ///< function pointer base (in registers hopefully)
     const char *name = 0;   ///< name field
 #if DO_WASM
-    union {
-        FPTR xt = 0;        ///< WASM fptr is just index to vtable
-        IU   pfa;           ///< i.e. no LSBs available
-    };
-    IU attr = 0;            ///< So, attributes need to be separated
+    FPTR xt   = 0;          ///< WASM fptr is just index to vtable
+    IU   attr = 0;          ///< So, attributes need to be separated
+    IU   pfa  = 0;          ///< i.e. no LSBs available
 #else // !DO_WASM
     union {                 ///< either a primitive or colon word
         FPTR xt = 0;        ///< lambda pointer (4-byte align, 2 LSBs can be used for attr)
@@ -103,8 +100,14 @@ struct Code {
     static FPTR XT(IU ix)   INLINE { return (FPTR)(XT0 + (UFP)ix); }
     static void exec(IU ix) INLINE { (*XT(ix))(); }
 
+    Code(const char *n, IU w) : name(n), xt((FPTR)((UFP)w)) {   ///< primitives
+#if CC_DEBUG > 1
+		LOG_KX("prim xt=", (UFP)xt); 
+		LOG_KX(", nm=", (UFP)n); LOGS(" "); LOGS(n); LOGS("\n");
+#endif // CC_DEBUG > 1
+    }
     Code(const char *n, FPTR fp, bool im) : name(n), xt(fp) {
-        if ((UFP)xt < XT0) XT0 = (UFP)xt; ///> collect xt base
+        if ((UFP)xt < XT0) XT0 = (UFP)xt;                ///> collect xt base
         if (im) attr |= IMM_ATTR;
 #if CC_DEBUG > 1
 		LOG_KX("XT0=", XT0);  LOG_KX(" xt=", (UFP)xt); 
@@ -127,7 +130,7 @@ struct Code {
 #define IMMD(n, g) ADD_CODE(n, g, true)
 
 extern void forth_init();
-extern void forth_vm(const char *stm, void(*hook)(int, const char*)=NULL);
+extern int  forth_vm(const char *cmd, void(*hook)(int, const char*)=NULL);
 extern int  forth_include(const char *fn);
 ;
 
