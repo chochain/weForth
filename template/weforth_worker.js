@@ -105,18 +105,15 @@ function get_px(v) {
 /// @note: serialization, i.e. structuredClone(), is slow (24ms)
 ///        so prebuild a transferable object is much faster (~5ms)
 ///
+const forth = Module.cwrap('forth', 'int', ['number', 'string'])
 self.onmessage = function(e) {                        ///> worker input message queue
     let k = e.data[0], v = e.data[1]
     const post = (v)=>postMessage([k, v])             ///> macro to response to front-end
     switch (k) {
-    case 'cmd':
-        let forth =
-            Module.cwrap('forth', null, ['number', 'string'])
-        forth(0, v)                                   /// * calls Module.print
-        break
-    case 'dc' : post(get_dict());            break
-    case 'usr': post(get_dict(true));        break
-    case 'ss' : post(get_ss());              break
+    case 'cmd': post(forth(0, v));           break    /// * call Forth VM (output=>Module.print)
+    case 'dc' : post(get_dict());            break    /// * built-in words
+    case 'usr': post(get_dict(true));        break    /// * colon words
+    case 'ss' : post(get_ss());              break    /// * dump stack
     case 'dm' :                                       /// * dump memory
         const idx = v[0], n = v[1]
         const here= wasmExports.vm_mem_idx()
