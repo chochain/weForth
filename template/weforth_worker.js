@@ -110,7 +110,9 @@ self.onmessage = function(e) {                        ///> worker input message 
     let k = e.data[0], v = e.data[1]
     const post = (v)=>postMessage([k, v])             ///> macro to response to front-end
     switch (k) {
-    case 'cmd': post(forth(0, v));           break    /// * call Forth VM (output=>Module.print)
+    case 'cmd':
+        post(forth(0, v));
+        post(get_ss());                      break    /// * call Forth VM (output=>Module.print)
     case 'dc' : post(get_dict());            break    /// * built-in words
     case 'usr': post(get_dict(true));        break    /// * colon words
     case 'ss' : post(get_ss());              break    /// * dump stack
