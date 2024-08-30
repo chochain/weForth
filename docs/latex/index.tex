@@ -4,9 +4,9 @@ Web\+Assembly enpowered e\+Forth on web browsers. Is it faster? Is it more porta
 
 Well, on my aged laptop, the impression is pretty exciting! It\textquotesingle{}s at least 5x faster than pure Javascript implementation on a browser and at 40\% speed of C/\+C++ natively compiled code on C\+PU. It was at 25\% of native a year ago but as Javascript J\+IT improves, it now runs faster as well. Not bad at all! On the portability end, though not exactly plug-\/and-\/play but some simple alteration turned my C code web-\/enabled. Of course, W\+A\+SM has yet to integrate with the front-\/end well enough, so updating D\+OM is a different feat. If we want to venture beyond being a terminal app some UI glue is still required.
 
-Regardless, it brought me warm smiles seeing e\+Forth run in a browser. Better yet, it\textquotesingle{}s straight from C/\+C++ source code. Other popular scripting languages such as Python, Ruby are trending toward W\+A\+S\+M/\+W\+A\+SI implementation as well. However, unlike F\+O\+R\+TH, they depend mostly on J\+IT without a built-\/in compiler, the interpreter-\/in-\/an-\/interpreter design will likely cap the top-\/end performance (i.\+e. stuck at 5$\sim$10\% of native speed, so far).
+Regardless, it brought me warm smiles seeing e\+Forth run in a browser. Better yet, it\textquotesingle{}s straight from C/\+C++ source code. Other popular scripting languages such as Python, Ruby are trending toward W\+A\+S\+M/\+W\+A\+SI implementation as well. However, unlike F\+O\+R\+TH, they depend mostly on J\+IT without a built-\/in compiler, the interpreter-\/in-\/an-\/interpreter design will likely cap the top-\/end performance (i.\+e. stuck at 10$\sim$15\% of native speed, so far).
 
-With W\+A\+SM, the interoperability between different languages become a thing of the near future. If words can be compiled directly into W\+A\+SM opcodes, OS and peripherals can be accessed through W\+A\+SI, adding a graphic front-\/end (i.\+g. S\+DL or Web\+GL), we\+Forth can become a worthy scripting alternative for Web.
+With W\+A\+SM, the interoperability between different languages become a thing of the near future. If words can be compiled directly into W\+A\+SM opcodes, OS and peripherals can be accessed through W\+A\+SI, adding an interactive graphical front-\/end, we\+Forth can become a worthy scripting alternative for Web.
 
 \doxysubsection*{Features}
 
@@ -17,6 +17,7 @@ With W\+A\+SM, the interoperability between different languages become a thing o
 \item integrated with Web graphics (S\+D\+L2, Web\+GL) and Physics Engine (Jolt)
 \item built-\/in editor, I\+D\+E-\/style interactive front-\/end
 \item access to ss, dict, and VM memory (via Web\+Assembly.\+Memory) from Javascript
+\item browser can fetch from self-\/host web server (i.\+g. python3 -\/m http.\+server)
 \item can run parallel in Web Worker threads
 
 
@@ -30,12 +31,26 @@ Serving as the core of demos, the templates under $\sim$/template directory are 
 \begin{DoxyItemize}
 \item eforth.\+html -\/ vanilla we\+Forth, one single-\/threaded H\+T\+ML. A good place to start.
 \item ceforth.\+html -\/ we\+Forth, now with integrated editor, single-\/threaded.
-\item weforth.\+html -\/ we\+Forth runs in a worker thread, can also do fancy G\+UI stuffs now $>$ Javascript module/files are included in the H\+T\+ML for added functionality $>$ + weforth\+\_\+helper.\+js -\/ vocabulary lookup table $>$ + weforth\+\_\+worker.\+js -\/ worker thread proxy object $>$ + weforth\+\_\+sleep.\+js -\/ sleep/delay support for async environment $>$ + weforth\+\_\+logo.\+js -\/ Turtle Graphic implementation $>$ + weforth\+\_\+jolt.\+js -\/ Jolt Physics Engine integration $>$ + file\+\_\+io.\+js -\/ file IO support
+\item weforth.\+html -\/ we\+Forth runs in a worker thread, can also do fancy G\+UI stuffs now Javascript module/files are included in the H\+T\+ML for added functionality 
+\begin{DoxyPre}
+       + weforth\_helper.js -\/ vocabulary lookup table
+       + weforth\_worker.js -\/ worker thread proxy object
+       + weforth\_sleep.js  -\/ sleep/delay support for async environment
+       + weforth\_logo.js   -\/ Turtle Graphic implementation
+       + weforth\_jolt.js   -\/ Jolt Physics Engine integration
+       + file\_io.js        -\/ file IO support
+       \end{DoxyPre}
 
-$>$ The following Forth scripts under $\sim$/tests/forth are also included for G\+UI integration demo $>$ + forth/logo.\+fs -\/ Turtle Graphics $>$ + forth/jolt.\+fs -\/ Jolt Physics Engine
+
+The following Forth scripts under $\sim$/tests/forth are also included for G\+UI integration demo 
+\begin{DoxyPre}
+       + forth/logo.fs -\/ Turtle Graphics
+       + forth/jolt.fs -\/ Jolt Physics Engine
+       \end{DoxyPre}
+
 \end{DoxyItemize}
 
-\doxysubsubsection*{Bare-\/bone e\+Forth on Web}
+\#\doxysubsection*{Bare-\/bone e\+Forth on Web}
 
 \begin{DoxyVerb}make zero
 Note: -O2 works OK, -O3 emscripten spits wrong code
@@ -81,11 +96,9 @@ To communicate between Forth and Javascript engine, we\+Forth implemented a word
 }
 
 > 54321 s" alert('%d ... hello world!')" JS⏎
+
+<img src="https://chochain.github.io/weForth/img/weforth_js.png" width=604px/>
 \end{DoxyVerb}
-
-
-\begin{quote}
-JS call \end{quote}
 
 
 \doxysubsubsection*{weforth.\+html -\/ a more complex message dispatcher with the multi-\/threaded web worker demo}
@@ -111,11 +124,9 @@ vm.onmessage = e=>{               /// * wait for worker's response
 > : color 2* PC ;⏎
 > : daz 100 0 do i color i seg loop ;⏎
 > daz⏎
+
+<img src="https://chochain.github.io/weForth/img/weforth_logo.png" width=604px/>
 \end{DoxyVerb}
-
-
-\begin{quote}
-Logo demo \end{quote}
 
 
 \doxysubsection*{D\+E\+B\+UG the W\+A\+SM file (dump all functions, check with wasm-\/objdump in W\+A\+BT kit)}
@@ -134,42 +145,6 @@ zz⏎
 \end{DoxyVerb}
 
 
-\tabulinesep=1mm
-\begin{longtabu}spread 0pt [c]{*{7}{|X[-1]}|}
-\hline
-\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ implementation }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ version }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ source code }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ optimization }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ platform }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ run time(ms) }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ code size(\+K\+B)  }\\\cline{1-7}
-\endfirsthead
-\hline
-\endfoot
-\hline
-\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ implementation }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ version }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ source code }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ optimization }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ platform }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ run time(ms) }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ code size(\+K\+B)  }\\\cline{1-7}
-\endhead
-eforth &4.\+2 &g++ / C &-\/O0 &C\+PU &1830 &186  \\\cline{1-7}
-&&&-\/O2 &C\+PU &85 &106  \\\cline{1-7}
-&&&-\/O3 &C\+PU &87 &114  \\\cline{1-7}
-eforth &4.\+2 &E\+M.\+b / C &-\/O0 &F\+F.\+b &4250 &273  \\\cline{1-7}
-&&&-\/O2 &F\+F.\+b &215 &160  \\\cline{1-7}
-&&&-\/O3 &F\+F.\+b &222 &176  \\\cline{1-7}
-e\+Forth.\+js &pre6 &Java\+Script &&F\+F.\+a &756 &20  \\\cline{1-7}
-&pre6 &&&F\+F.\+b &1059 &20  \\\cline{1-7}
-&4.\+2 &&&F\+F.\+b &1459 &20  \\\cline{1-7}
-u\+Eforth &7.\+0.\+2 &Asm.\+js &&F\+F.\+a &814 &29  \\\cline{1-7}
-&7.\+0.\+7 &&&F\+F.\+b &387 &29  \\\cline{1-7}
-we\+Forth &1.\+2 &E\+M.\+a / C &-\/O0 &F\+F.\+a1 &943 &254  \\\cline{1-7}
-&&&-\/O2 &F\+F.\+a1 &410 &165  \\\cline{1-7}
-we\+Forth &1.\+4 &E\+M.\+b / C &-\/O0 &F\+F.\+b &451 &267  \\\cline{1-7}
-&&&-\/O2 &F\+F.\+b &181 &170  \\\cline{1-7}
-we\+Forth &4.\+1 &E\+M.\+b / C &-\/O0 &F\+F.\+b &348 &300  \\\cline{1-7}
-&&&-\/O2 &F\+F.\+b &154 &164  \\\cline{1-7}
-&&&-\/O2 &F\+F.\+b1 &160 &164  \\\cline{1-7}
-we\+Forth~\newline
-float32 &4.\+2 &E\+M.\+b / C &-\/O2 &F\+F.\+b &160 &153  \\\cline{1-7}
-\end{longtabu}
-\begin{DoxyVerb}FF.a = FireFox v120, FF.a1 = FF.a + 1 worker
-FF.b = FireFox v122, FF.b1 = FF.b + 1 worker
-EM.a = Emscripten v3.1.51
-EM.b = Emscripten v3.1.53
-\end{DoxyVerb}
 
 
 Note\+:
@@ -182,7 +157,9 @@ Note\+:
 \item W\+A\+SM -\/O3 =$>$ err functions (wa.$\ast$) not found
 \item Fire\+Fox v122, is 2x faster than v120
 \item Chrome is about 10\% slower than Fire\+Fox
-\item we\+Forth 4.\+2 w float32-\/enabled, runs equally fast as int32, but why?
+\item we\+Forth 4.\+2 w float32-\/enabled, runs faster than int32, but why?
+\item we\+Forth 4.\+2 w float32/real-\/time is slower due to message passing
+\item we\+Forth 4.\+2 w float32/real-\/time is even slower without Web\+GL, why?
 \end{DoxyItemize}
 
 \doxysubsection*{T\+O\+DO}
