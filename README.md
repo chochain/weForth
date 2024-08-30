@@ -2,9 +2,9 @@
 
 WebAssembly enpowered eForth on web browsers. Is it faster? Is it more portable? Yes, and Yes.
 
-<img src="https://chochain.github.io/weForth/img/weforth_jolt2.png" style="width:800px"/>
+<img src="https://chochain.github.io/weForth/img/weforth_jolt2.png" style="width:800px"></img>
 
-Well, on my aged laptop, the impression is pretty exciting! It's at least 5x faster than pure Javascript implementation on a browser and at 40% speed of C/C++ natively compiled code on CPU. It was at 25% of native a year ago but as Javascript JIT improves, it now runs faster as well. Not bad at all! On the portability end, though not exactly plug-and-play but some simple alteration turned my C code web-enabled. Of course, WASM has yet to integrate with the front-end well enough, so updating DOM is a different feat. If we want to venture beyond being a terminal app some UI glue is still required.
+Well, on my aged laptop, the impression is pretty exciting! It's at least 5x faster than pure Javascript implementation on a browser and at 60% speed of C/C++ natively compiled code on CPU. It was at 25% of native a year ago but as Javascript JIT improves, it now runs faster as well. Not bad at all! On the portability end, though not exactly plug-and-play but some simple alteration turned my C code web-enabled. Of course, WASM has yet to integrate with the front-end well enough, so updating DOM is a different feat. If we want to venture beyond being a terminal app some UI glue is still required.
 
 Regardless, it brought me warm smiles seeing eForth run in a browser. Better yet, it's straight from C/C++ source code. Other popular scripting languages such as Python, Ruby are trending toward WASM/WASI implementation as well. However, unlike FORTH, they depend mostly on JIT without a built-in compiler, the interpreter-in-an-interpreter design will likely cap the top-end performance (i.e. stuck at 10~15% of native speed, so far).
 
@@ -19,7 +19,7 @@ With WASM, the interoperability between different languages become a thing of th
    * browser can fetch from self-host web server (i.g. python3 -m http.server)
    * can run parallel in Web Worker threads
 
-    <img src="https://chochain.github.io/weForth/img/weforth_logo_snip2.png" style="width:800px"/>
+<img src="https://chochain.github.io/weForth/img/weforth_logo_snip2.png" style="width:800px"></img>
 
 ### Build - (make sure python3 and Emscripten are installed)
 #### Templates
@@ -82,7 +82,7 @@ To communicate between Forth and Javascript engine, weForth implemented a word '
 
     > 54321 s" alert('%d ... hello world!')" JS⏎
     
-    <img src="https://chochain.github.io/weForth/img/weforth_js.png" width=604px/>
+<img src="https://chochain.github.io/weForth/img/weforth_js.png" width=604px></img>
 
 #### weforth.html - a more complex message dispatcher with the multi-threaded web worker demo
 
@@ -108,7 +108,7 @@ To communicate between Forth and Javascript engine, weForth implemented a word '
     > : daz 100 0 do i color i seg loop ;⏎
     > daz⏎
     
-    <img src="https://chochain.github.io/weForth/img/weforth_logo.png" width=604px/>
+<img src="https://chochain.github.io/weForth/img/weforth_logo.png" width=604px></img>
 
 ### DEBUG the WASM file (dump all functions, check with wasm-objdump in WABT kit)
 
@@ -123,7 +123,7 @@ Simple 10M tests
     : zz MS NEGATE yy MS + ;⏎
     zz⏎
 
-<img src="https://chochain.github.io/weForth/img/weforth_perf.png" width=800px/>
+<img src="https://chochain.github.io/weForth/img/weforth_perf.png" width=800px></img>
 
 Note:
 * eForth.js uses JS straight, can do floating-points
