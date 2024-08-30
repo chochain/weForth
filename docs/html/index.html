@@ -88,7 +88,7 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <div class="contents">
 <div class="textblock"><p>WebAssembly enpowered eForth on web browsers. Is it faster? Is it more portable? Yes, and Yes.</p>
 <p><img src="https://chochain.github.io/weForth/img/weforth_jolt2.png" alt="" style="width:800px" class="inline"/></p>
-<p>Well, on my aged laptop, the impression is pretty exciting! It's at least 5x faster than pure Javascript implementation on a browser and at 40% speed of C/C++ natively compiled code on CPU. It was at 25% of native a year ago but as Javascript JIT improves, it now runs faster as well. Not bad at all! On the portability end, though not exactly plug-and-play but some simple alteration turned my C code web-enabled. Of course, WASM has yet to integrate with the front-end well enough, so updating DOM is a different feat. If we want to venture beyond being a terminal app some UI glue is still required.</p>
+<p>Well, on my aged laptop, the impression is pretty exciting! It's at least 5x faster than pure Javascript implementation on a browser and at 60% speed of C/C++ natively compiled code on CPU. It was at 25% of native a year ago but as Javascript JIT improves, it now runs faster as well. Not bad at all! On the portability end, though not exactly plug-and-play but some simple alteration turned my C code web-enabled. Of course, WASM has yet to integrate with the front-end well enough, so updating DOM is a different feat. If we want to venture beyond being a terminal app some UI glue is still required.</p>
 <p>Regardless, it brought me warm smiles seeing eForth run in a browser. Better yet, it's straight from C/C++ source code. Other popular scripting languages such as Python, Ruby are trending toward WASM/WASI implementation as well. However, unlike FORTH, they depend mostly on JIT without a built-in compiler, the interpreter-in-an-interpreter design will likely cap the top-end performance (i.e. stuck at 10~15% of native speed, so far).</p>
 <p>With WASM, the interoperability between different languages become a thing of the near future. If words can be compiled directly into WASM opcodes, OS and peripherals can be accessed through WASI, adding an interactive graphical front-end, weForth can become a worthy scripting alternative for Web.</p>
 <h2>Features</h2>
@@ -99,10 +99,9 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <li>built-in editor, IDE-style interactive front-end</li>
 <li>access to ss, dict, and VM memory (via WebAssembly.Memory) from Javascript</li>
 <li>browser can fetch from self-host web server (i.g. python3 -m http.server)</li>
-<li><p class="startli">can run parallel in Web Worker threads</p>
-<p class="startli"><img src="https://chochain.github.io/weForth/img/weforth_logo_snip2.png" alt="" style="width:800px" class="inline"/></p>
-</li>
+<li>can run parallel in Web Worker threads</li>
 </ul>
+<p><img src="https://chochain.github.io/weForth/img/weforth_logo_snip2.png" alt="" style="width:800px" class="inline"/></p>
 <h2>Build - (make sure python3 and Emscripten are installed)</h2>
 <h3>Templates</h3>
 <p>Serving as the core of demos, the templates under ~/template directory are used in different built shown below. They are organized by the Makefile</p><ul>
@@ -141,9 +140,8 @@ Note: -O2 works OK, -O3 emscripten spits wrong code
 }
 
 &gt; 54321 s" alert('%d ... hello world!')" JS⏎
-
-&lt;img src="https://chochain.github.io/weForth/img/weforth_js.png" width=604px/&gt;
-</pre><h3>weforth.html - a more complex message dispatcher with the multi-threaded web worker demo</h3>
+</pre><p><img src="https://chochain.github.io/weForth/img/weforth_js.png" alt="" width="604px" class="inline"/></p>
+<h3>weforth.html - a more complex message dispatcher with the multi-threaded web worker demo</h3>
 <pre class="fragment">const ex = (ops)=&gt;Function(       ///&lt; scope limiting eval
     `"use strict"; this.update('${ops}')`
 ).bind(logo)()
@@ -165,9 +163,8 @@ vm.onmessage = e=&gt;{               /// * wait for worker's response
 &gt; : color 2* PC ;⏎
 &gt; : daz 100 0 do i color i seg loop ;⏎
 &gt; daz⏎
-
-&lt;img src="https://chochain.github.io/weForth/img/weforth_logo.png" width=604px/&gt;
-</pre><h2>DEBUG the WASM file (dump all functions, check with wasm-objdump in WABT kit)</h2>
+</pre><p><img src="https://chochain.github.io/weForth/img/weforth_logo.png" alt="" width="604px" class="inline"/></p>
+<h2>DEBUG the WASM file (dump all functions, check with wasm-objdump in WABT kit)</h2>
 <pre class="fragment">make debug
 read tests/ceforth.wasm.txt (really long)
 </pre><h2>Benchmark (on my aged IBM X230 w Intel <a href="#" onclick="location.href='mai'+'lto:'+'i5-'+'34'+'70@'+'3.'+'2GH'+'z'; return false;">i5-34<span style="display: none;">.nosp@m.</span>70@3<span style="display: none;">.nosp@m.</span>.2GHz</a>)</h2>
@@ -175,7 +172,7 @@ read tests/ceforth.wasm.txt (really long)
 : yy 999 FOR xx NEXT ;⏎
 : zz MS NEGATE yy MS + ;⏎
 zz⏎
-</pre><p><img src="https://chochain.github.io/weForth/img/weforth_perf.png" alt="" width="800px/" class="inline"/></p>
+</pre><p><img src="https://chochain.github.io/weForth/img/weforth_perf.png" alt="" width="800px" class="inline"/></p>
 <p>Note:</p><ul>
 <li>eForth.js uses JS straight, can do floating-points</li>
 <li>uEforth v7 uses Asm.js, build Forth up with JS "assembly".</li>

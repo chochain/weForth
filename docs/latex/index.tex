@@ -2,7 +2,7 @@ Web\+Assembly enpowered e\+Forth on web browsers. Is it faster? Is it more porta
 
 
 
-Well, on my aged laptop, the impression is pretty exciting! It\textquotesingle{}s at least 5x faster than pure Javascript implementation on a browser and at 40\% speed of C/\+C++ natively compiled code on C\+PU. It was at 25\% of native a year ago but as Javascript J\+IT improves, it now runs faster as well. Not bad at all! On the portability end, though not exactly plug-\/and-\/play but some simple alteration turned my C code web-\/enabled. Of course, W\+A\+SM has yet to integrate with the front-\/end well enough, so updating D\+OM is a different feat. If we want to venture beyond being a terminal app some UI glue is still required.
+Well, on my aged laptop, the impression is pretty exciting! It\textquotesingle{}s at least 5x faster than pure Javascript implementation on a browser and at 60\% speed of C/\+C++ natively compiled code on C\+PU. It was at 25\% of native a year ago but as Javascript J\+IT improves, it now runs faster as well. Not bad at all! On the portability end, though not exactly plug-\/and-\/play but some simple alteration turned my C code web-\/enabled. Of course, W\+A\+SM has yet to integrate with the front-\/end well enough, so updating D\+OM is a different feat. If we want to venture beyond being a terminal app some UI glue is still required.
 
 Regardless, it brought me warm smiles seeing e\+Forth run in a browser. Better yet, it\textquotesingle{}s straight from C/\+C++ source code. Other popular scripting languages such as Python, Ruby are trending toward W\+A\+S\+M/\+W\+A\+SI implementation as well. However, unlike F\+O\+R\+TH, they depend mostly on J\+IT without a built-\/in compiler, the interpreter-\/in-\/an-\/interpreter design will likely cap the top-\/end performance (i.\+e. stuck at 10$\sim$15\% of native speed, so far).
 
@@ -19,9 +19,9 @@ With W\+A\+SM, the interoperability between different languages become a thing o
 \item access to ss, dict, and VM memory (via Web\+Assembly.\+Memory) from Javascript
 \item browser can fetch from self-\/host web server (i.\+g. python3 -\/m http.\+server)
 \item can run parallel in Web Worker threads
-
-
 \end{DoxyItemize}
+
+
 
 \doxysubsection*{Build -\/ (make sure python3 and Emscripten are installed)}
 
@@ -96,9 +96,9 @@ To communicate between Forth and Javascript engine, we\+Forth implemented a word
 }
 
 > 54321 s" alert('%d ... hello world!')" JS⏎
-
-<img src="https://chochain.github.io/weForth/img/weforth_js.png" width=604px/>
 \end{DoxyVerb}
+
+
 
 
 \doxysubsubsection*{weforth.\+html -\/ a more complex message dispatcher with the multi-\/threaded web worker demo}
@@ -124,9 +124,9 @@ vm.onmessage = e=>{               /// * wait for worker's response
 > : color 2* PC ;⏎
 > : daz 100 0 do i color i seg loop ;⏎
 > daz⏎
-
-<img src="https://chochain.github.io/weForth/img/weforth_logo.png" width=604px/>
 \end{DoxyVerb}
+
+
 
 
 \doxysubsection*{D\+E\+B\+UG the W\+A\+SM file (dump all functions, check with wasm-\/objdump in W\+A\+BT kit)}

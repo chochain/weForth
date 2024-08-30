@@ -827,7 +827,11 @@ display v by radix \end{quote}
 \doxysubsubsection{\texorpdfstring{load()}{load()}}
 {\footnotesize\ttfamily void load (\begin{DoxyParamCaption}\item[{const char $\ast$}]{fn }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{ceforth_8cpp_abbce13f8751c5d6d194da4e408317bad}\label{ceforth_8cpp_abbce13f8751c5d6d194da4e408317bad}} 
+save context
+
+include file
+
+restore cotnext\mbox{\Hypertarget{ceforth_8cpp_abbce13f8751c5d6d194da4e408317bad}\label{ceforth_8cpp_abbce13f8751c5d6d194da4e408317bad}} 
 \index{ceforth.cpp@{ceforth.cpp}!mem\_stat@{mem\_stat}}
 \index{mem\_stat@{mem\_stat}!ceforth.cpp@{ceforth.cpp}}
 \doxysubsubsection{\texorpdfstring{mem\_stat()}{mem\_stat()}}
@@ -983,9 +987,18 @@ fetch a word \end{quote}
 send to Forth core \end{quote}
 
 
+\begin{quote}
+multi-\/threading support \end{quote}
+
+
+\begin{quote}
+check timing \end{quote}
+
+
 
 \begin{DoxyItemize}
-\item update return status
+\item time slice up
+\item real-\/time support, 10ms = 100Hz
 \item pause, yield to front-\/end task
 \item dump stack and display ok prompt
 \end{DoxyItemize}\mbox{\Hypertarget{ceforth_8cpp_ac0fd47776c33f55abe0077eb4d77ce0c}\label{ceforth_8cpp_ac0fd47776c33f55abe0077eb4d77ce0c}} 
