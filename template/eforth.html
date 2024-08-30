@@ -43,6 +43,7 @@
           try {
               var forth = Module.cwrap('forth', 'int', ['number', 'string'])
               while (forth(0, cmd));         /// * call Forth in C/C++
+              forth(0, '.s')
           }
           catch(e) { console.log(e.toString()+'\n') }
           finally  { xtib(); }

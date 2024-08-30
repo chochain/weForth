@@ -130,10 +130,11 @@
     const vm_req = (k, v)=>vm.postMessage([k, v]) ///< send request to vm worker
     vm.onmessage = e=>{                           ///< handle response from vm worker
         let k = e.data[0], v = e.data[1]
-        if (!v) return
+        if (v===undefined) return
         switch (k) {
-        case 'cmd':                               ///< capture VM state
+        case 'cmd':
             if (v==1) vm_req('cmd', tib.value)    /// * contine, if VM==HOLD
+            else      vm_req('ss')
             break
         case 'txt': to_txt(v);         break
         case 'dc' : show_dict(v);      break
