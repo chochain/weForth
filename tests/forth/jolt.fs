@@ -31,17 +31,22 @@ DYNASET  ds                            \ dynamic setting [id,pos[3],rot[4],v[3],
   0 0 0 ds .P!                             \ position   x, y, z
   rnd rnd rnd rnd 2PI * ds .R! ;           \ rotation   x, y, z, w
 : rnd_v 3 rx rnd 10 * 10 + 3 rx ds .V! ;   \ velocity   x, y, z
-: remove s" drop %d" JS ;              \ ( id -- ) remove body from scene
 \ create mesh floor (id=0, shape=0)
-30 1 0.8 px 3!                         \ 30x30 mesh with cell size 1, max height=0.8
-0 -5 0  ds .P! 0 0 0 1 ds .R!          \ position xyz: (0,-5,0), rotation xyzw:0,0,0,-1
-color 3 px DSZ ds                      \ get color[0], gemoetry, shape config
-s" mesh %x %p %p" JS                   \ foreward to front-end thread
-\ random shapes methods
+: mesh
+  30 1 0.8 px 3!                       \ 30x30 mesh with cell size 1, max height=0.8
+  0 -5 0  ds .P! 0 0 0 1 ds .R!        \ position xyz: (0,-5,0), rotation xyzw:0,0,0,-1
+  color 3 px DSZ ds                    \ get color[0], gemoetry, shape config
+  s" mesh %x %p %p" JS ;               \ foreward to front-end thread
+mesh
+\ random shapes creation
 : one                                  \ create one random body
   rnd_bdy rnd_geo rnd_v                \ create random shape, geometry, velocity
   color 3 px DSZ ds                    \ get color, geometry, shape config
   s" body %x %p %p" JS ;               \ foreward to front-end thread
 : ten  9 for one 250 delay next ;
 : spit 9 for ten i 10 * . cr next ;
+\ shape removal
+: remove s" drop %d" JS ;              \ ( id -- ) remove body from scene
+: skew
+  99 for i 1+ remove 100 delay next ;
 .( JOLT loaded )
