@@ -83,18 +83,28 @@ U8  *MEM0 = &pmem[0];              ///< base of parameter memory block
 ///
 typedef enum {
     EXIT=0|EXT_FLAG, NOP, NEXT, LOOP, LIT, VAR, STR, DOTQ, BRAN, ZBRAN,
-    VBRAN, DOES, FOR, DO, MAX_OP
+    VBRAN, DOES, FOR, DO, KEY, MAX_OP
 } forth_opcode;
 
 Code op_prim[] = {
     Code(";",    EXIT), Code("nop",  NOP),   Code("next",  NEXT),  Code("loop",  LOOP),
     Code("lit",  LIT),  Code("var",  VAR),   Code("str",   STR),   Code("dotq",  DOTQ),
     Code("bran", BRAN), Code("0bran",ZBRAN), Code("vbran", VBRAN), Code("does>", DOES),
-    Code("for",  FOR),  Code("do",   DO)
+    Code("for",  FOR),  Code("do",   DO),    Code("key",   KEY)
 };
 #define USER_AREA  (ALIGN16(MAX_OP & ~EXT_FLAG))
 #define IS_PRIM(w) ((w & EXT_FLAG) && (w < MAX_OP))
+
+///====================================================================
 ///
+///> Platform specific code - deferred
+///
+char key();                               // read key from console
+void dict_dump();                         // dump dictionary
+void mem_stat();                          // display memory statistics
+void native_api();                        // call native/Javascript
+int  forth_include(const char *fn);       // load external Forth script
+
 ///====================================================================
 ///
 ///> VM states (single task)
@@ -288,6 +298,7 @@ void nest(IU pfa) {
         CASE(FOR,  rs.push(POP()));                  /// * setup FOR..NEXT call frame
         CASE(DO,                                     /// * setup DO..LOOP call frame
              rs.push(ss.pop()); rs.push(POP()));
+        CASE(KEY, key());
         OTHER(
             if (ix & EXT_FLAG) {                     /// * colon word?
                 rs.push(IP);                         /// * setup call frame
@@ -491,90 +502,6 @@ void load(const char* fn) {
 }
 ///====================================================================
 ///
-///> System statistics - for heap, stack, external memory debugging
-///
-void mem_stat();   ///< forward decl (implemented in platform specific)
-void dict_dump() {
-    fout << setbase(16) << setfill('0') << "XT0=" << Code::XT0 << ENDL;
-    for (int i=0; i<dict.idx; i++) {
-        Code &c = dict[i];
-        fout << setfill('0') << setw(3) << i
-             << "> attr=" << (c.attr & 0x3)
-             << ", xt="   << setw(4) << (IS_UDF(i) ? c.pfa : c.xtoff())
-             << ":"       << setw(8) << (UFP)c.xt
-             << ", name=" << setw(8) << (UFP)c.name
-             << " "       << c.name << ENDL;
-    }
-    fout << setbase(*base) << setfill(' ') << setw(-1);
-}
-///====================================================================
-///
-///> Javascript/WASM interface
-///
-#if DO_WASM
-EM_JS(void, js, (const char *ops), {
-        const req = UTF8ToString(ops).split(/\\s+/);
-        const wa  = wasmExports;
-        const mem = wa.vm_mem();
-        let msg = [Date.now()], tfr = [];       ///< t0 anchor for performance
-        for (let i=0, n=req.length; i < n; i++) {
-            if (req[i]=='p') {
-                const a = new Float32Array(     ///< create a buffer ref
-                    wa.memory.buffer,           /// * WASM ArrayBuffer
-                    mem + (req[i+1]|0),         /// * pointer address
-                    req[i+2]|0                  /// * length
-                );
-                i += 2;                         /// *  skip over addr, len
-                const t = new Float64Array(a);  ///< create a transferable
-                msg.push(t);                    /// * which speeds postMessage
-                tfr.push(t.buffer);             /// * from 20ms => 5ms
-            }
-            else msg.push(req[i]);
-        }
-        postMessage(['js', msg], tfr);
-});
-///
-///> Javascript calling, before passing to js()
-///
-///  String substitude similar to printf
-///    %d - integer
-///    %f - float
-///    %x - hex
-///    %s - string
-///    %p - pointer (memory block)
-///
-void call_js() {                           ///> ( n addr u -- )
-    stringstream n;
-    auto t2s = [&n](char c) {              ///< template to string
-        n.str("");                         /// * clear stream
-        switch (c) {
-        case 'd': n << UINT(POP());                break;
-        case 'f': n << (DU)POP();                  break;
-        case 'x': n << "0x" << hex << UINT(POP()); break;
-        case 's': POP(); n << (char*)MEM(POP());   break;  /// also handles raw stream
-        case 'p':
-            n << "p " << UINT(POP());
-            n << ' '  << UINT(POP());              break;
-        default : n << c << '?';                   break;
-        }
-        return n.str();
-    };
-    POP();                                 /// * strlen, not used
-    pad.clear();                           /// * borrow PAD for string op
-    pad.append((char*)MEM(POP()));         /// copy string on stack
-    for (size_t i=pad.find_last_of('%');   ///> find % from back
-         i!=string::npos;                  /// * until not found
-         i=pad.find_last_of('%',i?i-1:0)) {
-        if (i && pad[i-1]=='%') {          /// * double %%
-            pad.replace(--i,1,"");         /// * drop one %
-        }
-        else pad.replace(i, 2, t2s(pad[i+1]));
-    }
-    js(pad.c_str());    /// * call Emscripten js function
-}
-#endif // DO_WASM
-///====================================================================
-///
 ///> eForth dictionary assembler
 ///  Note: sequenced by enum forth_opcode as following
 ///
@@ -666,7 +593,7 @@ void dict_compile() {  ///< compile built-in words into dictionary
     CODE("u.r",     fout << setbase(*base) << setw(POP()) << UINT(POP()));
     CODE("type",    POP();                    // string length (not used)
          fout << (const char*)MEM(POP()));    // get string pointer
-    CODE("key",     PUSH(word()[0]));
+    IMMD("key",     add_w(KEY));
     CODE("emit",    char b = (char)POP(); fout << b);
     CODE("space",   spaces(1));
     CODE("spaces",  spaces(POP()));
@@ -803,7 +730,7 @@ void dict_compile() {  ///< compile built-in words into dictionary
          POP();                             // string length, not used
          load((const char*)MEM(POP())));    // include external file
 #if DO_WASM
-    CODE("JS",    call_js());               // Javascript interface
+    CODE("JS",    native_api());            // Javascript interface
 #else  // !DO_WASM
     CODE("bye",   exit(0));
 #endif // DO_WASM    
@@ -911,58 +838,6 @@ int forth_vm(const char *line, void(*hook)(int, const char*)) {
 #endif  // DO_WASM
     return hold;
 }
-///====================================================================
-///> WASM specific code
-///
-///> Memory statistics - for heap, stack, external memory debugging
-///
-void mem_stat() {
-    fout << APP_VERSION
-         << "\n  dict: " << dict.idx  << "/" << E4_DICT_SZ
-         << "\n  ss  : " << ss.idx    << "/" << E4_SS_SZ << " (max " << ss.max
-         << ")\n  rs  : " << rs.idx   << "/" << E4_RS_SZ << " (max " << rs.max
-         << ")\n  mem : " << HERE     << "/" << E4_PMEM_SZ << endl;
-}
-
-int  forth_include(const char *fn) {
-#if DO_WASM
-    const int rst = EM_ASM_INT({
-        const xhr = new XMLHttpRequest();
-        xhr.responseType = 'text';                /// Forth script
-        xhr.open('GET', UTF8ToString($0), false); /// synchronized GET
-        xhr.send(null);
-        if (xhr.status!=200) {
-            console.log(xhr.statusText);
-            return 0;
-        }
-        const wa  = wasmExports;                  ///< WASM export block
-        const len = xhr.responseText.length + 1;  ///< script + '\0'
-        const adj = (len + 0x10) & ~0xf;          ///< adjusted length, 16-byte aligned
-        const adr = wa.vm_mem() + $1 - adj;       ///< memory address from rear
-        const buf = new Uint8Array(wa.memory.buffer, adr, len);
-        for (var i=0; i < len; i++) {
-            buf[i] = xhr.responseText.charCodeAt(i);
-        }
-        buf[len-1] = '\0';                        /// * \0 terminated str
-        
-        return adj;
-        }, fn, E4_PMEM_SZ);
-    if (rst==0) return 0;                         /// * fetch failed, bail
-    ///
-    /// preserve I/O states, call VM, restore IO states
-    ///
-    void (*cb)(int, const char*) = fout_cb;       ///< keep output function
-    string in; getline(fin, in);                  ///< keep input buffers
-    fout << ENDL;                                 /// * flush output
-    
-    while (forth_vm((const char*)&pmem[E4_PMEM_SZ-rst])); /// * send script to VM
-    
-    fout_cb = cb;                                 /// * restore output cb
-    fin.clear(); fin.str(in);                     /// * restore input
-#endif // DO_WASM
-    return 0;
-}
-
 #include <iostream>
 int  main(int ac, char* av[]) {
     forth_init();
@@ -980,6 +855,7 @@ int  main(int ac, char* av[]) {
     
     return 0;
 }
+
 ///====================================================================
 ///
 /// WASM/Emscripten ccall interfaces
@@ -995,5 +871,136 @@ int  vm_mem_idx()    { return pmem.idx; }       // HERE
 DU   *vm_ss()        { return &ss[0];   }
 char *vm_dict(int i) { return (char*)dict[i].name; }
 char *vm_mem()       { return (char*)&pmem[0]; }
+}
+
+///====================================================================
+///> WASM platform specific code
+///
+///> System statistics - for heap, stack, external memory debugging
+///
+char key() {
+    char c = (char)EM_ASM_INT({
+            postMessage('key');
+            
+        });
+    return c;
+}
+void dict_dump() {
+    fout << setbase(16) << setfill('0') << "XT0=" << Code::XT0 << ENDL;
+    for (int i=0; i<dict.idx; i++) {
+        Code &c = dict[i];
+        fout << setfill('0') << setw(3) << i
+             << "> attr=" << (c.attr & 0x3)
+             << ", xt="   << setw(4) << (IS_UDF(i) ? c.pfa : c.xtoff())
+             << ":"       << setw(8) << (UFP)c.xt
+             << ", name=" << setw(8) << (UFP)c.name
+             << " "       << c.name << ENDL;
+    }
+    fout << setbase(*base) << setfill(' ') << setw(-1);
+}
+void mem_stat() {
+    fout << APP_VERSION
+         << "\n  dict: " << dict.idx  << "/" << E4_DICT_SZ
+         << "\n  ss  : " << ss.idx    << "/" << E4_SS_SZ << " (max " << ss.max
+         << ")\n  rs  : " << rs.idx   << "/" << E4_RS_SZ << " (max " << rs.max
+         << ")\n  mem : " << HERE     << "/" << E4_PMEM_SZ << endl;
+}
+EM_JS(void, js, (const char *ops), {
+        const req = UTF8ToString(ops).split(/\\s+/);
+        const wa  = wasmExports;
+        const mem = wa.vm_mem();
+        let msg = [Date.now()], tfr = [];       ///< t0 anchor for performance
+        for (let i=0, n=req.length; i < n; i++) {
+            if (req[i]=='p') {
+                const a = new Float32Array(     ///< create a buffer ref
+                    wa.memory.buffer,           /// * WASM ArrayBuffer
+                    mem + (req[i+1]|0),         /// * pointer address
+                    req[i+2]|0                  /// * length
+                );
+                i += 2;                         /// *  skip over addr, len
+                const t = new Float64Array(a);  ///< create a transferable
+                msg.push(t);                    /// * which speeds postMessage
+                tfr.push(t.buffer);             /// * from 20ms => 5ms
+            }
+            else msg.push(req[i]);
+        }
+        postMessage(['js', msg], tfr);
+});
+///
+///> Javascript Native Interface, before passing to js()
+///
+///  String substitude similar to printf
+///    %d - integer
+///    %f - float
+///    %x - hex
+///    %s - string
+///    %p - pointer (memory block)
+///
+void native_api() {                        ///> ( n addr u -- )
+    stringstream n;
+    auto t2s = [&n](char c) {              ///< template to string
+        n.str("");                         /// * clear stream
+        switch (c) {
+        case 'd': n << UINT(POP());                break;
+        case 'f': n << (DU)POP();                  break;
+        case 'x': n << "0x" << hex << UINT(POP()); break;
+        case 's': POP(); n << (char*)MEM(POP());   break;  /// also handles raw stream
+        case 'p':
+            n << "p " << UINT(POP());
+            n << ' '  << UINT(POP());              break;
+        default : n << c << '?';                   break;
+        }
+        return n.str();
+    };
+    POP();                                 /// * strlen, not used
+    pad.clear();                           /// * borrow PAD for string op
+    pad.append((char*)MEM(POP()));         /// copy string on stack
+    for (size_t i=pad.find_last_of('%');   ///> find % from back
+         i!=string::npos;                  /// * until not found
+         i=pad.find_last_of('%',i?i-1:0)) {
+        if (i && pad[i-1]=='%') {          /// * double %%
+            pad.replace(--i,1,"");         /// * drop one %
+        }
+        else pad.replace(i, 2, t2s(pad[i+1]));
+    }
+    js(pad.c_str());    /// * call Emscripten js function
+}
+///
+///> External file loader
+///
+int  forth_include(const char *fn) {
+    const int rst = EM_ASM_INT({
+        const txt = sync_fetch($0);               ///< fetch file from server subdir
+        if (!txt) return 0;
+        
+        const len = txt.length + 1;               ///< script + '\0'
+        const adj = (len + 0x10) & ~0xf;          ///< adjusted length, 16-byte aligned
+        const wa  = wasmExports;                  ///< WASM export block
+        const adr = wa.vm_mem() + $1 - adj;       ///< memory address from rear
+        const buf = new Uint8Array(wa.memory.buffer, adr, len);
+        for (var i=0; i < len; i++) {
+            buf[i] = txt.charCodeAt(i);
+        }
+        buf[len-1] = '\0';                        /// * \0 terminated str
+        
+        return adj;
+        }, fn, E4_PMEM_SZ);
+    if (rst==0) {
+        fout << fn << " load failed!" << ENDL;    /// * fetch failed, bail
+        return 0;
+    }
+    ///
+    /// preserve I/O states, call VM, restore IO states
+    ///
+    void (*cb)(int, const char*) = fout_cb;       ///< keep output function
+    string in; getline(fin, in);                  ///< keep input buffers
+    fout << ENDL;                                 /// * flush output
+    
+    while (forth_vm((const char*)&pmem[E4_PMEM_SZ-rst])); /// * send script to VM
+    
+    fout_cb = cb;                                 /// * restore output cb
+    fin.clear(); fin.str(in);                     /// * restore input
+    
+    return 0;
 }
 #endif // DO_WSAM
