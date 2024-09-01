@@ -99,11 +99,11 @@ typedef int32_t         DU;
     #define millis()        EM_ASM_INT({ return Date.now(); })
     #define delay(ms)       EM_ASM({                                      \
                                 const xhr = new XMLHttpRequest();         \
-                                xhr.timeout = $0;                         \
+                                xhr.timeout = 1.1*$0;                     \
                                 xhr.open('GET', "/SLEEP?t="+$0, false);   \
                                 try { xhr.send(); } catch(e) {}           \
                             }, ms)
-/*
+/*    
     #define delay(ms)       EM_ASM({                                      \
                                 const t1 = Date.now() + $0;               \
                                 while(Date.now() < t1);                   \
