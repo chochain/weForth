@@ -67,12 +67,17 @@
         edt.style.height = cm.innerHeight
         txt.scrollTop    = txt.scrollHeight
     }).observe($('#cm'))
-      
-    tib.onkeydown = e=>{                          ///< console input
-        if (13!=e.keyCode) return
-        forth(tib.value)
-        tib.value = ''
+
+    let skey     = 0                              ///< single keypress mode
+    tib.onkeyup  = e=>{                           ///< console input
+        if (tib.value.length==0)     return
+        if (!skey && "Enter"!=e.key) return
+        
+        if (skey) vm_req('key', tib.value);       /// * send keypressed to vm
+        else      forth(tib.value)                /// * send line to forth VM
+        
         txt.scrollTop = txt.scrollHeight          /// * scroll down
+        tib.value = ''
         tib.focus()
     }
     ///
@@ -136,6 +141,11 @@
             if (v==1) vm_req('cmd', tib.value)    /// * contine, if VM==HOLD
             else      vm_req('ss')
             break
+        case 'key': 
+            skey = v;
+            if (v==1) tib.value=''                /// * ready for key press
+            else      vm_req('cmd', tib.value);   /// * key pressed, Forth continue
+            break  
         case 'txt': to_txt(v);         break
         case 'dc' : show_dict(v);      break
         case 'usr': usr.innerHTML = v; break
@@ -145,7 +155,7 @@
             jolt_req(v)    ||
             logo.update(v) ||
             exec(v[1]);                break
-        default: console.log('vm_res['+k+'].error=>'+v)
+        default: console.log('vm.msg err='+JSON.stringify(e))
         }
     }
     clear_txt()
