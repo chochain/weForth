@@ -99,7 +99,7 @@ Code op_prim[] = {
 ///
 ///> Platform specific code - deferred
 ///
-char key();                               // read key from console
+void key();                               // read key from console
 void dict_dump();                         // dump dictionary
 void mem_stat();                          // display memory statistics
 void native_api();                        // call native/Javascript
@@ -109,7 +109,7 @@ int  forth_include(const char *fn);       // load external Forth script
 ///
 ///> VM states (single task)
 ///
-typedef enum { STOP=0, HOLD, RUN } vm_state;
+typedef enum { STOP=0, HOLD, IO, RUN } vm_state;
 
 IU   IP      = 0;       ///< instruction pointer
 IU   DP      = 0;       ///< call frame depth (iterator design)
@@ -247,7 +247,8 @@ inline DU   POP()      { DU n=top; top=ss.pop(); return n; }
     else VM = STOP
 
 void nest(IU pfa) {
-    if (VM != HOLD) { IP = pfa; DP = 1; }            /// * reset IP & depth counter
+//    printf("nest DP=%d, IP=%4x", DP, IP);
+    if (VM!=HOLD && VM!=IO) { DP = 1; IP = pfa; }    /// * reset IP & depth counter
     VM = RUN;                                        /// * activate VM
 
     while (VM==RUN) {
@@ -279,11 +280,11 @@ void nest(IU pfa) {
              IP += sizeof(DU));                      /// * hop over the stored value
         CASE(VAR, PUSH(DALIGN(IP)); RETURN());       ///> get var addr, alignment?
         CASE(STR,
-             const char *s = (const char*)MEM(IP);   // get string pointer
+             const char *s = (const char*)MEM(IP);   ///< get string pointer
              IU    len = STRLEN(s);
              PUSH(IP); PUSH(len); IP += len);
         CASE(DOTQ,                                   /// ." ..."
-             const char *s = (const char*)MEM(IP);   /// * get string pointer
+             const char *s = (const char*)MEM(IP);   ///< get string pointer
              fout << s;  IP += STRLEN(s));           /// * send to output console
         CASE(BRAN, IP = IGET(IP));                   /// * unconditional branch
         CASE(ZBRAN,                                  /// * conditional branch
@@ -292,13 +293,12 @@ void nest(IU pfa) {
              PUSH(DALIGN(IP + sizeof(IU)));          /// * skip target address
              IP = IGET(IP));                         /// * create..
         CASE(DOES,
-             IU *p = (IU*)MEM(LAST.pfa);             ///> memory pointer to pfa 
+             IU *p = (IU*)MEM(LAST.pfa);             ///< memory pointer to pfa 
              *(p+1) = IP;                            /// * encode current IP, and bail
              RETURN());
-        CASE(FOR,  rs.push(POP()));                  /// * setup FOR..NEXT call frame
-        CASE(DO,                                     /// * setup DO..LOOP call frame
-             rs.push(ss.pop()); rs.push(POP()));
-        CASE(KEY, key());
+        CASE(FOR,  rs.push(POP()));                     /// * setup FOR..NEXT call frame
+        CASE(DO,   rs.push(ss.pop()); rs.push(POP()));  /// * setup DO..LOOP call frame
+        CASE(KEY,  key(); VM=IO);                       /// * fetch single keypress
         OTHER(
             if (ix & EXT_FLAG) {                     /// * colon word?
                 rs.push(IP);                         /// * setup call frame
@@ -593,7 +593,7 @@ void dict_compile() {  ///< compile built-in words into dictionary
     CODE("u.r",     fout << setbase(*base) << setw(POP()) << UINT(POP()));
     CODE("type",    POP();                    // string length (not used)
          fout << (const char*)MEM(POP()));    // get string pointer
-    IMMD("key",     add_w(KEY));
+    IMMD("key",     if (compile) add_w(KEY); else PUSH(word()[0]));
     CODE("emit",    char b = (char)POP(); fout << b);
     CODE("space",   spaces(1));
     CODE("spaces",  spaces(POP()));
@@ -812,17 +812,17 @@ int forth_vm(const char *line, void(*hook)(int, const char*)) {
     auto cb = [](int, const char *rst) { printf("%s", rst); };
     fout_cb = hook ? hook : cb;  ///< serial output hook up
 
-    bool hold = VM==HOLD;        ///< check VM resume status
-    if (!hold) {                 ///> refresh buffer if not resuming
-        fout.str("");            /// * clean output buffer
-        fin.clear();             /// * clear input stream error bit if any
-        fin.str(line);           /// * reload user command into input stream
+    bool hold = (VM==HOLD || VM==IO);         ///< check VM resume status
+    if (!hold) {                              ///> refresh buffer if not resuming
+        fout.str("");                         /// * clean output buffer
+        fin.clear();                          /// * clear input stream error bit if any
+        fin.str(line);                        /// * reload user command into input stream
     }
     string idiom;
     while (hold || (fin >> idiom)) {          ///> fetch a word
         if (hold) nest(0);                    /// * continue without parsing
         else      forth_core(idiom.c_str());  ///> send to Forth core
-        hold = VM==HOLD;
+        hold = VM==HOLD;                      /// * no holding on STOP, IO, RUN
         if (hold) {                           ///> multi-threading support
             long t1 = millis();               ///> check timing
             if (t1 >= t0) {                   /// * time slice up
@@ -862,7 +862,9 @@ int  main(int ac, char* av[]) {
 ///
 #if DO_WASM
 extern "C" {
-int  forth(int n, char *cmd) { return forth_vm(cmd); }
+int  forth(int n, char *cmd) {
+    return (n==1) ? (PUSH(cmd[0]), 0) : forth_vm(cmd);
+}
 int  vm_base()       { return *base;    }
 int  vm_dflt()       { return *dflt;    }
 int  vm_ss_idx()     { return ss.idx;   }
@@ -878,13 +880,10 @@ char *vm_mem()       { return (char*)&pmem[0]; }
 ///
 ///> System statistics - for heap, stack, external memory debugging
 ///
-char key() {
-    char c = (char)EM_ASM_INT({
-            postMessage('key');
-            
-        });
-    return c;
+void key() {
+    EM_ASM({ postMessage(['key', 1]); });       /// set keypress mode
 }
+
 void dict_dump() {
     fout << setbase(16) << setfill('0') << "XT0=" << Code::XT0 << ENDL;
     for (int i=0; i<dict.idx; i++) {
@@ -905,7 +904,7 @@ void mem_stat() {
          << ")\n  rs  : " << rs.idx   << "/" << E4_RS_SZ << " (max " << rs.max
          << ")\n  mem : " << HERE     << "/" << E4_PMEM_SZ << endl;
 }
-EM_JS(void, js, (const char *ops), {
+EM_JS(void, js_call, (const char *ops), {
         const req = UTF8ToString(ops).split(/\\s+/);
         const wa  = wasmExports;
         const mem = wa.vm_mem();
@@ -927,7 +926,7 @@ EM_JS(void, js, (const char *ops), {
         postMessage(['js', msg], tfr);
 });
 ///
-///> Javascript Native Interface, before passing to js()
+///> Javascript Native Interface, before passing to js_call()
 ///
 ///  String substitude similar to printf
 ///    %d - integer
@@ -963,7 +962,7 @@ void native_api() {                        ///> ( n addr u -- )
         }
         else pad.replace(i, 2, t2s(pad[i+1]));
     }
-    js(pad.c_str());    /// * call Emscripten js function
+    js_call(pad.c_str());    /// * pass to Emscripten function above
 }
 ///
 ///> External file loader
