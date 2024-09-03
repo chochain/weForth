@@ -85,6 +85,8 @@ function objFactory(body, color) {
     let shape = body.GetShape();
     let obj;
 
+    mati.shininess = 100;
+
     switch (shape.GetSubType()) {
     case Jolt.EShapeSubType_Box:
         let box = Jolt.castObject(shape, Jolt.BoxShape)
@@ -111,6 +113,9 @@ function objFactory(body, color) {
     }
     obj.position.copy(V3G(body.GetPosition()))
     obj.quaternion.copy(Q4G(body.GetRotation()))
+    obj.receiveShadow = true
+    obj.castShadow    = true
+    obj.material.flatShading = true
     obj.userData.body = body;                     // keep GUI->PhyX ref
 
     return obj
@@ -145,6 +150,7 @@ export default class {
         this.time   = 0
         ///> create object space
         this.ospace = {}
+        this.mesh   = []
         this.length = 0
         
         new ResizeObserver(e=>this.resize()).observe(e)  /// * watch canvas resizing
@@ -188,11 +194,9 @@ export default class {
         )
 */
     }
-    add(shape, ds, color, fixed=false) {
+    add_shape(shape, ds, color, fixed=false) {
         const get_q4 = (
-            x=Math.random(),
-            y=Math.random(),
-            z=Math.random(),
+            x=Math.random(), y=Math.random(), z=Math.random(),
             w=2*Math.PI*Math.random())=>{
             let v3 = new Jolt.Vec3(0.001+x, y, z).Normalized()
             let q4 = (x==0 && y==0 && z==0)
@@ -219,19 +223,20 @@ export default class {
         
         return this._addToScene(id, body, color)
     }
-    drop(id) {
+    remove(id) {
         return this._removeFromScene(id)
     }
     addLine(from, to, color) {
         const mati = new THREE.LineBasicMaterial({ color: color })
         const pts  = []
-        pts.push(V3G(from))
-        pts.push(V3G(to))
+        pts.push(from)
+        pts.push(to)
 
         const geom = new THREE.BufferGeometry().setFromPoints(pts)
         const line = new THREE.Line(geom, mati)
 
         this.scene.add(line)        // GUI only
+        return line
     }
     addMarker(pos, sz, color) {
         const mati = new THREE.LineBasicMaterial({ color: color })
@@ -248,7 +253,6 @@ export default class {
         const mark = new THREE.LineSegments(geom, mati)
 
         this.scene.add(mark)         // GUI only
-
         return mark
     }
     _initGraphics(w, h, px_ratio) {
@@ -256,23 +260,42 @@ export default class {
         this.rndr  = new THREE.WebGLRenderer()
         this.cam   = new THREE.PerspectiveCamera(60, w / h, 0.2, 2000)
         this.ctrl  = new THREE.OrbitControls(this.cam, this.arena)
-        this.light = new THREE.DirectionalLight(0xffffff, 1)             // white light
+        this.light = new THREE.SpotLight(0xe0a060, 1)             // orange light
+//        this.light = new THREE.DirectionalLight(0xffffff, 1)    // white light
+        this.fused = new THREE.AmbientLight(0x404040)
         this.scene = new THREE.Scene()
-        this.stats = new Stats();
+        this.stats = new Stats()
+        this.caster= new THREE.Raycaster()
+        this.mouse = new THREE.Vector2()
+        this.arrow = new THREE.ArrowHelper(
+            new THREE.Vector3(), new THREE.Vector3(), 0.25, 0xffff00)
+        this.line  = this.addLine(
+            new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0.25), 0xff0000)
 
         this.rndr.setClearColor(0xbfd1e5)
         this.rndr.setPixelRatio(px_ratio)
         this.rndr.setSize(w, h)
         this.cam.position.set(0, 15, 30)
         this.cam.lookAt(new THREE.Vector3(0, 0, 0))
-        this.light.position.set(10, 10, 5)
+        this.ctrl.enableDamping = false
+        this.ctrl.enablePan     = true
+        this.light.position.set(10, 20, 5)
+        this.light.castShadow            = true
+        this.light.shadow.bias           = -0.003
+        this.light.shadow.mapSize.width  = 2048
+        this.light.shadow.mapSize.height = 2048
 
         this.scene.add(this.light)
+        this.scene.add(this.fused)
+        this.scene.add(this.arrow)
         this.stats.domElement.style.position = 'absolute'
         this.stats.domElement.style.top      = '0px'
 
         this.arena.appendChild(this.rndr.domElement)     // onto Web browser canvas
         this.arena.appendChild(this.stats.domElement)
+        
+        this.rndr.domElement.addEventListener(           /// * mouse click handler
+            'pointerdown', e=>this._click(e), false)
     }
     _initPhysics() {
         this.jolt = setupJolt()                          // setup collision interface
@@ -282,10 +305,11 @@ export default class {
     _addToScene(id, body, color) {
         let bid = body.GetID()                           // JOLT assigned id
         let obj = objFactory(body, color)
-
+        
         this.intf.AddBody(bid, Jolt.EActivation_Activate)// add to physic system
         this.scene.add(obj)                              // add to GUI
-        
+
+        this.mesh.push(obj)
         this.ospace[id] = obj                            // keep obj in KV store for reference
         return this.ospace.length                        // CC: need a lock?
     }
@@ -315,6 +339,31 @@ export default class {
         delete this.ospace[id]                           // remove from our KV storea
 
         return this.ospace.length                        // CC: need a lock?
+    }
+    _click(e) {
+        this.mouse.set(
+            (e.clientX / this.rndr.domElement.clientWidth)  * 2 - 1,
+           -(e.clientY / this.rndr.domElement.clientHeight) * 2 + 1)
+        this.caster.setFromCamera(this.mouse, this.cam)
+
+        const hits = this.caster.intersectObjects(this.mesh, false)
+
+        console.log(this.mesh.length + " => " + hits.length)
+        if (hits.length == 0) return
+        
+        let x = hits[0]
+
+        console.log(x.face.normal)
+        this.line.position.set(0, 0, 0)
+        this.line.lookAt(x.face.normal)
+        this.line.position.copy(x.point)
+        const n = new THREE.Vector3()
+        n.copy(x.face.normal)
+        n.transformDirection(x.object.matrixWorld)
+        this.arrow.setDirection(n)
+        this.arrow.position.copy(x.point)
+
+        console.log('hit!')
     }
 }  // class JoltCore
 
