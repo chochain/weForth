@@ -122,10 +122,10 @@ function jolt_update(jolt) {
     const x   = v[3]                        ///> geometry parameters
     const ds  = v[4]                        ///> shape dynaset
 
-    switch (CMD_LST.indexOf(cmd)) {
-    case 0: return jolt.add(get_shape(0, x),       ds, n, true)   // fixed=true
-    case 1: return jolt.add(get_shape(ds[1]|0, x), ds, n)
-    case 2: return jolt.drop(n)
+    switch (cmd) {
+    case 'mesh': return jolt.add_shape(get_shape(0, x),       ds, n, true)   // fixed=true
+    case 'body': return jolt.add_shape(get_shape(ds[1]|0, x), ds, n)
+    case 'drop': return jolt.remove(n)
     default: console.log('unknown cmd='+cmd); break
     }
     return 0
