@@ -257,10 +257,7 @@ function colon_words(lst) {
 }
 function sync_fetch(url, timeout=10000) {
     const xhr = new XMLHttpRequest()
-    console.log('>'+url+'<')
-    console.log(timeout)
     const str = UTF8ToString(url)
-    console.log(str)
     xhr.open("GET", UTF8ToString(url), false)   /// synchronized GET
     xhr.responseType = "text"                   /// Forth script
     xhr.timeout      = timeout
