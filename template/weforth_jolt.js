@@ -105,7 +105,6 @@ const CMD_LST = [ 'mesh', 'body', 'drop' ]
 function jolt_req(req) {                    ///> jolt job queue
     if (!req ||
         CMD_LST.indexOf(req[1])<0) return 0 /// * not Jolt command
-    console.log(req)
     req.push(Date.now() - req[0])           /// * encode timediff
     req_q.push(req)
     return 1
@@ -114,7 +113,7 @@ function jolt_update(jolt) {
     const v = req_q.shift()                 ///> pop from job queue
     if (!v) return                          /// * queue empty, bail
 
-    v.push(Date.now() - v[0])              /// * encode timediff
+    v.push(Date.now() - v[0])               /// * encode timediff
     console.log(v)                          /// * debug trace
     
     const cmd = v[1]                        ///> Jolt command
@@ -123,8 +122,8 @@ function jolt_update(jolt) {
     const ds  = v[4]                        ///> shape dynaset
 
     switch (cmd) {
-    case 'mesh': return jolt.add_shape(get_shape(0, x),       ds, n, true)   // fixed=true
-    case 'body': return jolt.add_shape(get_shape(ds[1]|0, x), ds, n)
+    case 'mesh': return jolt.addShape(get_shape(0, x),       ds, n, true)   // fixed=true
+    case 'body': return jolt.addShape(get_shape(ds[1]|0, x), ds, n)
     case 'drop': return jolt.remove(n)
     default: console.log('unknown cmd='+cmd); break
     }
