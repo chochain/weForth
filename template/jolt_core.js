@@ -150,7 +150,6 @@ export default class {
         this.time   = 0
         ///> create object space
         this.ospace = {}
-        this.mesh   = []
         this.length = 0
         
         new ResizeObserver(e=>this.resize()).observe(e)  /// * watch canvas resizing
@@ -268,9 +267,7 @@ export default class {
         this.caster= new THREE.Raycaster()
         this.mouse = new THREE.Vector2()
         this.arrow = new THREE.ArrowHelper(
-            new THREE.Vector3(), new THREE.Vector3(), 0.25, 0xffff00)
-        this.line  = this.addLine(
-            new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0.25), 0xff0000)
+            new THREE.Vector3(0,1,0).normalize(), new THREE.Vector3(0,-5,0), 2, 0xff0000)
 
         this.rndr.setClearColor(0xbfd1e5)
         this.rndr.setPixelRatio(px_ratio)
@@ -309,7 +306,6 @@ export default class {
         this.intf.AddBody(bid, Jolt.EActivation_Activate)// add to physic system
         this.scene.add(obj)                              // add to GUI
 
-        this.mesh.push(obj)
         this.ospace[id] = obj                            // keep obj in KV store for reference
         return this.ospace.length                        // CC: need a lock?
     }
@@ -346,17 +342,16 @@ export default class {
            -(e.clientY / this.rndr.domElement.clientHeight) * 2 + 1)
         this.caster.setFromCamera(this.mouse, this.cam)
 
-        const hits = this.caster.intersectObjects(this.mesh, false)
+        const hits = this.caster.intersectObjects(this.scene.children, false)
 
-        console.log(this.mesh.length + " => " + hits.length)
+        console.log('hit=' + hits.length)
         if (hits.length == 0) return
         
         let x = hits[0]
-
-        console.log(x.face.normal)
-        this.line.position.set(0, 0, 0)
-        this.line.lookAt(x.face.normal)
-        this.line.position.copy(x.point)
+        
+        console.log(x)
+        x.object.material.color.set(0xffffff)
+        
         const n = new THREE.Vector3()
         n.copy(x.face.normal)
         n.transformDirection(x.object.matrixWorld)
