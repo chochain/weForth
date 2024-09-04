@@ -107,15 +107,15 @@ function objFactory(body, color, tex=null) {
         break
     case Jolt.EShapeSubType_Sphere:
         let ball= Jolt.castObject(shape, Jolt.SphereShape)
-        obj = new THREE.Mesh(new THREE.SphereGeometry(ball.GetRadius(), 32, 32), mati)
+        obj = new THREE.Mesh(new THREE.SphereGeometry(ball.GetRadius(), 16, 16), mati)
         break
     case Jolt.EShapeSubType_Capsule:
         let cap = Jolt.castObject(shape, Jolt.CapsuleShape)
-        obj = new THREE.Mesh(new THREE.CapsuleGeometry(cap.GetRadius(), 2 * cap.GetHalfHeightOfCylinder(), 20, 10), mati)
+        obj = new THREE.Mesh(new THREE.CapsuleGeometry(cap.GetRadius(), 2 * cap.GetHalfHeightOfCylinder(), 16, 3), mati)
         break
     case Jolt.EShapeSubType_Cylinder:
         let cyl = Jolt.castObject(shape, Jolt.CylinderShape)
-        obj = new THREE.Mesh(new THREE.CylinderGeometry(cyl.GetRadius(), cyl.GetRadius(), 2 * cyl.GetHalfHeight(), 20, 1), mati)
+        obj = new THREE.Mesh(new THREE.CylinderGeometry(cyl.GetRadius(), cyl.GetRadius(), 2 * cyl.GetHalfHeight(), 16, 1), mati)
         break
     default:
         obj = (body.GetBodyType() == Jolt.EBodyType_SoftBody)
@@ -205,6 +205,26 @@ export default class {
         )
 */
     }
+    addVehicle(shape, ds, color, vehicle, type) {
+		const config = new Jolt.BodyCreationSettings(
+            shape, new Jolt.RVec3(...bodyPosition),
+			Jolt.Quat.prototype.sRotation(new Jolt.Vec3(0, 1, 0), Math.PI),
+			Jolt.EMotionType_Dynamic, L_MOVING)
+		config.mOverrideMassProperties       = Jolt.EOverrideMassProperties_CalculateInertia
+		config.mMassPropertiesOverride.mMass = vehicleMass
+        
+		const body = jolt.intf.CreateBody(config)
+        Jolt.destroy(config)
+		jolt.addToScene(body, 0xFF0000);
+        
+		const cnst = new Jolt.VehicleConstraint(body, vehicle)
+		const tstr = new Jolt.VehicleCollisionTesterCastCylinder(L_MOVING, 1)
+        
+		cnst.SetVehicleCollisionTester(tstr)
+		this.phyx.AddConstraint(cnst)
+        
+		const ctrl = Jolt.castObject(cnst.GetController(), type) //type=Jolt.MotorcycleController
+    }
     addShape(shape, ds, color, fixed=false) {
         const get_q4 = (
             x=Math.random(), y=Math.random(), z=Math.random(),
@@ -221,11 +241,13 @@ export default class {
         const rot  = get_q4(ds[5], ds[6], ds[7], ds[8])
         const lv   = new Jolt.Vec3(ds[9], ds[10], ds[11])
         const av   = new Jolt.Vec3(ds[12], ds[13], ds[14])
+        
         let config = new Jolt.BodyCreationSettings(
             shape, pos, rot,
             fixed ? Jolt.EMotionType_Static : Jolt.EMotionType_Dynamic,
             fixed ? L_STATIC : L_MOVING)
         config.mRestitution = 0.5                            // bounciness
+        
         let body = this.intf.CreateBody(config)
         Jolt.destroy(config)
         
