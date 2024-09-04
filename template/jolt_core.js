@@ -111,7 +111,7 @@ function objFactory(body, color, tex=null) {
         break
     case Jolt.EShapeSubType_Capsule:
         let cap = Jolt.castObject(shape, Jolt.CapsuleShape)
-        obj = new THREE.Mesh(new THREE.CapsuleGeometry(cap.GetRadius(), 2 * cap.GetHalfHeightOfCylinder(), 16, 3), mati)
+        obj = new THREE.Mesh(new THREE.CapsuleGeometry(cap.GetRadius(), 2 * cap.GetHalfHeightOfCylinder(), 3, 16), mati)
         break
     case Jolt.EShapeSubType_Cylinder:
         let cyl = Jolt.castObject(shape, Jolt.CylinderShape)
