@@ -77,15 +77,27 @@ function getMesh(shape) {
 
     return mesh
 }
+function dummyTexture() {
+	const tldr = new THREE.TextureLoader()           
+	const tex = tldr.load('data:image/gif;base64,R0lGODdhAgACAIABAAAAAP///ywAAAAAAgACAAACA0QCBQA7')
+	tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+	tex.offset.set(0, 0)
+	tex.repeat.set(1, 1)
+	tex.magFilter = THREE.NearestFilter
+
+    return tex
+}
 ///
 ///> THREE object factory
 ///
-function objFactory(body, color) {
-    let mati  = new THREE.MeshPhongMaterial({ color: color });
-    let shape = body.GetShape();
-    let obj;
-
-    mati.shininess = 100;
+function objFactory(body, color, tex=null) {
+    let shape = body.GetShape()
+    let mati  = new THREE.MeshPhongMaterial({
+        color: color, shininess:80,
+        // map: tex,                          // slow to 1/3
+        // transparent:true, opacity:0.75
+    })        
+    let obj
 
     switch (shape.GetSubType()) {
     case Jolt.EShapeSubType_Box:
@@ -94,7 +106,7 @@ function objFactory(body, color) {
         obj = new THREE.Mesh(new THREE.BoxGeometry(dim.x, dim.y, dim.z, 1, 1, 1), mati)
         break
     case Jolt.EShapeSubType_Sphere:
-        let ball= Jolt.castObject(shape, Jolt.SphereShape);
+        let ball= Jolt.castObject(shape, Jolt.SphereShape)
         obj = new THREE.Mesh(new THREE.SphereGeometry(ball.GetRadius(), 32, 32), mati)
         break
     case Jolt.EShapeSubType_Capsule:
@@ -193,7 +205,7 @@ export default class {
         )
 */
     }
-    add_shape(shape, ds, color, fixed=false) {
+    addShape(shape, ds, color, fixed=false) {
         const get_q4 = (
             x=Math.random(), y=Math.random(), z=Math.random(),
             w=2*Math.PI*Math.random())=>{
@@ -268,6 +280,7 @@ export default class {
         this.mouse = new THREE.Vector2()
         this.arrow = new THREE.ArrowHelper(
             new THREE.Vector3(0,1,0).normalize(), new THREE.Vector3(0,-5,0), 2, 0xff0000)
+        this.tex   = dummyTexture()
 
         this.rndr.setClearColor(0xbfd1e5)
         this.rndr.setPixelRatio(px_ratio)
@@ -301,7 +314,7 @@ export default class {
     }
     _addToScene(id, body, color) {
         let bid = body.GetID()                           // JOLT assigned id
-        let obj = objFactory(body, color)
+        let obj = objFactory(body, color, this.tex)
         
         this.intf.AddBody(bid, Jolt.EActivation_Activate)// add to physic system
         this.scene.add(obj)                              // add to GUI
