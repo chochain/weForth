@@ -205,25 +205,52 @@ export default class {
         )
 */
     }
-    addVehicle(shape, ds, color, vehicle, type) {
+    addVehicle(shape, ds, color, vehicle, mass, type) {
 		const config = new Jolt.BodyCreationSettings(
             shape, new Jolt.RVec3(...bodyPosition),
 			Jolt.Quat.prototype.sRotation(new Jolt.Vec3(0, 1, 0), Math.PI),
 			Jolt.EMotionType_Dynamic, L_MOVING)
 		config.mOverrideMassProperties       = Jolt.EOverrideMassProperties_CalculateInertia
-		config.mMassPropertiesOverride.mMass = vehicleMass
+		config.mMassPropertiesOverride.mMass = mass
         
-		const body = jolt.intf.CreateBody(config)
+		const body = this.intf.CreateBody(config)
         Jolt.destroy(config)
-		jolt.addToScene(body, 0xFF0000);
+		jolt.addToScene(body, color)
         
 		const cnst = new Jolt.VehicleConstraint(body, vehicle)
-		const tstr = new Jolt.VehicleCollisionTesterCastCylinder(L_MOVING, 1)
-        
+		// Set collision tester that checks the wheels for collision with the floor
+		let tstr;
+		switch (castType) {
+        case 'motorcycle':
+		    tstr = new Jolt.VehicleCollisionTesterCastCylinder(L_MOVING, 1)
+		case 'cylinder':
+			tstr = new Jolt.VehicleCollisionTesterCastCylinder(L_MOVING, 0.05);
+			break;
+		case 'sphere':
+			tstr = new Jolt.VehicleCollisionTesterCastSphere(L_MOVING, 0.5 * wheelWidth);
+			break;
+		default:
+			tstr = new Jolt.VehicleCollisionTesterRay(L_MOVING);
+			break;
+		}
 		cnst.SetVehicleCollisionTester(tstr)
 		this.phyx.AddConstraint(cnst)
         
 		const ctrl = Jolt.castObject(cnst.GetController(), type) //type=Jolt.MotorcycleController
+        
+		// Optional step: Set the vehicle constraint callbacks
+		let cb = new Jolt.VehicleConstraintCallbacksJS()
+		cb.GetCombinedFriction = (
+            wheelIndex, tireFrictionDirection, tireFriction, body2, subShapeID2) => {
+			body2 = Jolt.wrapPointer(body2, Jolt.Body)
+				return Math.sqrt(tireFriction * body2.GetFriction()) // This is the default calculation
+			}
+		cb.OnPreStepCallback     = (vehicle, deltaTime, physicsSystem)=>{}
+		cb.OnPostCollideCallback = (vehicle, deltaTime, physicsSystem)=>{}
+		cb.OnPostStepCallback    = (vehicle, deltaTime, physicsSystem)=>{}
+        
+		cb.SetVehicleConstraint(cnst)
+        
     }
     addShape(shape, ds, color, fixed=false) {
         const get_q4 = (
