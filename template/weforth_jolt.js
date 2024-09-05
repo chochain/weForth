@@ -33,51 +33,52 @@ function build_mesh(n, sz, h) {    // nxn, sz=tileSize, h:max_height
         }
     }
     let mati  = new Jolt.PhysicsMaterialList;
-    let shape = new Jolt.MeshShapeSettings(tlst, mati).Create().Get();
+    let config= new Jolt.MeshShapeSettings(tlst, mati)
     Jolt.destroy(tlst);
     Jolt.destroy(mati);
 
-    return shape
+    return config
 }
+///
+///> static shape 
+///
 function get_shape(t, v=null) {
     const rx = ()=>0.5 + Math.random()
     let x = v || (t==0 ? [ 30, 1, 0.8 ] : [ rx(), rx(), rx() ])
-    let shape = null
+    let config = null
     switch (t) {
     case 0: {
-        shape = build_mesh(x[0], x[1], x[2])
+        config = build_mesh(x[0], x[1], x[2])
         break
     }
     case 1: {                       // Sphere
         let r = x[0]
-        shape = new Jolt.SphereShape(r, null)
+        config = new Jolt.SphereShapeSettings(r, null)
         break
     }
     case 2: {                       // Box
         let sx = x[0], sy = x[1], sz = x[2]
-        shape = new Jolt.BoxShape(new Jolt.Vec3(sx, sy, sz), 0.05, null)
+        config = new Jolt.BoxShapeSettings(new Jolt.Vec3(sx, sy, sz), 0.05, null)
         break
     }
     case 3: {                       // Cylinder
         let r = x[0], h2 = x[1]
-        shape = new Jolt.CylinderShape(r, h2, 0.05, null)
+        config = new Jolt.CylinderShapeSettings(r, h2, 0.05, null)
         break
     }
     case 4: {                       // Capsule
         let l = x[0], r1 = x[1] * 0.5
-        shape = new Jolt.CapsuleShape(l, r1, 0.05, null)
+        config = new Jolt.CapsuleShapeSettings(l, r1, 0.05, null)
         break
     }
     case 5: {                       // tapered capsule
         let l = x[0], r1 = x[1] * 0.5, r2 = x[2] * 0.5
-		let config = new Jolt.TaperedCapsuleShapeSettings(l, r1, r2, null)
-        shape = config.Create().Get()
-        Jolt.destroy(config)
+		config = new Jolt.TaperedCapsuleShapeSettings(l, r1, r2, null)
         break
     }
     case 6: {                       // Static compound shape
-        let config = new Jolt.StaticCompoundShapeSettings()
         let l = x[0], r2 = x[1] * 0.5, r1 = r2 * 0.5
+        config = new Jolt.StaticCompoundShapeSettings()
         config.AddShape(
             new Jolt.Vec3(-l, 0, 0),
             Jolt.Quat.prototype.sIdentity(),
@@ -90,12 +91,71 @@ function get_shape(t, v=null) {
             new Jolt.Vec3( 0, 0, 0),
             Jolt.Quat.prototype.sRotation(new Jolt.Vec3(0, 0, 1), 0.5 * Math.PI),
             new Jolt.CapsuleShapeSettings(l, r1))
-        shape = config.Create().Get()
-        Jolt.destroy(config)
         break
     }
     default: console.log('?rnd_shape t='+t); break
     }
+    let shape = null
+    if (config) {
+        config.Create().Get()
+        Jolt.destroy(config)
+    }
+    return shape
+}
+///
+///> componded object implementation (2x slower)
+///
+function get_shape_compound(t, v=null) {
+    const rx = ()=>0.5 + Math.random()
+    let x = v || (t==0 ? [ 30, 1, 0.8 ] : [ rx(), rx(), rx() ])
+    const config = new Jolt.StaticCompoundShapeSettings()
+    const add    = (s, pos=new Jolt.Vec3(0,0,0), rot=Jolt.Quat.prototype.sIdentity())=>{
+        config.AddShape(pos, rot, s)
+    }
+    switch (t) {
+    case 0: {
+        add(build_mesh(x[0], x[1], x[2]))
+        break
+    }
+    case 1: {                       // Sphere
+        let r = x[0]
+        add(new Jolt.SphereShapeSettings(r, null))
+        break
+    }
+    case 2: {                       // Box
+        let sx = x[0], sy = x[1], sz = x[2]
+        add(new Jolt.BoxShapeSettings(new Jolt.Vec3(sx, sy, sz), 0.05, null))
+        break
+    }
+    case 3: {                       // Cylinder
+        let r = x[0], h2 = x[1]
+        add(new Jolt.CylinderShapeSettings(r, h2, 0.05, null))
+        break
+    }
+    case 4: {                       // Capsule
+        let l = x[0], r1 = x[1] * 0.5
+        add(new Jolt.CapsuleShapeSettings(l, r1, 0.05, null))
+        break
+    }
+    case 5: {                       // tapered capsule
+        let l = x[0], r1 = x[1] * 0.5, r2 = x[2] * 0.5
+		add(new Jolt.TaperedCapsuleShapeSettings(l, r1, r2, null))
+        break
+    }
+    case 6: {                       // Static compound shape
+        let l = x[0], r2 = x[1] * 0.5, r1 = r2 * 0.5
+//        config = new Jolt.StaticCompoundShapeSettings()
+        add(new Jolt.SphereShapeSettings(r2), new Jolt.Vec3(-l, 0, 0))
+        add(new Jolt.SphereShapeSettings(r2), new Jolt.Vec3( l, 0, 0))
+        add(new Jolt.CapsuleShapeSettings(l, r1),
+            new Jolt.Vec3( 0, 0, 0),
+            Jolt.Quat.prototype.sRotation(new Jolt.Vec3(0, 0, 1), 0.5 * Math.PI))
+        break
+    }
+    default: console.log('?rnd_shape t='+t); break
+    }
+    const shape = config.Create().Get()
+    Jolt.destroy(config)
     return shape
 }
 
