@@ -97,7 +97,7 @@ function get_shape(t, v=null) {
     }
     let shape = null
     if (config) {
-        config.Create().Get()
+        shape = config.Create().Get()
         Jolt.destroy(config)
     }
     return shape
@@ -170,20 +170,42 @@ function jolt_req(req) {                    ///> jolt job queue
     return 1
 }
 function jolt_update(jolt) {
+    const get_q4 = (
+        x=Math.random(), y=Math.random(), z=Math.random(),
+        w=2*Math.PI*Math.random())=>{
+            let v3 = new Jolt.Vec3(0.001+x, y, z).Normalized()
+            let q4 = (x==0 && y==0 && z==0)
+                ? new Jolt.Quat(0, 0, 0, 1)
+                : Jolt.Quat.prototype.sRotation(v3, w)
+            Jolt.destroy(v3)
+            return q4
+        }
     const v = req_q.shift()                 ///> pop from job queue
     if (!v) return                          /// * queue empty, bail
 
     v.push(Date.now() - v[0])               /// * encode timediff
     console.log(v)                          /// * debug trace
     
-    const cmd = v[1]                        ///> Jolt command
-    const n   = v[2]|0                      ///> color or object id
-    const x   = v[3]                        ///> geometry parameters
-    const ds  = v[4]                        ///> shape dynaset
+    const cmd  = v[1]                       ///> Jolt command
+    const n    = v[2]|0                     ///> object_id
+    const color= v[2]|0                     ///> color (shared param with object_id)
+    const x    = v[3]                       ///> geometry parameters
+    const ds   = v[4]                       ///> shape dynaset
+    const id   = ds[0]|0
+    const pos  = new Jolt.RVec3(ds[2], ds[3], ds[4])     // ds.slice(2,5) doesn't work?
+    const rot  = get_q4(ds[5], ds[6], ds[7], ds[8])
 
     switch (cmd) {
-    case 'mesh': return jolt.addShape(get_shape(0, x),       ds, n, true)   // fixed=true
-    case 'body': return jolt.addShape(get_shape(ds[1]|0, x), ds, n)
+    case 'mesh':
+        const mesh = get_shape(0, x)
+        return jolt.addShape(id, mesh, pos, rot, color, 0, false)
+    case 'body':
+        const shape = get_shape(ds[1]|0)
+        const nobj  = jolt.addShape(id, shape, pos, rot, color)
+        const lv    = new Jolt.Vec3(ds[9], ds[10], ds[11])
+        const av    = new Jolt.Vec3(ds[12], ds[13], ds[14])
+        this.setVelocity(id, lv, av)
+        return nobj
     case 'drop': return jolt.remove(n)
     default: console.log('unknown cmd='+cmd); break
     }
