@@ -125,10 +125,10 @@ function objFactory(body, color, tex=null) {
     }
     obj.position.copy(V3G(body.GetPosition()))
     obj.quaternion.copy(Q4G(body.GetRotation()))
-    obj.receiveShadow = true
-    obj.castShadow    = true
+    obj.receiveShadow        = true
+    obj.castShadow           = true
     obj.material.flatShading = true
-    obj.userData.body = body;                     // keep GUI->PhyX ref
+    obj.userData.body        = body;                     // keep GUI->PhyX cross-ref
 
     return obj
 }
@@ -205,69 +205,29 @@ export default class {
         )
 */
     }
-    addVehicle(shape, ds, color, vehicle, mass, type) {
-		const config = new Jolt.BodyCreationSettings(
-            shape, new Jolt.RVec3(...bodyPosition),
-			Jolt.Quat.prototype.sRotation(new Jolt.Vec3(0, 1, 0), Math.PI),
-			Jolt.EMotionType_Dynamic, L_MOVING)
-		config.mOverrideMassProperties       = Jolt.EOverrideMassProperties_CalculateInertia
-		config.mMassPropertiesOverride.mMass = mass
+    addShape(
+        id, shape, pos, rot,       // obj id, shape setting, pos3, rot4
+        color,                     // #C0FFC0
+        mass=0,                    // to calculate inertial, 0=default density
+        move=true                  // moving object
+    ) {
+        const type  = move ? Jolt.EMotionType_Dynamic : Jolt.EMotionType_Static
+        const layer = move ? L_MOVING : L_STATIC
+        const body  = this._getBody(shape, pos, rot, type, layer, mass)
         
-		const body = this.intf.CreateBody(config)
-        Jolt.destroy(config)
-		jolt.addToScene(body, color)
-        
-		const cnst = new Jolt.VehicleConstraint(body, vehicle)
-		// Set collision tester that checks the wheels for collision with the floor
-		let tstr;
-		switch (castType) {
-        case 'motorcycle':
-		    tstr = new Jolt.VehicleCollisionTesterCastCylinder(L_MOVING, 1)
-		case 'cylinder':
-			tstr = new Jolt.VehicleCollisionTesterCastCylinder(L_MOVING, 0.05);
-			break;
-		case 'sphere':
-			tstr = new Jolt.VehicleCollisionTesterCastSphere(L_MOVING, 0.5 * wheelWidth);
-			break;
-		default:
-			tstr = new Jolt.VehicleCollisionTesterRay(L_MOVING);
-			break;
-		}
-		cnst.SetVehicleCollisionTester(tstr)
-		this.phyx.AddConstraint(cnst)
-        
-		const ctrl = Jolt.castObject(cnst.GetController(), type) //type=Jolt.MotorcycleController
-        
-		// Optional step: Set the vehicle constraint callbacks
-		let cb = new Jolt.VehicleConstraintCallbacksJS()
-		cb.GetCombinedFriction = (
-            wheelIndex, tireFrictionDirection, tireFriction, body2, subShapeID2) => {
-			body2 = Jolt.wrapPointer(body2, Jolt.Body)
-				return Math.sqrt(tireFriction * body2.GetFriction()) // This is the default calculation
-			}
-		cb.OnPreStepCallback     = (vehicle, deltaTime, physicsSystem)=>{}
-		cb.OnPostCollideCallback = (vehicle, deltaTime, physicsSystem)=>{}
-		cb.OnPostStepCallback    = (vehicle, deltaTime, physicsSystem)=>{}
-        
-		cb.SetVehicleConstraint(cnst)
-        
-    }
-    addShape(shape, ds, color, fixed=false) {
-        const type  = fixed ? Jolt.EMotionType_Static : Jolt.EMotionType_Dynamic
-        const layer = fixed ? L_STATIC : L_MOVING
-        ///
-        ///> velocities - 6DOF - CC: separate from ds later
-        ///
-        const id    = ds[0]|0
-        const lv    = new Jolt.Vec3(ds[9], ds[10], ds[11])
-        const av    = new Jolt.Vec3(ds[12], ds[13], ds[14])
-        
-        const body  = this._getBody(shape, ds, type, layer)
-        
+        return this._addToScene(id, body, color)
+    }        
+    setVelocity(id, lv, av) {       // linear and angular velocities
+        const body = this.ospace[id].userData.body
+        const bid  = body.GetID()
         body.SetLinearVelocity(lv)
         body.SetAngularVelocity(av)
         
-        return this._addToScene(id, body, color)
+        this.intf.ActivateBody(bid)
+    }
+    tick(id) {                      // reactivate a body
+        let bid = this.ospace[id].userData.body.GetID()
+        this.intf.ActivateBody(bid)
     }
     remove(id) {
         return this._removeFromScene(id)
@@ -306,8 +266,8 @@ export default class {
         this.rndr  = new THREE.WebGLRenderer()
         this.cam   = new THREE.PerspectiveCamera(60, w / h, 0.2, 2000)
         this.ctrl  = new THREE.OrbitControls(this.cam, this.arena)
-        this.light = new THREE.SpotLight(0xe0a060, 1)             // orange light
-//        this.light = new THREE.DirectionalLight(0xffffff, 1)    // white light
+        this.light = new THREE.SpotLight(0xe0a060, 1)             // sunset
+//        this.light = new THREE.DirectionalLight(0xe0a060, 1)        // sunset
         this.fused = new THREE.AmbientLight(0x404040)
         this.scene = new THREE.Scene()
         this.stats = new Stats()
@@ -347,25 +307,15 @@ export default class {
         this.phyx = this.jolt.GetPhysicsSystem()         // physics system instance
         this.intf = this.phyx.GetBodyInterface()         // binding interface
     }
-    _getBody(shape, ds, type, layer) {
-        const get_q4 = (
-            x=Math.random(), y=Math.random(), z=Math.random(),
-            w=2*Math.PI*Math.random())=>{
-            let v3 = new Jolt.Vec3(0.001+x, y, z).Normalized()
-            let q4 = (x==0 && y==0 && z==0)
-                ? new Jolt.Quat(0, 0, 0, 1)
-                : Jolt.Quat.prototype.sRotation(v3, w)
-            Jolt.destroy(v3)
-            return q4
-        }
-        const pos  = new Jolt.RVec3(ds[2], ds[3], ds[4])     // ds.slice(2,5) doesn't work?
-        const rot  = get_q4(ds[5], ds[6], ds[7], ds[8])
-        
+    _getBody(shape, pos, rot, type, layer, mass=0) {
         let config = new Jolt.BodyCreationSettings(
             shape, pos, rot, type, layer
         )
-        config.mRestitution = 0.5                            // bounciness
-        
+        config.mRestitution = 0.5                        // bounciness
+        if (mass) {
+		    config.mOverrideMassProperties       = Jolt.EOverrideMassProperties_CalculateInertia
+		    config.mMassPropertiesOverride.mMass = mass
+        }
         let body = this.intf.CreateBody(config)
         Jolt.destroy(config)
 
@@ -381,13 +331,6 @@ export default class {
         this.ospace[id] = obj                            // keep obj in KV store for reference
         return this.ospace.length                        // CC: need a lock?
     }
-    _shakeScene() {
-        console.log('shake')
-        for (let id in this.ospace) {
-            let bid = this.ospace[id].userData.body.GetID()
-            this.intf.ActivateBody(bid)
-        }
-    }
     _removeFromScene(id) {
         const obj = this.ospace[id]                      // get object
         if (!obj) return 0
@@ -395,7 +338,7 @@ export default class {
         let body  = obj.userData.body
         let bid   = body.GetID()                         // fetch JOLT BodyID
         if (body.IsStatic()) {                           // reactivate bodies if needed
-            this._shakeScene()
+            for (let id in this.ospace) this.tick(id)
         }
         this.intf.RemoveBody(bid)
         this.intf.DestroyBody(bid)
