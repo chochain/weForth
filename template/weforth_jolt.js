@@ -158,10 +158,46 @@ function get_shape_compound(t, v=null) {
     Jolt.destroy(config)
     return shape
 }
+function get_q4(
+    x = Math.random(),
+    y = Math.random(),
+    z = Math.random(),
+    w = 2*Math.PI * Math.random()
+) {
+    let v3 = new Jolt.Vec3(0.001+x, y, z).Normalized()
+    let q4 = (x==0 && y==0 && z==0)
+        ? new Jolt.Quat(0, 0, 0, 1)
+        : Jolt.Quat.prototype.sRotation(v3, w)
+    Jolt.destroy(v3)
+    return q4
+}
 
 let   req_q   = []
 const CMD_LST = [ 'mesh', 'body', 'drop' ]
-
+let   xkey    = {
+	F: false, // forward
+	B: false, // backward
+	L: false, // left
+	R: false, // right
+	X: false, // break
+    callback: null
+}
+function xkey_down(event) {
+    switch(event.key) {             // keyCode
+	case 'w': xkey.F = true; break
+	case 's': xkey.B = true; break
+	case 'a': xkey.L = true; break
+	case 'd': xkey.R = true; break
+    }
+}
+function xkey_up(event) {
+    switch(event.key) {             // keyCode
+	case 'w': xkey.F = false; break
+	case 's': xkey.B = false; break
+	case 'a': xkey.L = false; break
+	case 'd': xkey.R = false; break
+    }
+}
 function jolt_req(req) {                    ///> jolt job queue
     if (!req ||
         CMD_LST.indexOf(req[1])<0) return 0 /// * not Jolt command
@@ -170,16 +206,8 @@ function jolt_req(req) {                    ///> jolt job queue
     return 1
 }
 function jolt_update(jolt) {
-    const get_q4 = (
-        x=Math.random(), y=Math.random(), z=Math.random(),
-        w=2*Math.PI*Math.random())=>{
-            let v3 = new Jolt.Vec3(0.001+x, y, z).Normalized()
-            let q4 = (x==0 && y==0 && z==0)
-                ? new Jolt.Quat(0, 0, 0, 1)
-                : Jolt.Quat.prototype.sRotation(v3, w)
-            Jolt.destroy(v3)
-            return q4
-        }
+    if (xkey.callback) xkey.callback(jolt)
+    
     const v = req_q.shift()                 ///> pop from job queue
     if (!v) return                          /// * queue empty, bail
 
@@ -191,6 +219,7 @@ function jolt_update(jolt) {
     const color= v[2]|0                     ///> color (shared param with object_id)
     const x    = v[3]                       ///> geometry parameters
     const ds   = v[4]                       ///> shape dynaset
+    
     const id   = ds[0]|0
     const pos  = new Jolt.RVec3(ds[2], ds[3], ds[4])     // ds.slice(2,5) doesn't work?
     const rot  = get_q4(ds[5], ds[6], ds[7], ds[8])
@@ -204,7 +233,7 @@ function jolt_update(jolt) {
         const nobj  = jolt.addShape(id, shape, pos, rot, color)
         const lv    = new Jolt.Vec3(ds[9], ds[10], ds[11])
         const av    = new Jolt.Vec3(ds[12], ds[13], ds[14])
-        this.setVelocity(id, lv, av)
+        jolt.setVelocity(id, lv, av)
         return nobj
     case 'drop': return jolt.remove(n)
     default: console.log('unknown cmd='+cmd); break
