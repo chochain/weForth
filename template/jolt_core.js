@@ -144,7 +144,8 @@ export default class {
         
         if (WebGL.isWebGLAvailable()) {
             let w = v.offsetWidth, h = v.offsetHeight
-            this.update = callback
+            this.update =                       /// * array of callback functions
+                Array.isArray(callback) ? callback : [ callback ]
 
             this._initGraphics(w, h, px_ratio)  /// => rndr, cam, ctrl,light, scene, stats
             this._initPhysics()                 /// => jolt, phyx, intf
@@ -173,7 +174,8 @@ export default class {
         this.rndr.setSize(w, h)
     }
     render() {
-        if (this.update != null) this.update(this)             // callback to front-end
+        this.update.forEach(fn=>fn(this))               /// * callback functions
+        
         /// update physics system
         for (let id in this.ospace) {
             let obj  = this.ospace[id]
@@ -193,7 +195,7 @@ export default class {
         let dt = Math.min(this.clock.getDelta(), 1.0 / 30.0) // stay above 30Hz
         this.time += dt
         this.jolt.Step(dt, dt > 1.0 / 55.0 ? 2 : 1)          // 2 steps if below 55 Hz
-        this.ctrl.update(dt)
+        this.orb.update(dt)
         this.rndr.render(this.scene, this.cam)
         this.stats.update()
         /// repaint screen (with frame-rate control)
@@ -265,7 +267,7 @@ export default class {
         ///> create global objects
         this.rndr  = new THREE.WebGLRenderer()
         this.cam   = new THREE.PerspectiveCamera(60, w / h, 0.2, 2000)
-        this.ctrl  = new THREE.OrbitControls(this.cam, this.arena)
+        this.orb   = new THREE.OrbitControls(this.cam, this.arena)
         this.light = new THREE.SpotLight(0xe0a060, 1)             // sunset
 //        this.light = new THREE.DirectionalLight(0xe0a060, 1)        // sunset
         this.fused = new THREE.AmbientLight(0x404040)
@@ -282,8 +284,8 @@ export default class {
         this.rndr.setSize(w, h)
         this.cam.position.set(0, 15, 30)
         this.cam.lookAt(new THREE.Vector3(0, 0, 0))
-        this.ctrl.enableDamping = false
-        this.ctrl.enablePan     = true
+        this.orb.enableDamping = false
+        this.orb.enablePan     = true
         this.light.position.set(10, 20, 5)
         this.light.castShadow            = true
         this.light.shadow.bias           = -0.003
