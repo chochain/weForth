@@ -218,7 +218,18 @@ export default class {
         const body  = this._getBody(shape, pos, rot, type, layer, mass)
         
         return this._addToScene(id, body, color)
-    }        
+    }
+    setConstraint(id, config) {
+        const body = this.ospace[id].userData.body
+		const cnst = new Jolt.VehicleConstraint(body, config)
+		const tstr = new Jolt.VehicleCollisionTesterCastCylinder(L_MOVING, 0.05)
+		cnst.SetVehicleCollisionTester(tstr)
+        
+		this.phyx.AddConstraint(cnst)
+//        this.phyx.AddStepListener(new Jolt.VehicleConstraintStepListener(cnst))
+
+        return cnst
+    }
     setVelocity(id, lv, av) {       // linear and angular velocities
         const body = this.ospace[id].userData.body
         const bid  = body.GetID()
@@ -309,7 +320,7 @@ export default class {
         this.phyx = this.jolt.GetPhysicsSystem()         // physics system instance
         this.intf = this.phyx.GetBodyInterface()         // binding interface
     }
-    _getBody(shape, pos, rot, type, layer, mass=0) {
+    _getBody(shape, pos, rot, type, layer, mass=0) {     // create physical body
         let config = new Jolt.BodyCreationSettings(
             shape, pos, rot, type, layer
         )
