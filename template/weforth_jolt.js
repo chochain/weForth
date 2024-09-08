@@ -238,21 +238,23 @@ function jolt_update(core) {
     case 'bike':
         const bike = new Vehicle(
             core, id, '2',
-            0.4, 0.6, 0.8, 1500,
+            x[0], x[1], x[2], 1500,
             pos, rot, color,
             60*Math.PI/180
         )
         const a30 = 30*Math.PI/180
-        bike.addDifferential(-1, 1, 1.93 * 40.0 / 16)
-        bike.addWheel(                     // front
-            0.31, 0.05, -0.54, 0.75,
-            a30, a30, 1.5,
-            0.3, 0.5, 500
+        bike.setMotorcycleDiff()
+        bike.addWheel(                     // front wheel
+            0.31, 0.05, -0.54, 0.75,       // r, w, h, z_pos
+            a30, a30,                      // steering, caster
+            1.5, 0.3, 0.5,                 // suspension freq, min, max
+            500                            // break strength
         )
-        bike.addWheel(                     // back
+        bike.addWheel(                     // back wheel
             0.31, 0.05, -0.54, -0.75,
-            a30, a30, 2.0,
-            0.3, 0.5, 250
+            a30, a30,
+            2.0, 0.3, 0.5,
+            250
         )
         return bike
     case 'drop': return core.remove(n)
