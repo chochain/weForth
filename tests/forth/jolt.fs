@@ -50,6 +50,7 @@ mesh
 : skew
   99 for i 1+ remove 100 delay next ;
 : bike
+  0.4 0.6 0.8 px 3!
   0 10 0 ds .P! 0 0 0 1 ds .R!
   $00ff00 3 px DSZ ds
   s" bike %x %p %p" JS ;
