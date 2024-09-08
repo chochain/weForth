@@ -141,6 +141,8 @@ Note:
 ### TODO
 * Physics Engine
   + vehicle sim
+  + CSG i.e. compound shape, [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
+  + review Jolt::RefTarget class (for ref counter, can apply to tensorForth)
 * inter-VM communication
 * add network system (SD_net)
 * review WebSerial
@@ -154,7 +156,7 @@ Note:
   + Character graphic (SDL_ttf or HTML5)
   - 3D graphic (GL)                      => Three.js WebGL
   + Audio (SDL_media)
-* use WASM stack as ss
+* use WASM stack as ss (brk, sbrk)
 * macro-assembler
 
 ### References
@@ -166,4 +168,4 @@ Note:
   + [Three.js](https://threejs.org/manual/#en/fundamentals)
 * Physics Engine
   + [Jolt Physics](https://jrouwe.github.io/JoltPhysics/)
-    + CSG Object (with optional motion trail) [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
+
