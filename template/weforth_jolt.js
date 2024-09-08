@@ -173,7 +173,7 @@ function get_q4(
 }
 
 let   req_q   = []
-const CMD_LST = [ 'mesh', 'body', 'drop' ]
+const CMD_LST = [ 'mesh', 'body', 'bike', 'drop' ]
 let   xkey    = {
 	F: false, // forward
 	B: false, // backward
@@ -205,8 +205,8 @@ function jolt_req(req) {                    ///> jolt job queue
     req_q.push(req)
     return 1
 }
-function jolt_update(jolt) {
-    if (xkey.callback) xkey.callback(jolt)
+function jolt_update(core) {
+    if (xkey.callback) xkey.callback(core)
     
     const v = req_q.shift()                 ///> pop from job queue
     if (!v) return                          /// * queue empty, bail
@@ -227,15 +227,28 @@ function jolt_update(jolt) {
     switch (cmd) {
     case 'mesh':
         const mesh = get_shape(0, x)
-        return jolt.addShape(id, mesh, pos, rot, color, 0, false)
+        return core.addShape(id, mesh, pos, rot, color, 0, false)
     case 'body':
         const shape = get_shape(ds[1]|0)
-        const nobj  = jolt.addShape(id, shape, pos, rot, color)
+        const nobj  = core.addShape(id, shape, pos, rot, color)
         const lv    = new Jolt.Vec3(ds[9], ds[10], ds[11])
         const av    = new Jolt.Vec3(ds[12], ds[13], ds[14])
-        jolt.setVelocity(id, lv, av)
+        core.setVelocity(id, lv, av)
         return nobj
-    case 'drop': return jolt.remove(n)
+    case 'bike':
+        const bike = new Vehicle(
+            core, id, '2',
+            2, 1.0, 0.4, 1500,
+            pos, rot, color,
+            60*Math.PI/180
+        )
+        bike.addWheel(
+            0.31, 0.05, 0.4, 0.75,
+            30*Math.PI/180, 30*Math.PI/180, 1.5,
+            0.3, 0.5, 500
+        )
+        return bike
+    case 'drop': return core.remove(n)
     default: console.log('unknown cmd='+cmd); break
     }
     return 0
