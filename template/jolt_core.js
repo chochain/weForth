@@ -77,7 +77,7 @@ function getMesh(shape) {
 
     return mesh
 }
-function dummyTexture() {
+function checkerTexture() {
 	const tldr = new THREE.TextureLoader()           
 	const tex = tldr.load('data:image/gif;base64,R0lGODdhAgACAIABAAAAAP///ywAAAAAAgACAAACA0QCBQA7')
 	tex.wrapS = tex.wrapT = THREE.RepeatWrapping
@@ -88,49 +88,49 @@ function dummyTexture() {
     return tex
 }
 ///
-///> THREE object factory
+///> THREE mesh factory
 ///
-function objFactory(body, color, tex=null) {
+function meshFactory(body, color, tex=null) {
     let shape = body.GetShape()
     let mati  = new THREE.MeshPhongMaterial({
         color: color, shininess:80,
         // map: tex,                          // slow to 1/3
         // transparent:true, opacity:0.75
     })        
-    let obj
+    let msh
 
     switch (shape.GetSubType()) {
     case Jolt.EShapeSubType_Box:
         let box = Jolt.castObject(shape, Jolt.BoxShape)
         let dim = V3G(box.GetHalfExtent()).multiplyScalar(2)
-        obj = new THREE.Mesh(new THREE.BoxGeometry(dim.x, dim.y, dim.z, 1, 1, 1), mati)
+        msh = new THREE.Mesh(new THREE.BoxGeometry(dim.x, dim.y, dim.z, 1, 1, 1), mati)
         break
     case Jolt.EShapeSubType_Sphere:
         let ball= Jolt.castObject(shape, Jolt.SphereShape)
-        obj = new THREE.Mesh(new THREE.SphereGeometry(ball.GetRadius(), 16, 16), mati)
+        msh = new THREE.Mesh(new THREE.SphereGeometry(ball.GetRadius(), 16, 16), mati)
         break
     case Jolt.EShapeSubType_Capsule:
         let cap = Jolt.castObject(shape, Jolt.CapsuleShape)
-        obj = new THREE.Mesh(new THREE.CapsuleGeometry(cap.GetRadius(), 2 * cap.GetHalfHeightOfCylinder(), 3, 16), mati)
+        msh = new THREE.Mesh(new THREE.CapsuleGeometry(cap.GetRadius(), 2 * cap.GetHalfHeightOfCylinder(), 3, 16), mati)
         break
     case Jolt.EShapeSubType_Cylinder:
         let cyl = Jolt.castObject(shape, Jolt.CylinderShape)
-        obj = new THREE.Mesh(new THREE.CylinderGeometry(cyl.GetRadius(), cyl.GetRadius(), 2 * cyl.GetHalfHeight(), 16, 1), mati)
+        msh = new THREE.Mesh(new THREE.CylinderGeometry(cyl.GetRadius(), cyl.GetRadius(), 2 * cyl.GetHalfHeight(), 16, 1), mati)
         break
     default:
-        obj = (body.GetBodyType() == Jolt.EBodyType_SoftBody)
+        msh = (body.GetBodyType() == Jolt.EBodyType_SoftBody)
             ? getSoftBodyMesh(body, mati)
             : new THREE.Mesh(getMesh(shape), mati)
         break
     }
-    obj.position.copy(V3G(body.GetPosition()))
-    obj.quaternion.copy(Q4G(body.GetRotation()))
-    obj.receiveShadow        = true
-    obj.castShadow           = true
-    obj.material.flatShading = true
-    obj.userData.body        = body;                     // keep GUI->PhyX cross-ref
+    msh.position.copy(V3G(body.GetPosition()))
+    msh.quaternion.copy(Q4G(body.GetRotation()))
+    msh.receiveShadow        = true
+    msh.castShadow           = true
+    msh.material.flatShading = true
+    msh.userData.body        = body;                     // keep GUI->PhyX cross-ref
 
-    return obj
+    return msh
 }
 ///
 ///> arena  - Web canvas container
@@ -161,7 +161,7 @@ export default class {
         ///> setup timer
         this.clock  = new THREE.Clock()
         this.time   = 0
-        ///> create object space
+        ///> create mesh object space
         this.ospace = {}
         this.length = 0
         
@@ -178,17 +178,17 @@ export default class {
         
         /// update physics system
         for (let id in this.ospace) {
-            let obj  = this.ospace[id]
+            let msh  = this.ospace[id]
             let body = obj.userData.body
 
-            obj.position.copy(V3G(body.GetPosition()))
-            obj.quaternion.copy(Q4G(body.GetRotation()))
+            msh.position.copy(V3G(body.GetPosition()))
+            msh.quaternion.copy(Q4G(body.GetRotation()))
 
             if (body.GetBodyType() == Jolt.EBodyType_SoftBody) {
-                if (obj.userData.updateVertex) {
-                    obj.userData.updateVertex()
+                if (msh.userData.updateVertex) {
+                    msh.userData.updateVertex()
                 }
-                else obj.geometry = getMesh(body.GetShape())
+                else msh.geometry = getMesh(body.GetShape())
             }
         }
         /// update GUI
@@ -222,7 +222,7 @@ export default class {
     setConstraint(id, config) {
         const body = this.ospace[id].userData.body
 		const cnst = new Jolt.VehicleConstraint(body, config)
-		const tstr = new Jolt.VehicleCollisionTesterCastCylinder(L_MOVING, 0.05)
+		const tstr = new Jolt.VehicleCollisionTesterCastCylinder(L_MOVING, 1)
 		cnst.SetVehicleCollisionTester(tstr)
         
 		this.phyx.AddConstraint(cnst)
@@ -288,7 +288,7 @@ export default class {
         this.mouse = new THREE.Vector2()
         this.arrow = new THREE.ArrowHelper(
             new THREE.Vector3(0,1,0).normalize(), new THREE.Vector3(0,-5,0), 2, 0xff0000)
-        this.tex   = dummyTexture()
+        this.tex   = checkerTexture()
 
         this.rndr.setClearColor(0xbfd1e5)
         this.rndr.setPixelRatio(px_ratio)
@@ -336,19 +336,19 @@ export default class {
     }
     _addToScene(id, body, color) {
         let bid = body.GetID()                           // JOLT assigned id
-        let obj = objFactory(body, color, this.tex)
+        let msh = meshFactory(body, color, this.tex)
         
         this.intf.AddBody(bid, Jolt.EActivation_Activate)// add to physic system
-        this.scene.add(obj)                              // add to GUI
+        this.scene.add(msh)                              // add to GUI
 
-        this.ospace[id] = obj                            // keep obj in KV store for reference
+        this.ospace[id] = msh                            // keep mesh in KV store for reference
         return this.ospace.length                        // CC: need a lock?
     }
     _removeFromScene(id) {
-        const obj = this.ospace[id]                      // get object
-        if (!obj) return 0
+        const msh = this.ospace[id]                      // get GUI mesh
+        if (!msh) return 0
 
-        let body  = obj.userData.body
+        let body  = msh.userData.body
         let bid   = body.GetID()                         // fetch JOLT BodyID
         if (body.IsStatic()) {                           // reactivate bodies if needed
             for (let id in this.ospace) this.tick(id)
@@ -357,9 +357,9 @@ export default class {
         this.intf.DestroyBody(bid)
 
         body = null                                      // free ref
-        delete obj.userData.body                         // drop Jolt body
+        delete msh.userData.body                         // drop Jolt body
 
-        this.scene.remove(obj)                           // remove from GUI
+        this.scene.remove(msh)                           // remove from GUI
         delete this.ospace[id]                           // remove from our KV storea
 
         return this.ospace.length                        // CC: need a lock?
