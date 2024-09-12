@@ -238,25 +238,43 @@ function jolt_update(core) {
     case 'bike':
         const bike = new Vehicle(
             core, id, '2',
-            x[0], x[1], x[2], 1500,
+            x[0], x[1], x[2],              // width, height, length
             pos, rot, color,
-            60*Math.PI/180
+            1, 2, 0                        // number of diff, wheels, anti-roll bars
         )
         const a30 = 30*Math.PI/180
         bike.setMotorcycleDiff()
-        bike.addWheel(                     // front wheel
-            0.31, 0.05, -0.54, 0.75,       // r, w, h, z_pos
-            a30, a30,                      // steering, caster
+        bike.setWheel(                     // front wheel
+            0, 0.31, 0.05, -0.54, 0.75,    // id, r, w, h, z_pos
             1.5, 0.3, 0.5,                 // suspension freq, min, max
+            a30, a30,                      // steering, caster
             500                            // break strength
         )
-        bike.addWheel(                     // back wheel
-            0.31, 0.05, -0.54, -0.75,
-            a30, a30,
+        bike.setWheel(                     // back wheel
+            1, 0.31, 0.05, -0.54, -0.75,
             2.0, 0.3, 0.5,
+            a30, a30,
             250
         )
         return bike
+    case 'car':
+        const car = new Vehicle(
+            core, id, '4',
+            x[0], x[1], x[2],              // width, height, length
+            pos, rot, color,
+            1, 4, 1                        // number of diff, wheels, anti-roll bars
+        )
+        car.setWheeledDiff(1.0)
+        return car
+    case '4x4':
+        const veh = new Vehicle(
+            core, id, '4',
+            x[0], x[1], x[2],              // width, height, length
+            pos, rot, color,
+            2, 4, 1                        // number of diff, wheels, anti-roll bars
+        )
+        veh.setWheeledDiff(0.5)
+        return veh
     case 'drop': return core.remove(n)
     default: console.log('unknown cmd='+cmd); break
     }
