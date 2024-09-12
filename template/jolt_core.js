@@ -179,7 +179,7 @@ export default class {
         /// update physics system
         for (let id in this.ospace) {
             let msh  = this.ospace[id]
-            let body = obj.userData.body
+            let body = msh.userData.body
 
             msh.position.copy(V3G(body.GetPosition()))
             msh.quaternion.copy(Q4G(body.GetRotation()))
