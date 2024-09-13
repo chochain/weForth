@@ -173,7 +173,11 @@ function get_q4(
 }
 
 let   req_q   = []
-const CMD_LST = [ 'mesh', 'body', 'bike', 'drop' ]
+const CMD_LST = [
+    'mesh', 'body', 'drop',
+    'bike', 'car', '4x4',
+    'wheel', 'engine', 'gearbox', 'start'
+]
 let   xkey    = {
 	F: false, // forward
 	B: false, // backward
@@ -199,8 +203,8 @@ function xkey_up(event) {
     }
 }
 
-let veh_last                                 ///< lastly defined vehicle
-let veh_cb = []                              ///< list of vehicle to update
+let this_veh = null                          ///< lastly defined vehicle
+let veh_cb  = []                             ///< list of vehicle to update
 
 function veh_update_req(veh) {
     veh_cb.push(veh)                         /// * add to callback list
@@ -234,11 +238,13 @@ function jolt_update(core) {
     const color= v[2]|0                     ///> color (shared param with object_id)
     const x    = v[3]                       ///> geometry parameters
     const ds   = v[4]                       ///> shape dynaset
-    
-    const id   = ds[0]|0
-    const pos  = new Jolt.RVec3(ds[2], ds[3], ds[4])     // ds.slice(2,5) doesn't work?
-    const rot  = get_q4(ds[5], ds[6], ds[7], ds[8])
 
+    let id, pos, rot
+    if (ds) {
+        id   = ds[0]|0
+        pos  = new Jolt.RVec3(ds[2], ds[3], ds[4])  // ds.slice(2,5) doesn't work?
+        rot  = get_q4(ds[5], ds[6], ds[7], ds[8])
+    }
     switch (cmd) {
     case 'mesh':
         const mesh = get_shape(0, x)
@@ -251,28 +257,31 @@ function jolt_update(core) {
         core.setVelocity(id, lv, av)
         return nobj
     case 'bike':
-        const A30 = 30*Math.PI/180
-        veh_last = new Vehicle(
+        this_veh = new Vehicle(
             core, id, '2',
             x[0], x[1], x[2],              // width, height, length
             pos, rot, color,
             1, 2, 0                        // number of diff, wheels, anti-roll bars
         )
-        veh_last.setEngine(150, 10000, 1000)
-        veh_last.setTransmission(2, 8000, 2000)
-        veh_last.useMotorcycleDiff()
-        veh_last.setWheel(                 // front wheel
-            0, 0.31, 0.05, -0.25, 0.4,     // id, r, w, h, z_pos
-            1.5, 0.3, 0.5,                 // suspension freq, min, max
-            A30, A30, 500                  // steering, caster, break strength
+        this_veh.useMotorcycleDiff()
+        return this_veh
+    case 'wheel':
+        this_veh.setWheel(                 // front wheel
+            id, pos,                       // id, pos[x,y,z]
+            x[0], x[1], x[2],              // dim[r1, r2, w]
+            ds[9],  ds[10], ds[11],        // suspension freq, min, max
+            ds[12], ds[13], ds[14]         // steering, caster, break strength
         )
-        veh_last.setWheel(                 // back wheel
-            1, 0.31, 0.05, -0.25, -1.1,
-            2.0, 0.3, 0.5,
-            A30, A30, 250
-        )
-        veh_update_req(veh_last)
-        return veh_last
+        return this_veh
+    case 'engine':
+        this_veh.setEngine(150, 10000, 1000)
+        return this_veh
+    case 'gearbox':
+        this_veh.setTransmission(2, 8000, 2000)
+        return this_veh
+    case 'start':
+        veh_update_req(this_veh)
+        return this_veh
     case 'car':
         const car = new Vehicle(
             core, id, '4',
