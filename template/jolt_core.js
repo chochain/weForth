@@ -238,10 +238,10 @@ export default class {
         
         this.intf.ActivateBody(bid)
     }
-    tick(id, off=false) {                      // reactivate a body
+    tick(id, on=true) {                      // reactivate a body
         let bid = this.ospace[id].userData.body.GetID()
-        if (off) this.intf.DeactivateBody(bid)
-        else     this.intf.ActivateBody(bid)
+        if (on) this.intf.ActivateBody(bid)
+        else    this.intf.DeactivateBody(bid)
     }
     remove(id) {
         return this._removeFromScene(id)
