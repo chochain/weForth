@@ -52,11 +52,10 @@ export default class {
         /// initialize differentials, wheels, and anti-roll bars
         ///
         const init_part = (a, n, p)=>{
-            a.clear()
-            for (let i=0; i<n; i++) a.push_back(new p())
+            a.clear(); for (let i=0; i<n; i++) a.push_back(new p())
         }
-        init_part(ctl.mDifferentials, ndiff,  Jolt.VehicleDifferentialSettings)
         init_part(cfg.mWheels,        nwheel, Jolt.WheelSettingsWV)
+        init_part(ctl.mDifferentials, ndiff,  Jolt.VehicleDifferentialSettings)
         init_part(cfg.mAntiRollBars,  narbar, Jolt.VehicleAntiRollBar)
         
         this.ctrl   = cfg.mController = ctl
@@ -65,11 +64,12 @@ export default class {
         this.handle = Jolt.castObject(this.cnst.GetController(), ctype)
         
         this.wheels = Array(nwheel)                  /// ref to GUI wheels
+        this.xkey   = { F: 1, R: 0 }
     }
     update() {                                       /// update GUI from physics
         for (let i = 0; i < this.wheels.length; i++) {
             let wh = this.wheels[i]
-            let tx = this.cnst.GetWheelLocalTransform(i, this.right, this.up)
+            let tx = this.cnst.GetWheelWorldTransform(i, this.right, this.up)
             wh.position.copy(V3G(tx.GetTranslation()))
             wh.quaternion.copy(Q4G(tx.GetRotation().GetQuaternion()))
         }
@@ -79,7 +79,8 @@ export default class {
         jolt.orb.target = pos
         jolt.cam.position.add(pos.clone().sub(oldPos))
     }
-    xkey_update(k) {
+    xkey_update(k, dv) {               // dv = steerSpeed * deltaTime
+        let f0 = this.key.F, r0 = this.key.R
         let f1 = 0.0, r1 = 0.0, x1 = 0.0, handBrake = 0.0
         
         f1 = k.F ? 1.0 : (k.B ? -1.0 : 0.0)
@@ -91,20 +92,19 @@ export default class {
             if ((f1 > 0.0 && v1 < -0.1) || (f1 < 0.0 && v1 > 0.1)) {
                 f1 = 0.0; x1 = 1.0    // Brake while we've not stopped yet
             }
-            else f0 = f1                // When we've come to a stop, accept the new direction
+            else this.key.F = f1      // When we've come to a stop, accept the new direction
         }
         
         r1 = k.R ? 1.0 : (k.L ? -1.0 : 0.0)
-        if (r1 > r0)      r1 = Math.min(r0 + steerSpeed * deltaTime, r1)
-        else if (r1 < r0) r1 = Math.max(r0 - steerSpeed * deltaTime, r1)
-        r0 = r1
+        this.key.R = r1 = r1 > r0
+            ? Math.min(r0 + dv, r1)
+            : (r1 < r0 ? Math.max(r0 - dv, r1) : r1)
         
         if (k.X) { f1 = 0.0; r1 = 0.0; x1 = 1.0; }
         
-        /// CC: move the following to jolt_core
         this.handle.SetDriverInput(f1, r1, x1, handBrake);
         if (r1 != 0.0 || f1 != 0.0 || x1 != 0.0 || handBrake != 0.0) {
-            this.core.bintf.ActivateBody(this.body.GetID())
+            this.core.tick(this.id)
         }
     }
     addTankBody(              // CC: move to jolt_vehicle or Forth
@@ -140,83 +140,10 @@ export default class {
         barrel.position.set(0, h/2 + th, tl + bl/2)
         this.core.scene.add(barrel)
     }
-    setWheel(                           ///> set wheel physical properties
-        id, r, w, y, z,                 // wheel id, radius, width, y, z positions
-        sus_freq,                       // suspension frequency
-        sus_min       = 0.3,            // suspension min length
-        sus_max       = 0.5,            // suspension max length
-        ang_steer     = RAD(30),        // steering angle
-        ang_caster    = RAD(30),        // caster angle
-        torque_break  = 1500,           // break torque, hand break torque
-        torque_hbreak = 4000
-    ) {
-        const cfg  =
-              Jolt.castObject(
-                  this.config.mWheels.at(id), // Jolt.WheelSettingsWV()
-                  Jolt.WheelSettingsWV
-              )
-        cfg.mPosition            = new Jolt.Vec3(0.0, y, z)
-        cfg.mSuspensionDirection = new Jolt.Vec3(0, -1, Math.tan(ang_caster)).Normalized()
-        cfg.mSteeringAxis        = new Jolt.Vec3(0, 1, -Math.tan(ang_caster)).Normalized()
-        cfg.mWheelUp             = new Jolt.Vec3(0, 1, 0)
-        cfg.mWheelForward        = new Jolt.Vec3(0, 0, 1)
-        cfg.mSuspensionMinLength = sus_min
-        cfg.mSuspensionMaxLength = sus_max
-        cfg.mSuspensionSpring.mFrequency = sus_freq
-        cfg.mRadius              = r
-        cfg.mWidth               = w
-        /// Wheeled Vehicle specific
-        cfg.mMaxSteerAngle       = ang_steer
-        cfg.mMaxBrakeTorque      = torque_break
-        cfg.mMaxHandBrakeTorque  = torque_hbreak
-
-        /// create GUI wheel
-        let wheel =
-             new THREE.Mesh(new THREE.CylinderGeometry(r, r, w, 20, 1), this.mati)
-        this.wheels[id] = wheel              // keep ref
-        this.core.scene.add(wheel)           // shown in GUI
-    }
-    setAntiRoll(id, left, right, stiff=1000) {
-        let rb = this.config.mAntiRollBars.at(id)
-        rb.mLeftWheel  = left
-        rb.mRightWheel = right
-        rb.mStiffness  = stiff
-    }
-    setDifferential(
-        id, left, right,                    // diff, left, right wheel index
-        torque_ratio,                       // torque apply to this differential 1.0
-        lr_limited_slip_ratio,              // max/min between wheel speed 1.4
-        diff_ratio = 3.42,                  // rotation speed between gearbox and wheel 3.42
-        lr_split   = 0.5                    // engine torque between l/r wheel 0.5
-    ) {
-        let d = this.ctrl.mDifferentials.at(id)
-        d.mLeftWheel         = left                      // -1=no wheel
-        d.mRightWheel        = right                     // 1  
-        d.mDifferentialRatio = diff_ratio                // 1.93 * 40.0 / 16.0 (gear/tire)
-        d.mLeftRightSplit    = lr_split                  // 0=left, 0.5=center, 1.0=right
-        d.mLimitedSlipRatio  = lr_limited_slip_ratio     // max/min between two wheels
-        d.mEngineTorqueRatio = torque_ratio              // 0.5
-    }
-    addCallback(cnst, type) {
-        const ctrl = Jolt.castObject(cnst.GetController(), type)     // type=Jolt.MotorcycleController
-        
-        // Optional step: Set the vehicle constraint callbacks
-        let cb = new Jolt.VehicleConstraintCallbacksJS()
-        cb.GetCombinedFriction = (
-            wheelIndex, tireFrictionDirection, tireFriction, body2, subShapeID2) => {
-            body2 = Jolt.wrapPointer(body2, Jolt.Body)
-                return Math.sqrt(tireFriction * body2.GetFriction()) // This is the default calculation
-            }
-        cb.OnPreStepCallback     = (vehicle, deltaTime, physicsSystem)=>{}
-        cb.OnPostCollideCallback = (vehicle, deltaTime, physicsSystem)=>{}
-        cb.OnPostStepCallback    = (vehicle, deltaTime, physicsSystem)=>{}
-        
-        cb.SetVehicleConstraint(cnst)
-    }
     setEngine(
-        torque,                                 // max engine torque
-        rpm_max, rpm_min,                       // Engine max torque, max RPM, min RPM
-        iner = 0.5, damp = 0.2                  // momoent of inertial and angular damping
+        torque,                           ///< max engine torque
+        rpm_max, rpm_min,                 ///< Engine max torque, max RPM, min RPM
+        iner = 0.5, damp = 0.2            ///< inertial and angular damping
     ) {
         let eng = this.ctrl.mEngine
         eng.mMaxTorque      = torque      // 150
@@ -242,10 +169,83 @@ export default class {
         tran.mShiftDownRPM   = rpm_down   //2000
         tran.mClutchStrength = clutch     //2
     }
-    setMotorcycleDiff() {
-        this.setDifferential(0, -1, 1, 1.0, 1.4, 1.93 * 40.0 / 16.0)
+    setWheel(                           ///> set wheel physical properties
+        id, r, w, y, z,                 // wheel id, radius, width, y, z positions
+        sus_freq,                       // suspension frequency
+        sus_min       = 0.3,            // suspension min length
+        sus_max       = 0.5,            // suspension max length
+        ang_steer     = RAD(30),        // steering angle
+        ang_caster    = RAD(30),        // caster angle
+        torque_break  = 1500,           // break torque, hand break torque
+        torque_hbreak = 4000
+    ) {
+        let cfg = this.cnst.GetWheel(id).GetSettings()
+        cfg.mPosition            = new Jolt.Vec3(0.0, y, z)
+        cfg.mSuspensionDirection = new Jolt.Vec3(0, -1, Math.tan(ang_caster)).Normalized()
+        cfg.mSteeringAxis        = new Jolt.Vec3(0, 1, -Math.tan(ang_caster)).Normalized()
+        cfg.mWheelUp             = new Jolt.Vec3(0, 1, 0)
+        cfg.mWheelForward        = new Jolt.Vec3(0, 0, 1)
+        cfg.mSuspensionMinLength = sus_min
+        cfg.mSuspensionMaxLength = sus_max
+        cfg.mSuspensionSpring.mFrequency = sus_freq
+        cfg.mRadius              = r
+        cfg.mWidth               = w
+        /// Wheeled Vehicle specific
+        cfg.mMaxSteerAngle       = ang_steer
+        cfg.mMaxBrakeTorque      = torque_break
+        cfg.mMaxHandBrakeTorque  = torque_hbreak
+
+        /// create GUI wheel
+        let wheel =
+             new THREE.Mesh(new THREE.CylinderGeometry(r, r, w, 20, 1), this.mati)
+        this.wheels[id] = wheel              // keep ref
+        this.core.scene.add(wheel)           // shown in GUI
     }
-    setWheeledCarDiff(
+    setDifferential(
+        id, left, right,                    // diff, left, right wheel index
+        torque_ratio,                       // torque apply to this differential 1.0
+        lr_limited_slip_ratio,              // max/min between wheel speed 1.4
+        diff_ratio = 3.42,                  // rotation speed between gearbox and wheel 3.42
+        lr_split   = 0.5                    // engine torque between l/r wheel 0.5
+    ) {
+        let d = this.ctrl.mDifferentials.at(id)
+        d.mLeftWheel         = left                   // -1=no wheel
+        d.mRightWheel        = right                  // 1  
+        d.mDifferentialRatio = diff_ratio             // 1.93 * 40.0 / 16.0 (gear/tire)
+        d.mLeftRightSplit    = lr_split               // 0=left, 0.5=center, 1.0=right
+        d.mLimitedSlipRatio  = lr_limited_slip_ratio  // max/min between two wheels
+        d.mEngineTorqueRatio = torque_ratio           // 0.5
+    }
+    setAntiRoll(id, left, right, stiff=1000) {
+        let rb = this.config.mAntiRollBars.at(id)
+        rb.mLeftWheel  = left
+        rb.mRightWheel = right
+        rb.mStiffness  = stiff
+    }
+    addCallback(cnst, type) {
+        const ctrl = Jolt.castObject(cnst.GetController(), type)     // type=Jolt.MotorcycleController
+        
+        // Optional step: Set the vehicle constraint callbacks
+        let cb = new Jolt.VehicleConstraintCallbacksJS()
+        cb.GetCombinedFriction = (
+            wheelIndex, tireFrictionDirection, tireFriction, body2, subShapeID2) => {
+            body2 = Jolt.wrapPointer(body2, Jolt.Body)
+                return Math.sqrt(tireFriction * body2.GetFriction()) // This is the default calculation
+            }
+        cb.OnPreStepCallback     = (vehicle, deltaTime, physicsSystem)=>{}
+        cb.OnPostCollideCallback = (vehicle, deltaTime, physicsSystem)=>{}
+        cb.OnPostStepCallback    = (vehicle, deltaTime, physicsSystem)=>{}
+        
+        cb.SetVehicleConstraint(cnst)
+    }
+    useMotorcycleDiff() {
+        this.setDifferential(
+            0, -1, 1,
+            1.0, 1.4,
+            1.93 * 40.0 / 16.0
+        )
+    }
+    useWheeledCarDiff(
         fb_torque_ratio,
         fb_limited_slip_ratio = 1.4,           // max/min between wheels speed
         lr_limited_slip_ratio = 1.4
