@@ -4,6 +4,7 @@
 : 4! >r r@ 12 + ! r> 3! ;              \ ( x y z w a -- )
 \ shape types and default colors
 6.2832 constant 2PI                    \ 2*PI (for degree => radian calc)
+: rad ( d -- r ) 2PI * 360 / ;         
 6      constant SMAX                   \ shape 1:box, 2:ball, 3:cynlinder,
                                        \       4:capsule, 5:tapered capsule, 6:dumbbell
 create fg
@@ -50,8 +51,25 @@ mesh
 : skew
   99 for i 1+ remove 100 delay next ;
 : bike
-  0.4 0.6 0.8 px 3!
-  0 10 0 ds .P! 0 0 0 1 ds .R!
-  $00ff00 3 px DSZ ds
+  0.4 0.5 0.8 px 3!                    \ bike body px[width, height, length]
+  0 10 0 ds .P! 0 0 0 1 ds .R!         \ pos[3], rot[4]
+  $00ff00 3 px DSZ ds                  \ create bike body
   s" bike %x %p %p" JS ;
+: wheel ( -- )
+  0 3 px DSZ ds                        \ create front wheel
+  s" wheel %x %p %p" JS ;
+: front_wheel ( -- )
+  0              ds !                  \ front wheel
+  0 -0.25 0.45   ds .P!                \ pos[x,y,z]
+  1.5 0.3 0.5    ds .V!                \ suspension[freq, min, max]
+  30 rad dup 500 ds .W!                \ steering, caster, break strength
+  0.31 0.31 0.05 px 3!                 \ wheel dim[r1, r2, width]
+  wheel ;
+: back_wheel ( -- )
+  1              ds !                  \ back wheel
+  0 -0.25 -1.1   ds .P!                \ pos[x,y,z]
+  2.0 0.3 0.5    ds .V!                \ suspension[freq, min, max]
+  30 rad dup 250 ds .W!                \ steering, caster, break strength
+  wheel ;                              \ same dim as front wheel
+: start  s" start" JS ; 
 .( JOLT loaded )
