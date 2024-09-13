@@ -27,6 +27,7 @@ export default class {
             new Jolt.BoxShapeSettings(new Jolt.Vec3(w/2, h/2, l/2))
         ).Create().Get()
         core.addShape(id, this.shape, pos, rot, color, mass)
+        core.tick(id, false)            // deactivate body update for now
         ///
         /// Vehicle configurations
         ///
@@ -65,6 +66,19 @@ export default class {
         
         this.wheels = Array(nwheel)                  /// ref to GUI wheels
     }
+    update() {                                       /// update GUI from physics
+        for (let i = 0; i < this.wheels.length; i++) {
+            let wh = this.wheels[i]
+            let tx = this.cnst.GetWheelLocalTransform(i, this.right, this.up)
+            wh.position.copy(V3G(tx.GetTranslation()))
+            wh.quaternion.copy(Q4G(tx.GetRotation().GetQuaternion()))
+        }
+    }
+    follow() {
+        const pos = wrapVec3(this.body.GetPosition())
+        jolt.orb.target = pos
+        jolt.cam.position.add(pos.clone().sub(oldPos))
+    }
     xkey_update(k) {
         let f1 = 0.0, r1 = 0.0, x1 = 0.0, handBrake = 0.0
         
@@ -91,19 +105,6 @@ export default class {
         this.handle.SetDriverInput(f1, r1, x1, handBrake);
         if (r1 != 0.0 || f1 != 0.0 || x1 != 0.0 || handBrake != 0.0) {
             this.core.bintf.ActivateBody(this.body.GetID())
-        }
-    }    
-    pre_physics_update(dt) {
-        let oldPos = wrapVec3(this.body.GetPosition())
-        this.core.orb.target = motorcycle.position
-        onExampleUpdate = (time, deltaTime) => {
-            this.prePhysicsUpdate(deltaTime)
-            const pos = wrapVec3(this.body.GetPosition())
-            jolt.cam.position.add(pos.clone().sub(oldPos))
-            oldPos = pos
-            for (let i = 0; i < this.wheels.size(); i++) {
-                this.wheels[i].updateLocalTransform()
-            }
         }
     }
     addTankBody(              // CC: move to jolt_vehicle or Forth
@@ -154,8 +155,6 @@ export default class {
                   this.config.mWheels.at(id), // Jolt.WheelSettingsWV()
                   Jolt.WheelSettingsWV
               )
-        console.log(cfg)
-
         cfg.mPosition            = new Jolt.Vec3(0.0, y, z)
         cfg.mSuspensionDirection = new Jolt.Vec3(0, -1, Math.tan(ang_caster)).Normalized()
         cfg.mSteeringAxis        = new Jolt.Vec3(0, 1, -Math.tan(ang_caster)).Normalized()
@@ -174,21 +173,8 @@ export default class {
         /// create GUI wheel
         let wheel =
              new THREE.Mesh(new THREE.CylinderGeometry(r, r, w, 20, 1), this.mati)
-        this.wheels[id] = wheel           // keep ref
-        wheel.position.copy(new THREE.Vector3(0,1,0))
-        wheel.quaternion.copy(new THREE.Quaternion(0,0,0,1))
-        this.core.scene.add(wheel)        // shown in GUI
-
-        /// update GUI from physics
-        wheel.updateLocalTransform = ()=>{
-            let tx = this.cnst.GetWheelLocalTransform(id, this.right, this.up)
-            console.log(tx)
-            console.log(V3G(tx.GetTranslation()))
-            console.log(Q4G(tx.GetRotation().GetQuaternion()))
-            wheel.position.copy(V3G(tx.GetTranslation()))
-            wheel.quaternion.copy(Q4G(tx.GetRotation().GetQuaternion()))
-        }
-        wheel.updateLocalTransform()
+        this.wheels[id] = wheel              // keep ref
+        this.core.scene.add(wheel)           // shown in GUI
     }
     setAntiRoll(id, left, right, stiff=1000) {
         let rb = this.config.mAntiRollBars.at(id)
