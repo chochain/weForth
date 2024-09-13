@@ -198,15 +198,18 @@ function xkey_up(event) {
 	case 'd': xkey.R = false; break
     }
 }
-let veh_cb = []
+
+let veh_last                                 ///< lastly defined vehicle
+let veh_cb = []                              ///< list of vehicle to update
+
 function veh_update_req(veh) {
-    veh_cb.push(veh)               // add callback
-    veh.core.tick(veh.id)          // activate body physics
+    veh_cb.push(veh)                         /// * add to callback list
+    veh.core.tick(veh.id)                    /// * activate body physics
 }
 function veh_update() {
     veh_cb.forEach(veh=>{
         veh.update()
-        // veh.follow()
+        // v.follow()
     })
 }
 function jolt_req(req) {                    ///> jolt job queue
@@ -220,7 +223,7 @@ function jolt_update(core) {
     if (xkey.callback) xkey.callback(core)
     veh_update()
     
-    const v = req_q.shift()                 ///> pop from job queue
+    const v = req_q.shift()                 ///> pop from command request queue
     if (!v) return                          /// * queue empty, bail
 
     v.push(Date.now() - v[0])               /// * encode timediff
@@ -248,28 +251,28 @@ function jolt_update(core) {
         core.setVelocity(id, lv, av)
         return nobj
     case 'bike':
-        const bike = new Vehicle(
+        const A30 = 30*Math.PI/180
+        veh_last = new Vehicle(
             core, id, '2',
             x[0], x[1], x[2],              // width, height, length
             pos, rot, color,
             1, 2, 0                        // number of diff, wheels, anti-roll bars
         )
-        const a30 = 30*Math.PI/180
-        bike.setMotorcycleDiff()
-        bike.setWheel(                     // front wheel
-            0, 0.31, 0.05, -0.54, 0.75,    // id, r, w, h, z_pos
+        veh_last.setEngine(150, 10000, 1000)
+        veh_last.setTransmission(2, 8000, 2000)
+        veh_last.useMotorcycleDiff()
+        veh_last.setWheel(                 // front wheel
+            0, 0.31, 0.05, -0.25, 0.4,     // id, r, w, h, z_pos
             1.5, 0.3, 0.5,                 // suspension freq, min, max
-            a30, a30,                      // steering, caster
-            500                            // break strength
+            A30, A30, 500                  // steering, caster, break strength
         )
-        bike.setWheel(                     // back wheel
-            1, 0.31, 0.05, -0.54, -0.75,
+        veh_last.setWheel(                 // back wheel
+            1, 0.31, 0.05, -0.25, -1.1,
             2.0, 0.3, 0.5,
-            a30, a30,
-            250
+            A30, A30, 250
         )
-        veh_update_req(bike)
-        return bike
+        veh_update_req(veh_last)
+        return veh_last
     case 'car':
         const car = new Vehicle(
             core, id, '4',
