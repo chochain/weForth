@@ -226,8 +226,8 @@ export default class {
 		cnst.SetVehicleCollisionTester(tstr)
         
 		this.phyx.AddConstraint(cnst)
-//        this.phyx.AddStepListener(new Jolt.VehicleConstraintStepListener(cnst))
-
+        this.phyx.AddStepListener(new Jolt.VehicleConstraintStepListener(cnst))
+        
         return cnst
     }
     setVelocity(id, lv, av) {       // linear and angular velocities
@@ -238,9 +238,10 @@ export default class {
         
         this.intf.ActivateBody(bid)
     }
-    tick(id) {                      // reactivate a body
+    tick(id, off=false) {                      // reactivate a body
         let bid = this.ospace[id].userData.body.GetID()
-        this.intf.ActivateBody(bid)
+        if (off) this.intf.DeactivateBody(bid)
+        else     this.intf.ActivateBody(bid)
     }
     remove(id) {
         return this._removeFromScene(id)
