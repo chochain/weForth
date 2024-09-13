@@ -198,6 +198,17 @@ function xkey_up(event) {
 	case 'd': xkey.R = false; break
     }
 }
+let veh_cb = []
+function veh_update_req(veh) {
+    veh_cb.push(veh)               // add callback
+    veh.core.tick(veh.id)          // activate body physics
+}
+function veh_update() {
+    veh_cb.forEach(veh=>{
+        veh.update()
+        // veh.follow()
+    })
+}
 function jolt_req(req) {                    ///> jolt job queue
     if (!req ||
         CMD_LST.indexOf(req[1])<0) return 0 /// * not Jolt command
@@ -207,6 +218,7 @@ function jolt_req(req) {                    ///> jolt job queue
 }
 function jolt_update(core) {
     if (xkey.callback) xkey.callback(core)
+    veh_update()
     
     const v = req_q.shift()                 ///> pop from job queue
     if (!v) return                          /// * queue empty, bail
@@ -256,6 +268,7 @@ function jolt_update(core) {
             a30, a30,
             250
         )
+        veh_update_req(bike)
         return bike
     case 'car':
         const car = new Vehicle(
