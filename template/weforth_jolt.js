@@ -259,25 +259,25 @@ function jolt_update(core) {
     case 'bike':
         this_veh = new Vehicle(
             core, id, '2',
-            x[0], x[1], x[2],              // width, height, length
-            pos, rot, color,
-            1, 2, 0                        // number of diff, wheels, anti-roll bars
+            x[0], x[1], x[2],          ///< dim[width, height, length]
+            pos, rot, color,           ///< position, rotation, color
+            1, 2, 0                    ///< number of diff, wheels, anti-roll bars
         )
         this_veh.useMotorcycleDiff()
         return this_veh
     case 'wheel':
-        this_veh.setWheel(                 // front wheel
-            id, pos,                       // id, pos[x,y,z]
-            x[0], x[1], x[2],              // dim[r1, r2, w]
-            ds[9],  ds[10], ds[11],        // suspension freq, min, max
-            ds[12], ds[13], ds[14]         // steering, caster, break strength
+        this_veh.setWheel(             ///> create wheel
+            id, pos,                   ///< id, pos[x,y,z]
+            x[0], x[1], x[2],          ///< dim[r1, r2, w]
+            ds[9],  ds[10], ds[11],    ///< suspension freq, min, max
+            ds[12], ds[13], ds[14]     ///< steering, caster, break strength
         )
         return this_veh
     case 'engine':
-        this_veh.setEngine(150, 10000, 1000)
+        this_veh.setEngine(x[0], x[1], x[2])
         return this_veh
     case 'gearbox':
-        this_veh.setTransmission(2, 8000, 2000)
+        this_veh.setTransmission(x[0], x[1], x[2])
         return this_veh
     case 'start':
         veh_update_req(this_veh)
