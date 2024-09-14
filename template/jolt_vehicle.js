@@ -2,6 +2,39 @@ const V3G = v=> new THREE.Vector3(v.GetX(), v.GetY(), v.GetZ())              // 
 const Q4G = q=> new THREE.Quaternion(q.GetX(), q.GetY(), q.GetZ(), q.GetW()) // => GUI quaternion
 const RAD = d=> d*Math.PI/180.0
 
+function createVehicleTrack(core) {
+	const track = [
+		[[[38, 64, -14], [38, 64, -16], [38, -64, -16], [38, -64, -14], [64, -64, -16], [64, -64, -14], [64, 64, -16], [64, 64, -14]], [[-16, 64, -14], [-16, 64, -16], [-16, -64, -16], [-16, -64, -14], [10, -64, -16], [10, -64, -14], [10, 64, -16], [10, 64, -14]], [[10, -48, -14], [10, -48, -16], [10, -64, -16], [10, -64, -14], [38, -64, -16], [38, -64, -14], [38, -48, -16], [38, -48, -14]], [[10, 64, -14], [10, 64, -16], [10, 48, -16], [10, 48, -14], [38, 48, -16], [38, 48, -14], [38, 64, -16], [38, 64, -14]]],
+		[[[38, 48, -10], [38, 48, -14], [38, -48, -14], [38, -48, -10], [40, -48, -14], [40, -48, -10], [40, 48, -14], [40, 48, -10]], [[62, 62, -10], [62, 62, -14], [62, -64, -14], [62, -64, -10], [64, -64, -14], [64, -64, -10], [64, 62, -14], [64, 62, -10]], [[8, 48, -10], [8, 48, -14], [8, -48, -14], [8, -48, -10], [10, -48, -14], [10, -48, -10], [10, 48, -14], [10, 48, -10]], [[-16, 62, -10], [-16, 62, -14], [-16, -64, -14], [-16, -64, -10], [-14, -64, -14], [-14, -64, -10], [-14, 62, -14], [-14, 62, -10]], [[-14, -62, -10], [-14, -62, -14], [-14, -64, -14], [-14, -64, -10], [62, -64, -14], [62, -64, -10], [62, -62, -14], [62, -62, -10]], [[8, -48, -10], [8, -48, -14], [8, -50, -14], [8, -50, -10], [40, -50, -14], [40, -50, -10], [40, -48, -14], [40, -48, -10]], [[8, 50, -10], [8, 50, -14], [8, 48, -14], [8, 48, -10], [40, 48, -14], [40, 48, -10], [40, 50, -14], [40, 50, -10]], [[-16, 64, -10], [-16, 64, -14], [-16, 62, -14], [-16, 62, -10], [64, 62, -14], [64, 62, -10], [64, 64, -14], [64, 64, -10]]],
+		[[[-4, 22, -14], [-4, -14, -14], [-4, -14, -10], [4, -14, -14], [4, -14, -10], [4, 22, -14]], [[-4, -27, -14], [-4, -48, -14], [-4, -48, -11], [4, -48, -14], [4, -48, -11], [4, -27, -14]], [[-4, 50, -14], [-4, 30, -14], [-4, 30, -12], [4, 30, -14], [4, 30, -12], [4, 50, -14]], [[46, 50, -14], [46, 31, -14], [46, 50, -12], [54, 31, -14], [54, 50, -12], [54, 50, -14]], [[46, 16, -14], [46, -19, -14], [46, 16, -10], [54, -19, -14], [54, 16, -10], [54, 16, -14]], [[46, -28, -14], [46, -48, -14], [46, -28, -11], [54, -48, -14], [54, -28, -11], [54, -28, -14]]]
+	];
+
+	const mapColors = [0x666666, 0x006600, 0x000066];
+
+	let tempVec = new Jolt.Vec3(0, 1, 0);
+	const mapRot = Jolt.Quat.prototype.sRotation(tempVec, 0.5 * Math.PI);
+	let tempRVec = new Jolt.RVec3(0, 0, 0);
+	track.forEach((type, tIdx) => {
+		type.forEach(block => {
+			const hull = new Jolt.ConvexHullShapeSettings;
+			block.forEach(v => {
+				tempVec.Set(-v[1], v[2], v[0]);
+				hull.mPoints.push_back(tempVec);
+			});
+			const shape = hull.Create().Get();
+			tempRVec.Set(0, 10, 0);
+			const creationSettings = new Jolt.BodyCreationSettings(shape, tempRVec, mapRot, Jolt.EMotionType_Static, LAYER_NON_MOVING);
+			Jolt.destroy(hull);
+			const body = core.intf.CreateBody(creationSettings);
+			Jolt.destroy(creationSettings);
+			body.SetFriction(1.0);
+			addToScene(body, mapColors[tIdx]);
+		});
+	});
+	Jolt.destroy(tempVec);
+	Jolt.destroy(tempRVec);
+}
+
 export default class {
     constructor(
         core,                         ///< jolt_core instance
@@ -23,7 +56,7 @@ export default class {
         ///
         this.id      = id
         this.shape   = new Jolt.OffsetCenterOfMassShapeSettings(
-            new Jolt.Vec3(0, -h/2, 0),  // below the body for stability
+            new Jolt.Vec3(0, -h, 0),    // below the body for stability
             new Jolt.BoxShapeSettings(new Jolt.Vec3(w/2, h/2, l/2))
         ).Create().Get()
         core.addShape(id, this.shape, pos, rot, color, mass)
@@ -58,10 +91,11 @@ export default class {
         init_part(ctl.mDifferentials, ndiff,  Jolt.VehicleDifferentialSettings)
         init_part(cfg.mAntiRollBars,  narbar, Jolt.VehicleAntiRollBar)
         
-        this.ctrl   = cfg.mController = ctl
-        this.config = cfg
-        this.cnst   = core.setConstraint(id, cfg)    /// set collision testsr
+        this.ctrl   = cfg.mController = ctl          ///< short ref to controller
+        this.config = cfg                            ///< vehicle configuration
+        this.cnst   = core.setConstraint(id, cfg)    ///< set collision testsr
         this.handle = Jolt.castObject(this.cnst.GetController(), ctype)
+        console.log(this.handle.GetEngine())
         
         this.wheels = Array(nwheel)                  /// ref to GUI wheels
         this.xkey   = { F: 1, R: 0 }
@@ -84,6 +118,7 @@ export default class {
     }
     update() {                         ///> update GUI from physics
         for (let i=0; i < this.wheels.length; i++) this._syncWheel(i)
+        this.handle.SetDriverInput(0.5, 0.5, 0, 0)
     }
     follow() {
         const pos = wrapVec3(this.body.GetPosition())
@@ -156,20 +191,21 @@ export default class {
         rpm_max, rpm_min,                 ///< Engine max torque, max RPM, min RPM
         iner = 0.5, damp = 0.2            ///< inertial and angular damping
     ) {
-        let eng = this.ctrl.mEngine
+        let eng = this.handle.GetEngine()
         eng.mMaxTorque      = torque      // 150
         eng.mMinRPM         = rpm_min     // 1000
         eng.mMaxRPM         = rpm_max     // 10000
 //      eng.normalizedTorque= [ X-Axis, Y-Axis ]  // CC:Later
         eng.mInertial       = iner
         eng.mAngularDamping = damp
+        console.log(this.handle.GetEngine())
     }
     setTransmission(
         clutch   = 10,                    // Transmission clutch strength, shift up/down RPM
         rpm_up   = 4000,
         rpm_down = 2000,
     ) {
-        let tran = this.ctrl.mTransmission
+        let tran = this.handle.GetTransmission()
         // tran.mMode              = ETransmissionMode::Auto
         // tran.mGearRatios        = [ 2.66, 1.78, 1.3, 1.0, 0.74 ]
         // tran.mReverseGearRatios = [ -2.90 ]
@@ -179,6 +215,7 @@ export default class {
         tran.mShiftUpRPM     = rpm_up     //8000
         tran.mShiftDownRPM   = rpm_down   //2000
         tran.mClutchStrength = clutch     //2
+        console.log(this.handle.GetTransmission())
     }
     setDifferential(
         id, left, right,                ///< diff, left, right wheel index
@@ -187,13 +224,14 @@ export default class {
         diff_ratio = 3.42,              ///< rotation speed between gearbox and wheel 3.42
         lr_split   = 0.5                ///< engine torque between l/r wheel 0.5
     ) {
-        let d = this.ctrl.mDifferentials.at(id)
+        let d = this.handle.GetDifferentials().at(id)
         d.mLeftWheel         = left                   // -1=no wheel
         d.mRightWheel        = right                  // 1  
         d.mDifferentialRatio = diff_ratio             // 1.93 * 40.0 / 16.0 (gear/tire)
         d.mLeftRightSplit    = lr_split               // 0=left, 0.5=center, 1.0=right
         d.mLimitedSlipRatio  = lr_limited_slip_ratio  // max/min between two wheels
         d.mEngineTorqueRatio = torque_ratio           // 0.5
+        console.log(this.handle.GetDifferentials().at(id))
     }
     setWheel(                           ///> set wheel physical properties
         id, pos,                        ///< wheel id, positions, radius, width
@@ -228,6 +266,8 @@ export default class {
         this.wheels[id] = wheel         /// * keep ref
         this.core.scene.add(wheel)      /// * shown in GUI
         this._syncWheel(id)             /// * attach wheel to body
+        console.log(this.cnst.GetWheel(id))
+        console.log(this.cnst.GetWheel(id).GetSettings())
     }
     setAntiRoll(id, left, right, stiff=1000) {
         let rb = this.config.mAntiRollBars.at(id)
@@ -247,7 +287,7 @@ export default class {
         fb_limited_slip_ratio = 1.4,           // max/min between wheels speed
         lr_limited_slip_ratio = 1.4
     ) {
-        this.ctrl.mDifferentialLimitedSlipRatio = fb_limited_slip_ratio
+        this.handle.mDifferentialLimitedSlipRatio = fb_limited_slip_ratio
         this.setDifferential(                  ///< Front differential
             0, FL_WHEEL, FR_WHEEL,
             fb_torque_ratio,
