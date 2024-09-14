@@ -265,6 +265,24 @@ function jolt_update(core) {
         )
         this_veh.useMotorcycleDiff()
         return this_veh
+    case 'car':
+        this_veh = new Vehicle(
+            core, id, '4',
+            x[0], x[1], x[2],              // width, height, length
+            pos, rot, color,
+            1, 4, 1                        // number of diff, wheels, anti-roll bars
+        )
+        this_veh.setWheeledDiff(1.0)
+        return car
+    case '4x4':
+        this_veh = new Vehicle(
+            core, id, '4',
+            x[0], x[1], x[2],              // width, height, length
+            pos, rot, color,
+            2, 4, 1                        // number of diff, wheels, anti-roll bars
+        )
+        this_veh.setWheeledDiff(0.5)
+        return this_veh
     case 'wheel':
         this_veh.setWheel(             ///> create wheel
             id, pos,                   ///< id, pos[x,y,z]
@@ -282,24 +300,6 @@ function jolt_update(core) {
     case 'start':
         veh_update_req(this_veh)
         return this_veh
-    case 'car':
-        const car = new Vehicle(
-            core, id, '4',
-            x[0], x[1], x[2],              // width, height, length
-            pos, rot, color,
-            1, 4, 1                        // number of diff, wheels, anti-roll bars
-        )
-        car.setWheeledDiff(1.0)
-        return car
-    case '4x4':
-        const veh = new Vehicle(
-            core, id, '4',
-            x[0], x[1], x[2],              // width, height, length
-            pos, rot, color,
-            2, 4, 1                        // number of diff, wheels, anti-roll bars
-        )
-        veh.setWheeledDiff(0.5)
-        return veh
     case 'drop': return core.remove(n)
     default: console.log('unknown cmd='+cmd); break
     }
