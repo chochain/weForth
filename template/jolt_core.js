@@ -321,18 +321,20 @@ export default class {
         this.phyx = this.jolt.GetPhysicsSystem()         // physics system instance
         this.intf = this.phyx.GetBodyInterface()         // binding interface
     }
-    _getBody(shape, pos, rot, type, layer, mass=0) {     // create physical body
+    _getBody(shape, pos, rot, type, layer, mass) {       // create physical body
         let config = new Jolt.BodyCreationSettings(
             shape, pos, rot, type, layer
         )
         config.mRestitution = 0.5                        // bounciness
-        if (mass) {
+        if (mass > 0.0) {                                // override default
 		    config.mOverrideMassProperties       = Jolt.EOverrideMassProperties_CalculateInertia
 		    config.mMassPropertiesOverride.mMass = mass
         }
+        if (layer==L_STATIC) config.mFriction    = 1.0
+        
         let body = this.intf.CreateBody(config)
         Jolt.destroy(config)
-
+        
         return body
     }
     _addToScene(id, body, color) {
