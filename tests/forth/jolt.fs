@@ -51,17 +51,19 @@ mesh
 : remove s" drop %d" JS ;              \ ( id -- ) remove body from scene
 : skew
   99 for i 1+ remove 100 delay next ;
+1000 constant ID
 : bike
   0.4 0.5 0.8 px 3!                    \ bike body px[width, height, length]
-  0 10 0 ds .P! 0 0 0 1 ds .R!         \ pos[3], rot[4]
+  ID ds !                              \ bike id
+  0 0 0 ds .P! -0.3 0 0 1 ds .R!          \ pos[3], rot[4]
   $00ff00 3 px DSZ ds                  \ create bike body
   s" bike %x %p %p" JS
   150 10000 1000 px 3!                 \ set engine params
-  s" engine %p"  JS
+  ID 3 px s" engine %x %p" JS
   2 8000 2000 px 3!                    \ set transmission params
-  s" gearbox %p" JS ;
+  ID 3 px s" gearbox %x %p" JS ;
 : wheel ( -- )
-  0 3 px DSZ ds                        \ create front wheel
+  ID 3 px DSZ ds                       \ create front wheel
   s" wheel %x %p %p" JS ;
 : front_wheel ( -- )
   0              ds !                  \ front wheel
@@ -76,7 +78,8 @@ mesh
   2.0 0.3 0.5    ds .V!                \ suspension[freq, min, max]
   30 rad dup 250 ds .W!                \ steering, caster, break strength
   wheel ;                              \ same dim as front wheel
+: start s" start" JS ;
 : go
   bike front_wheel back_wheel
-  s" start" JS ;
+  start ;
 .( JOLT loaded )
