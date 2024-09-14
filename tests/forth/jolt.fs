@@ -52,15 +52,19 @@ mesh
   99 for i 1+ remove 100 delay next ;
 : bike
   0.4 0.5 0.8 px 3!                    \ bike body px[width, height, length]
-  0 10 0 ds .P! 0 0 0 1 ds .R!         \ pos[3], rot[4]
+  0 5 0 ds .P! 0 0 0 1 ds .R!          \ pos[3], rot[4]
   $00ff00 3 px DSZ ds                  \ create bike body
-  s" bike %x %p %p" JS ;
+  s" bike %x %p %p" JS
+  150 10000 1000 px 3!                 \ set engine params
+  s" engine %p"  JS
+  2 8000 2000 px 3!                    \ set transmission params
+  s" gearbox %p" JS ;
 : wheel ( -- )
   0 3 px DSZ ds                        \ create front wheel
   s" wheel %x %p %p" JS ;
 : front_wheel ( -- )
   0              ds !                  \ front wheel
-  0 -0.25 0.45   ds .P!                \ pos[x,y,z]
+  0 -0.25 0.4    ds .P!                \ pos[x,y,z]
   1.5 0.3 0.5    ds .V!                \ suspension[freq, min, max]
   30 rad dup 500 ds .W!                \ steering, caster, break strength
   0.31 0.31 0.05 px 3!                 \ wheel dim[r1, r2, width]
@@ -71,5 +75,7 @@ mesh
   2.0 0.3 0.5    ds .V!                \ suspension[freq, min, max]
   30 rad dup 250 ds .W!                \ steering, caster, break strength
   wheel ;                              \ same dim as front wheel
-: start  s" start" JS ; 
+: go
+  bike front_wheel back_wheel
+  s" start" JS ;
 .( JOLT loaded )
