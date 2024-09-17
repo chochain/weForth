@@ -6,14 +6,15 @@ SRC = ./src/ceforth.cpp
 EXP = _main,_forth,_vm_base,_vm_dflt,_vm_ss,_vm_ss_idx,_vm_dict_idx,_vm_dict,_vm_mem_idx,_vm_mem,_top
 
 HTML = \
-	template/weforth.html \
-	template/weforth.css \
-	template/file_io.js \
-	template/weforth_logo.js \
+	template/weforth.html      \
+	template/weforth.css 	   \
+	template/file_io.js        \
+	template/weforth_logo.js   \
 	template/weforth_helper.js \
 	template/weforth_worker.js \
-	template/weforth_sleep.js \
-	template/jolt_core.js \
+	template/weforth_sleep.js  \
+	template/jolt_core.js      \
+	template/jolt_vehicle.js   \
 	template/weforth_jolt.js
 
 all: zero one two
