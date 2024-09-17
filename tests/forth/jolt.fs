@@ -8,7 +8,7 @@
 6      constant SMAX                   \ shape 1:box, 2:ball, 3:cynlinder,
                                        \       4:capsule, 5:tapered capsule, 6:dumbbell
 create fg
-  $c0f0c0 , $f04040 , $a0a0f0 , $f0ff40 ,
+  $f0fff0 , $f04040 , $a0a0f0 , $f0ff40 ,
   $80f080 , $f0d080 , $f0a0f0 ,
 15 constant DSZ                        \ size of DYNASET (15 cells)
 : DYNASET create DSZ cells allot ;     \ ( "name" -- [ id, t, pos[3], rot[4], v[3], av[3] ] )
@@ -36,7 +36,7 @@ DYNASET  ds                            \ dynamic setting [id,pos[3],rot[4],v[3],
 \ create mesh floor (id=0, shape=0)
 : mesh
   40 1 0.8 px 3!                       \ 40x40 mesh with cell size 1, max height=0.8
-  0 -5 0  ds .P! 0 0 0 1 ds .R!        \ position xyz: (0,-5,0), rotation xyzw:0,0,0,-1
+  0 -5 0  ds .P! 0 0 0 1 ds .R!        \ pos xyz=[0,-5,0], rot xyzw=[0,0,0,1]
   color 3 px DSZ ds                    \ get color[0], gemoetry, shape config
   s" mesh %x %p %p" JS ;               \ foreward to front-end thread
 mesh
@@ -82,9 +82,9 @@ mesh
   1.6 0.3 2.0 px 3!                    \ car body px[width, height, length]
   ID ds !                              \ body id
   0 10 0 ds .P! 0 0 0 1 ds .R!         \ pos[3], rot[4]
-  $00ff00 3 px DSZ ds                  \ create bike body
-  s" car %x %p %p" JS
-  500 10000 1000 px 3!                 \ set engine params
+  $00ff00 3 px DSZ ds                  \ create car body
+  s" 4x4 %x %p %p" JS
+  1500 10000 1000 px 3!                \ set engine params
   ID 3 px s" engine %x %p" JS
   2 8000 2000 px 3!                    \ set transmission params
   ID 3 px s" gearbox %x %p" JS ;
@@ -109,5 +109,7 @@ mesh
 : go_bike
   bike front_wheel back_wheel
   start ;
-: go_car car car_wheels start ;
+: go_car
+  car car_wheels
+  start ;
 .( JOLT loaded )
