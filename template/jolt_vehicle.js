@@ -41,15 +41,14 @@ export default class {
         id, vtype,                    ///< vehicle id, and type
         w, h, l,                      ///< vehicle dimensions [width, height, length]
         pos, rot, color,              ///< dynaset and body color
-        ndiff, nwheel, narbar,        ///< number of diffs, wheels, and anti-roll bars
+        nwheel, ndiff=1, narbar=0,    ///< number of wheels, diffs, and anti-roll bars
         mass=1500,                    ///< body mass
         ang_pitch_roll=RAD(60)        ///< max pitch/roll angle
-            
     ) {
         this.core    = core
         this.right   = new Jolt.Vec3(0, 1, 0)
         this.up      = new Jolt.Vec3(1, 0, 0)
-        this.mati    = new THREE.MeshPhongMaterial({ color: 0x666666 })
+        this.mati    = new THREE.MeshPhongMaterial({ color: 0xcccccc })
         this.mati.map= core.tex         // set checker texture
         ///
         /// create physical body
@@ -95,7 +94,6 @@ export default class {
         this.config = cfg                            ///< vehicle configuration
         this.cnst   = core.setConstraint(id, cfg)    ///< set collision testsr
         this.handle = Jolt.castObject(this.cnst.GetController(), ctype)
-        console.log(this.handle.GetEngine())
         
         this.wheels = Array(nwheel)                  /// ref to GUI wheels
         this.xkey   = { F: 1, R: 0 }
@@ -118,7 +116,7 @@ export default class {
     }
     update() {                         ///> update GUI from physics
         for (let i=0; i < this.wheels.length; i++) this._syncWheel(i)
-        this.handle.SetDriverInput(0.5, 0.5, 0, 0)
+        this.handle.SetDriverInput(0.6, 0, 0, 0)
     }
     follow() {
         const pos = wrapVec3(this.body.GetPosition())
@@ -198,7 +196,6 @@ export default class {
 //      eng.normalizedTorque= [ X-Axis, Y-Axis ]  // CC:Later
         eng.mInertial       = iner
         eng.mAngularDamping = damp
-        console.log(this.handle.GetEngine())
     }
     setTransmission(
         clutch   = 10,                    // Transmission clutch strength, shift up/down RPM
@@ -221,8 +218,8 @@ export default class {
         id, left, right,                ///< diff, left, right wheel index
         torque_ratio,                   ///< torque apply to this differential 1.0
         lr_limited_slip_ratio,          ///< max/min between wheel speed 1.4
-        diff_ratio = 3.42,              ///< rotation speed between gearbox and wheel 3.42
-        lr_split   = 0.5                ///< engine torque between l/r wheel 0.5
+        lr_split   = 0.5,               ///< engine torque between l/r wheel 0.5
+        diff_ratio = 3.42               ///< rotation speed between gearbox and wheel 3.42
     ) {
         let d = this.handle.GetDifferentials().at(id)
         d.mLeftWheel         = left                   // -1=no wheel
@@ -231,6 +228,7 @@ export default class {
         d.mLeftRightSplit    = lr_split               // 0=left, 0.5=center, 1.0=right
         d.mLimitedSlipRatio  = lr_limited_slip_ratio  // max/min between two wheels
         d.mEngineTorqueRatio = torque_ratio           // 0.5
+        console.log(id)
         console.log(this.handle.GetDifferentials().at(id))
     }
     setWheel(                           ///> set wheel physical properties
@@ -239,17 +237,15 @@ export default class {
         sus_freq,                       ///< suspension frequency
         sus_min       = 0.3,            ///< suspension min length
         sus_max       = 0.5,            ///< suspension max length
-        ang_steer     = RAD(30),        ///< steering angle
-        ang_caster    = RAD(30),        ///< caster angle
+        ang_steer     = RAD(45),        ///< max steering angle
+        ang_caster    = RAD(30),        ///< caster angle (steer direction)
         torque_break  = 1500,           ///< break torque, hand break torque
         torque_hbreak = 4000
     ) {
         let cfg = this.cnst.GetWheel(id).GetSettings()
         cfg.mPosition            = pos
-        cfg.mSuspensionDirection = new Jolt.Vec3(0, -1, Math.tan(ang_caster)).Normalized()
+        cfg.mSuspensionDirection = new Jolt.Vec3(0, -1, Math.tan(ang_caster)).Normalized()   // bike point opposites to mSteeringAxis
         cfg.mSteeringAxis        = new Jolt.Vec3(0, 1, -Math.tan(ang_caster)).Normalized()
-        cfg.mWheelUp             = new Jolt.Vec3(0, 1, 0)
-        cfg.mWheelForward        = new Jolt.Vec3(0, 0, 1)
         cfg.mSuspensionMinLength = sus_min
         cfg.mSuspensionMaxLength = sus_max
         cfg.mSuspensionSpring.mFrequency = sus_freq
@@ -266,8 +262,7 @@ export default class {
         this.wheels[id] = wheel         /// * keep ref
         this.core.scene.add(wheel)      /// * shown in GUI
         this._syncWheel(id)             /// * attach wheel to body
-        console.log(this.cnst.GetWheel(id))
-        console.log(this.cnst.GetWheel(id).GetSettings())
+        console.log(cfg)
     }
     setAntiRoll(id, left, right, stiff=1000) {
         let rb = this.config.mAntiRollBars.at(id)
@@ -278,8 +273,7 @@ export default class {
     useMotorcycleDiff() {
         this.setDifferential(
             0, -1, 1,
-            1.0, 1.4,
-            1.93 * 40.0 / 16.0
+            1.0, 1.4, 1.0, 1.93 * 40.0 / 16.0,
         )
     }
     useWheeledCarDiff(
