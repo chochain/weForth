@@ -96,7 +96,7 @@ export default class {
         this.handle = Jolt.castObject(this.cnst.GetController(), ctype)
         
         this.wheels = Array(nwheel)                  /// ref to GUI wheels
-        this.xkey   = { F: 0.8, R: 0 }
+        this.xkey   = { F: 0.7, R: 0 }
     }
     setCallback() {
         const ctrl = Jolt.castObject(cnst.GetController(), type)     // type=Jolt.MotorcycleController
@@ -116,12 +116,21 @@ export default class {
     }
     update() {                         ///> update GUI from physics
         for (let i=0; i < this.wheels.length; i++) this._syncWheel(i)
-        const lv = this.cnst.GetVehicleBody().GetLinearVelocity()
-        if (lv.LengthSq() < 0.1) {
+        
+        const body = this.cnst.GetVehicleBody()
+        const rot  = Q4G(body.GetRotation().Conjugated())
+        const lv   = V3G(body.GetLinearVelocity())
+        const v1   = lv.applyQuaternion(rot).z
+        const f    = this.xkey.F
+        if (f > 0 && v1 < -0.1) {
             this.xkey.F *= -1
-            this.xkey.R  = 0.3
+            this.xkey.R  = -0.3
         }
-        else this.xkey.R = 0
+        else if (f < 0 && v1 > 0.1) {
+            this.xkey.F *= -1
+            this.xkey.R  = 0
+        }
+        
         this.handle.SetDriverInput(this.xkey.F, this.xkey.R, 0, 0)
     }
     follow() {
@@ -136,8 +145,8 @@ export default class {
         f1 = k.F ? 1.0 : (k.B ? -1.0 : 0.0)
 
         if (f0 * f1 < 0.0) {
-            const rot = wrapQuat(this.body.GetRotation().Conjugated())
-            const lv  = wrapVec3(this.body.GetLinearVelocity())
+            const rot = Q4G(this.body.GetRotation().Conjugated())
+            const lv  = V3G(this.body.GetLinearVelocity())
             const v1  = lv.applyQuaternion(rot).z
             if ((f1 > 0.0 && v1 < -0.1) || (f1 < 0.0 && v1 > 0.1)) {
                 f1 = 0.0; x1 = 1.0    // Brake while we've not stopped yet
