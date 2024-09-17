@@ -79,12 +79,12 @@ mesh
   0 dup 250      ds .W!                \ steering[ang, caster, break]
   wheel ;                              \ same dim as front wheel
 : car
-  1.6 0.3 2.0 px 3!                    \ car body px[width, height, length]
+  1.2 0.3 2.0 px 3!                    \ car body px[width, height, length]
   ID ds !                              \ body id
   0 10 0 ds .P! 0 0 0 1 ds .R!         \ pos[3], rot[4]
   $00ff00 3 px DSZ ds                  \ create car body
-  s" 4x4 %x %p %p" JS
-  1500 10000 1000 px 3!                \ set engine params
+  s" fwd %x %p %p" JS
+  800 10000 1000 px 3!                 \ set engine params
   ID 3 px s" engine %x %p" JS
   2 8000 2000 px 3!                    \ set transmission params
   ID 3 px s" gearbox %x %p" JS ;
