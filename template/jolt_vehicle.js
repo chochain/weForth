@@ -96,7 +96,7 @@ export default class {
         this.handle = Jolt.castObject(this.cnst.GetController(), ctype)
         
         this.wheels = Array(nwheel)                  /// ref to GUI wheels
-        this.xkey   = { F: 1, R: 0 }
+        this.xkey   = { F: 0.8, R: 0 }
     }
     setCallback() {
         const ctrl = Jolt.castObject(cnst.GetController(), type)     // type=Jolt.MotorcycleController
@@ -116,7 +116,13 @@ export default class {
     }
     update() {                         ///> update GUI from physics
         for (let i=0; i < this.wheels.length; i++) this._syncWheel(i)
-        this.handle.SetDriverInput(0.8, 0.3, 0, 0)
+        const lv = this.cnst.GetVehicleBody().GetLinearVelocity()
+        if (lv.LengthSq() < 0.1) {
+            this.xkey.F *= -1
+            this.xkey.R  = 0.3
+        }
+        else this.xkey.R = 0
+        this.handle.SetDriverInput(this.xkey.F, this.xkey.R, 0, 0)
     }
     follow() {
         const pos = wrapVec3(this.body.GetPosition())
@@ -215,7 +221,7 @@ export default class {
         console.log(this.handle.GetTransmission())
     }
     setDifferential(
-        id, left, right,                ///< diff, left, right wheel index
+        id, left, right,                ///< diff, wheel index[left, right]
         diff_ratio           = 3.42,    ///< rotation speed between gearbox and wheel 3.42
         engine_torque_ratio  = 1.0,     ///< engine torque apply (sum should =1.0)
         lr_split             = 0.5,     ///< engine torque between l/r wheel 0.5
@@ -269,6 +275,7 @@ export default class {
         rb.mLeftWheel  = left
         rb.mRightWheel = right
         rb.mStiffness  = stiff
+        console.log(rb)
     }
     useMotorcycleDiff() {
         this.setDifferential(
@@ -281,16 +288,26 @@ export default class {
         fb_limited_slip_ratio = 1.4,           ///< max/min between wheels speed
         lr_limited_slip_ratio = 1.4
     ) {
+        const n = this.ctrl.mDifferentials.size()
+        switch (n) {
+        case 1:
+            if (fb_torque_ratio > 0.99) {
+                this.setDifferential(          ///< Front differential
+                    0, 0, 1, 1)
+            }
+            else if (fb_torque_ratio < 0.01) {
+                this.setDifferential(          ///< Rear differential
+                    0, 2, 3, 1)
+            }
+            break
+        case 2:
+            this.setDifferential(              ///< Front differential
+                0, 0, 1, fb_torque_ratio)
+            this.setDifferential(              ///< Rear differential
+                1, 2, 3, 1-fb_torque_ratio)    /// * check total torque sum = 1.0
+            break
+        }
         this.handle.mDifferentialLimitedSlipRatio = fb_limited_slip_ratio
-        this.setDifferential(                  ///< Front differential
-            0, 0, 1,
-            fb_torque_ratio)
-        
-        if (this.ctrl.mDifferentials.size() < 2) return
-        
-        this.setDifferential(                  ///< Rear differential
-            1, 2, 3,
-            1.0 - fb_torque_ratio)             /// * check total torque sum = 1.0
     }
     _syncWheel(id) {               
         let wh = this.wheels[id]
