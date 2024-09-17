@@ -78,8 +78,36 @@ mesh
   2.0 0.3 0.5    ds .V!                \ suspension[freq, min, max]
   0 dup 250      ds .W!                \ steering[ang, caster, break]
   wheel ;                              \ same dim as front wheel
+: car
+  1.6 0.3 2.0 px 3!                    \ car body px[width, height, length]
+  ID ds !                              \ body id
+  0 10 0 ds .P! 0 0 0 1 ds .R!         \ pos[3], rot[4]
+  $00ff00 3 px DSZ ds                  \ create bike body
+  s" car %x %p %p" JS
+  150 10000 1000 px 3!                 \ set engine params
+  ID 3 px s" engine %x %p" JS
+  2 8000 2000 px 3!                    \ set transmission params
+  ID 3 px s" gearbox %x %p" JS ;
+: car_wheels ( -- )
+  0              ds !                  \ front wheel
+  0.8 0.1 1.2    ds .P!                \ pos[x,y,z]
+  1.5 0.3 0.5    ds .V!                \ suspension[freq, min, max]
+  30 rad dup 500 ds .W!                \ steering, caster, break strength
+  0.3 0.3 0.1    px 3!                 \ wheel dim[r1, r2, width]
+  wheel
+  1              ds !                  \ back wheel
+  -0.8 0.1 1.2   ds .P!                \ pos[x,y,z]
+  wheel                                \ same dim as front wheel
+  2              ds !                  \ front wheel
+  0.8 0.1 -1.2   ds .P!                \ pos[x,y,z]
+  0 dup 500      ds .W!                \ steering, caster, break strength
+  wheel
+  3              ds !                  \ back wheel
+ -0.8 0.1 -1.2   ds .P!                \ pos[x,y,z]
+  wheel ;                              \ same dim as front wheel
 : start s" start" JS ;
-: go
+: go_bike
   bike front_wheel back_wheel
   start ;
+: go_car car car_wheels start ;
 .( JOLT loaded )
