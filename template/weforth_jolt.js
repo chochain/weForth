@@ -9,7 +9,7 @@ function build_mesh(n, sz, h) {    // nxn, sz=tileSize, h:max_height
     const n2   = n * 0.5, ctr = n2 * sz
     const hmap = (x, z) => {
         return (x==0 || x==n || z==0 || z==n)
-            ? h * 5
+            ? h * 8
             : h * (1 - Math.cos((x-n2)/4) * Math.cos((z-n2)/3))
     }
     const tlst = new Jolt.TriangleList
