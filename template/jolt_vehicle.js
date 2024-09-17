@@ -89,7 +89,7 @@ export default class {
         init_part(cfg.mWheels,        nwheel, Jolt.WheelSettingsWV)
         init_part(ctl.mDifferentials, ndiff,  Jolt.VehicleDifferentialSettings)
         init_part(cfg.mAntiRollBars,  narbar, Jolt.VehicleAntiRollBar)
-        
+
         this.ctrl   = cfg.mController = ctl          ///< short ref to controller
         this.config = cfg                            ///< vehicle configuration
         this.cnst   = core.setConstraint(id, cfg)    ///< set collision testsr
@@ -216,10 +216,10 @@ export default class {
     }
     setDifferential(
         id, left, right,                ///< diff, left, right wheel index
-        torque_ratio,                   ///< torque apply to this differential 1.0
-        lr_limited_slip_ratio,          ///< max/min between wheel speed 1.4
+        torque_ratio,                   ///< engine torque apply (sum should =1.0)
+        diff_ratio = 3.42,              ///< rotation speed between gearbox and wheel 3.42
         lr_split   = 0.5,               ///< engine torque between l/r wheel 0.5
-        diff_ratio = 3.42               ///< rotation speed between gearbox and wheel 3.42
+        lr_limited_slip_ratio = 1.4     ///< max/min between wheel speed 1.4
     ) {
         let d = this.handle.GetDifferentials().at(id)
         d.mLeftWheel         = left                   // -1=no wheel
@@ -272,8 +272,8 @@ export default class {
     }
     useMotorcycleDiff() {
         this.setDifferential(
-            0, -1, 1,
-            1.0, 1.4, 1.0, 1.93 * 40.0 / 16.0,
+            0, -1, 1,                          // body id, left, right wheel id
+            1.0, 1.93 * 40.0 / 16.0, 1.0       // ratio[torque, diff, lr_split]
         )
     }
     useWheeledCarDiff(
