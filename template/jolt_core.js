@@ -125,9 +125,9 @@ function meshFactory(body, color, tex=null) {
     }
     msh.position.copy(V3G(body.GetPosition()))
     msh.quaternion.copy(Q4G(body.GetRotation()))
-    msh.receiveShadow        = true
-    msh.castShadow           = true
-    msh.material.flatShading = true
+//    msh.receiveShadow        = true
+//    msh.castShadow           = true
+//    msh.material.flatShading = true
     msh.userData.body        = body;                     // keep GUI->PhyX cross-ref
 
     return msh
@@ -280,8 +280,8 @@ export default class {
         this.rndr  = new THREE.WebGLRenderer()
         this.cam   = new THREE.PerspectiveCamera(60, w / h, 0.2, 2000)
         this.orb   = new THREE.OrbitControls(this.cam, this.arena)
-        this.light = new THREE.SpotLight(0xe0a060, 1)             // sunset
-//        this.light = new THREE.DirectionalLight(0xe0a060, 1)        // sunset
+        this.light = new THREE.SpotLight(0xe0a060, 1)           // sun
+//      this.light = new THREE.DirectionalLight(0xe0a060, 1)    // shadow expensive
         this.fused = new THREE.AmbientLight(0x404040)
         this.scene = new THREE.Scene()
         this.stats = new Stats()
@@ -298,11 +298,11 @@ export default class {
         this.cam.lookAt(new THREE.Vector3(0, 0, 0))
         this.orb.enableDamping = false
         this.orb.enablePan     = true
-        this.light.position.set(10, 20, 5)
-        this.light.castShadow            = true
-        this.light.shadow.bias           = -0.003
-        this.light.shadow.mapSize.width  = 2048
-        this.light.shadow.mapSize.height = 2048
+        this.light.position.set(20, 30, 20)          // afternoon
+//        this.light.castShadow            = true
+//        this.light.shadow.bias           = -0.003
+//        this.light.shadow.mapSize.width  = 2048
+//        this.light.shadow.mapSize.height = 2048
 
         this.scene.add(this.light)
         this.scene.add(this.fused)
