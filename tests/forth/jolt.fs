@@ -35,7 +35,7 @@ DYNASET  ds                            \ dynamic setting [id,pos[3],rot[4],v[3],
 : rnd_w 1 rx rnd           1 rx ds .W! ;   \ angular velocity[x, y, z]
 \ create mesh floor (id=0, shape=0)
 : mesh
-  30 1 0.8 px 3!                       \ 30x30 mesh with cell size 1, max height=0.8
+  40 1 0.8 px 3!                       \ 40x40 mesh with cell size 1, max height=0.8
   0 -5 0  ds .P! 0 0 0 1 ds .R!        \ position xyz: (0,-5,0), rotation xyzw:0,0,0,-1
   color 3 px DSZ ds                    \ get color[0], gemoetry, shape config
   s" mesh %x %p %p" JS ;               \ foreward to front-end thread
@@ -84,7 +84,7 @@ mesh
   0 10 0 ds .P! 0 0 0 1 ds .R!         \ pos[3], rot[4]
   $00ff00 3 px DSZ ds                  \ create bike body
   s" car %x %p %p" JS
-  150 10000 1000 px 3!                 \ set engine params
+  500 10000 1000 px 3!                 \ set engine params
   ID 3 px s" engine %x %p" JS
   2 8000 2000 px 3!                    \ set transmission params
   ID 3 px s" gearbox %x %p" JS ;
