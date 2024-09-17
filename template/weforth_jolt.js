@@ -269,10 +269,10 @@ function jolt_update(core) {
             core, id, '4',
             x[0], x[1], x[2],              // width, height, length
             pos, rot, color,
-            4, 1, 1                        // number of diff, wheels, anti-roll bars
+            4, 1, 1                        // number of wheels, diff, anti-roll bars
         )
-        this_veh.setWheeledDiff(1.0)
-        return car
+        this_veh.useWheeledCarDiff(1.0)
+        return this_veh
     case '4x4':
         this_veh = new Vehicle(
             core, id, '4',
