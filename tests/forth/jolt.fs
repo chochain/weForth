@@ -55,7 +55,7 @@ mesh
 : bike
   0.4 0.5 0.8 px 3!                    \ bike body px[width, height, length]
   ID ds !                              \ bike id
-  0 0 0 ds .P! -0.3 0 0 1 ds .R!          \ pos[3], rot[4]
+  0 0 0 ds .P! 0 0 0 1 ds .R!          \ pos[3], rot[4]
   $00ff00 3 px DSZ ds                  \ create bike body
   s" bike %x %p %p" JS
   150 10000 1000 px 3!                 \ set engine params
@@ -67,16 +67,16 @@ mesh
   s" wheel %x %p %p" JS ;
 : front_wheel ( -- )
   0              ds !                  \ front wheel
-  0 -0.25 0.4    ds .P!                \ pos[x,y,z]
+  0 -0.2 0.65    ds .P!                \ pos[x,y,z]
   1.5 0.3 0.5    ds .V!                \ suspension[freq, min, max]
   30 rad dup 500 ds .W!                \ steering, caster, break strength
-  0.31 0.31 0.05 px 3!                 \ wheel dim[r1, r2, width]
+  0.3 0.3 0.08 px 3!                   \ wheel dim[r1, r2, width]
   wheel ;
 : back_wheel ( -- )
   1              ds !                  \ back wheel
-  0 -0.25 -1.1   ds .P!                \ pos[x,y,z]
+  0 -0.2 -0.95    ds .P!               \ pos[x,y,z]
   2.0 0.3 0.5    ds .V!                \ suspension[freq, min, max]
-  30 rad dup 250 ds .W!                \ steering, caster, break strength
+  0 dup 250      ds .W!                \ steering[ang, caster, break]
   wheel ;                              \ same dim as front wheel
 : start s" start" JS ;
 : go
