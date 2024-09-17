@@ -6,34 +6,33 @@
 
 function build_mesh(n, sz, h) {    // nxn, sz=tileSize, h:max_height
     // Create regular grid of triangles
-    let hmap = (x, y)=> h * Math.sin(x / 2) * Math.cos(y / 3)
-    let tlst = new Jolt.TriangleList;
-    tlst.resize(n * n * 2);
-    for (let x = 0; x < n; ++x) {
-        for (let z = 0; z < n; ++z) {
-            let ctr= n * sz / 2
-            let x1 = sz * x - ctr
-            let z1 = sz * z - ctr
-            let x2 = x1 + sz
-            let z2 = z1 + sz
+    const n2   = n * 0.5, ctr = n2 * sz
+    const hmap = (x, z) => h * (1 - Math.cos((x-n2)/2) * Math.cos((z-n2)/3))
+    const tlst = new Jolt.TriangleList
+    tlst.resize(n * n * 2)         // allot the space
+    
+    for (let x = 0; x < n; x++) {
+        for (let z = 0; z < n; z++) {
+            const x1 = sz * x - ctr, x2 = x1 + sz
+            const z1 = sz * z - ctr, z2 = z1 + sz
             {
-                let t  = tlst.at((x * n + z) * 2)
-                let v1 = t.get_mV(0), v2 = t.get_mV(1), v3 = t.get_mV(2)
+                const t  = tlst.at((x * n + z) * 2)
+                const v1 = t.get_mV(0), v2 = t.get_mV(1), v3 = t.get_mV(2)
                 v1.x = x1, v1.z = z1, v1.y = hmap(x, z)
                 v2.x = x1, v2.z = z2, v2.y = hmap(x, z + 1)
                 v3.x = x2, v3.z = z2, v3.y = hmap(x + 1, z + 1)
             }
             {
-                let t  = tlst.at((x * n + z) * 2 + 1)
-                let v1 = t.get_mV(0), v2 = t.get_mV(1), v3 = t.get_mV(2);
+                const t  = tlst.at((x * n + z) * 2 + 1)
+                const v1 = t.get_mV(0), v2 = t.get_mV(1), v3 = t.get_mV(2)
                 v1.x = x1, v1.z = z1, v1.y = hmap(x, z)
                 v2.x = x2, v2.z = z2, v2.y = hmap(x + 1, z + 1)
                 v3.x = x2, v3.z = z1, v3.y = hmap(x + 1, z)
             }
         }
     }
-    let mati  = new Jolt.PhysicsMaterialList;
-    let config= new Jolt.MeshShapeSettings(tlst, mati)
+    const mati  = new Jolt.PhysicsMaterialList
+    const config= new Jolt.MeshShapeSettings(tlst, mati)
     Jolt.destroy(tlst);
     Jolt.destroy(mati);
 
@@ -44,7 +43,7 @@ function build_mesh(n, sz, h) {    // nxn, sz=tileSize, h:max_height
 ///
 function get_shape(t, v=null) {
     const rx = ()=>0.5 + Math.random()
-    let x = v || (t==0 ? [ 30, 1, 0.8 ] : [ rx(), rx(), rx() ])
+    const x = v || (t==0 ? [ 30, 1, 0.8 ] : [ rx(), rx(), rx() ])
     let config = null
     switch (t) {
     case 0: {
@@ -107,7 +106,7 @@ function get_shape(t, v=null) {
 ///
 function get_shape_compound(t, v=null) {
     const rx = ()=>0.5 + Math.random()
-    let x = v || (t==0 ? [ 30, 1, 0.8 ] : [ rx(), rx(), rx() ])
+    const x  = v || (t==0 ? [ 30, 1, 0.8 ] : [ rx(), rx(), rx() ])
     const config = new Jolt.StaticCompoundShapeSettings()
     const add    = (s, pos=new Jolt.Vec3(0,0,0), rot=Jolt.Quat.prototype.sIdentity())=>{
         config.AddShape(pos, rot, s)
@@ -164,8 +163,8 @@ function get_q4(
     z = Math.random(),
     w = 2*Math.PI * Math.random()
 ) {
-    let v3 = new Jolt.Vec3(0.001+x, y, z).Normalized()
-    let q4 = (x==0 && y==0 && z==0)
+    const v3 = new Jolt.Vec3(0.001+x, y, z).Normalized()
+    const q4 = (x==0 && y==0 && z==0)
         ? new Jolt.Quat(0, 0, 0, 1)
         : Jolt.Quat.prototype.sRotation(v3, w)
     Jolt.destroy(v3)
@@ -234,8 +233,8 @@ function jolt_update(core) {
     console.log(v)                          /// * debug trace
     
     const cmd  = v[1]                       ///> Jolt command
-    const n    = v[2]|0                     ///> object_id
-    const color= v[2]|0                     ///> color (shared param with object_id)
+    const n    = v[2]|0                     ///> object_id (integer)
+    const color= v[2]|0                     ///> color in "0xaabbcc" format
     const x    = v[3]                       ///> geometry parameters
     const ds   = v[4]                       ///> shape dynaset
 
@@ -261,7 +260,7 @@ function jolt_update(core) {
             core, id, '2',
             x[0], x[1], x[2],          ///< dim[width, height, length]
             pos, rot, color,           ///< position, rotation, color
-            1, 2, 0                    ///< number of diff, wheels, anti-roll bars
+            2, 1, 0                    ///< number of wheels, diff, anti-roll bars
         )
         this_veh.useMotorcycleDiff()
         return this_veh
@@ -270,7 +269,7 @@ function jolt_update(core) {
             core, id, '4',
             x[0], x[1], x[2],              // width, height, length
             pos, rot, color,
-            1, 4, 1                        // number of diff, wheels, anti-roll bars
+            4, 1, 1                        // number of diff, wheels, anti-roll bars
         )
         this_veh.setWheeledDiff(1.0)
         return car
@@ -279,7 +278,7 @@ function jolt_update(core) {
             core, id, '4',
             x[0], x[1], x[2],              // width, height, length
             pos, rot, color,
-            2, 4, 1                        // number of diff, wheels, anti-roll bars
+            4, 2, 1                        // number of diff, wheels, anti-roll bars
         )
         this_veh.setWheeledDiff(0.5)
         return this_veh
