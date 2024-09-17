@@ -7,10 +7,14 @@
 function build_mesh(n, sz, h) {    // nxn, sz=tileSize, h:max_height
     // Create regular grid of triangles
     const n2   = n * 0.5, ctr = n2 * sz
-    const hmap = (x, z) => h * (1 - Math.cos((x-n2)/2) * Math.cos((z-n2)/3))
+    const hmap = (x, z) => {
+        return (x==0 || x==n || z==0 || z==n)
+            ? h * 5
+            : h * (1 - Math.cos((x-n2)/4) * Math.cos((z-n2)/3))
+    }
     const tlst = new Jolt.TriangleList
     tlst.resize(n * n * 2)         // allot the space
-    
+
     for (let x = 0; x < n; x++) {
         for (let z = 0; z < n; z++) {
             const x1 = sz * x - ctr, x2 = x1 + sz
@@ -174,8 +178,9 @@ function get_q4(
 let   req_q   = []
 const CMD_LST = [
     'mesh', 'body', 'drop',
-    'bike', 'car', '4x4',
-    'wheel', 'engine', 'gearbox', 'start'
+    'bike', 'fwd', 'rwd', '4x4',
+    'wheel', 'engine', 'gearbox',
+    'start'
 ]
 let   xkey    = {
 	F: false, // forward
@@ -264,14 +269,25 @@ function jolt_update(core) {
         )
         this_veh.useMotorcycleDiff()
         return this_veh
-    case 'car':
+    case 'fwd':
         this_veh = new Vehicle(
             core, id, '4',
             x[0], x[1], x[2],              // width, height, length
             pos, rot, color,
             4, 1, 1                        // number of wheels, diff, anti-roll bars
         )
-        this_veh.useWheeledCarDiff(1.0)
+        this_veh.useWheeledCarDiff(1)      // fb_torque_ratio = 1.0
+        this_veh.setAntiRoll(0, 0, 1)
+        return this_veh
+    case 'rwd':
+        this_veh = new Vehicle(
+            core, id, '4',
+            x[0], x[1], x[2],              // width, height, length
+            pos, rot, color,
+            4, 1, 1                        // number of wheels, diff, anti-roll bars
+        )
+        this_veh.useWheeledCarDiff(0)      // fb_torque_ratio = 0.0
+        this_veh.setAntiRoll(0, 2, 3)
         return this_veh
     case '4x4':
         this_veh = new Vehicle(
@@ -280,7 +296,7 @@ function jolt_update(core) {
             pos, rot, color,
             4, 2, 1                        // number of diff, wheels, anti-roll bars
         )
-        this_veh.setWheeledDiff(0.5)
+        this_veh.useWheeledCarDiff(0.5)
         return this_veh
     case 'wheel':
         this_veh.setWheel(             ///> create wheel
