@@ -116,7 +116,7 @@ export default class {
     }
     update() {                         ///> update GUI from physics
         for (let i=0; i < this.wheels.length; i++) this._syncWheel(i)
-        this.handle.SetDriverInput(0.6, 0, 0, 0)
+        this.handle.SetDriverInput(0.8, 0.3, 0, 0)
     }
     follow() {
         const pos = wrapVec3(this.body.GetPosition())
@@ -283,13 +283,13 @@ export default class {
     ) {
         this.handle.mDifferentialLimitedSlipRatio = fb_limited_slip_ratio
         this.setDifferential(                  ///< Front differential
-            0, FL_WHEEL, FR_WHEEL,
+            0, 0, 1,
             fb_torque_ratio)
         
         if (this.ctrl.mDifferentials.size() < 2) return
         
         this.setDifferential(                  ///< Rear differential
-            1, BL_WHEEL, BR_WHEEL,
+            1, 2, 3,
             1.0 - fb_torque_ratio)             /// * check total torque sum = 1.0
     }
     _syncWheel(id) {               
