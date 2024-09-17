@@ -216,10 +216,10 @@ export default class {
     }
     setDifferential(
         id, left, right,                ///< diff, left, right wheel index
-        torque_ratio,                   ///< engine torque apply (sum should =1.0)
-        diff_ratio = 3.42,              ///< rotation speed between gearbox and wheel 3.42
-        lr_split   = 0.5,               ///< engine torque between l/r wheel 0.5
-        lr_limited_slip_ratio = 1.4     ///< max/min between wheel speed 1.4
+        diff_ratio           = 3.42,    ///< rotation speed between gearbox and wheel 3.42
+        engine_torque_ratio  = 1.0,     ///< engine torque apply (sum should =1.0)
+        lr_split             = 0.5,     ///< engine torque between l/r wheel 0.5
+        lr_limited_slip_ratio= 1.4      ///< max/min between wheel speed 1.4
     ) {
         let d = this.handle.GetDifferentials().at(id)
         d.mLeftWheel         = left                   // -1=no wheel
@@ -227,7 +227,7 @@ export default class {
         d.mDifferentialRatio = diff_ratio             // 1.93 * 40.0 / 16.0 (gear/tire)
         d.mLeftRightSplit    = lr_split               // 0=left, 0.5=center, 1.0=right
         d.mLimitedSlipRatio  = lr_limited_slip_ratio  // max/min between two wheels
-        d.mEngineTorqueRatio = torque_ratio           // 0.5
+        d.mEngineTorqueRatio = engine_torque_ratio    // 1.0
         console.log(id)
         console.log(this.handle.GetDifferentials().at(id))
     }
@@ -272,27 +272,25 @@ export default class {
     }
     useMotorcycleDiff() {
         this.setDifferential(
-            0, -1, 1,                          // body id, left, right wheel id
-            1.0, 1.93 * 40.0 / 16.0, 1.0       // ratio[torque, diff, lr_split]
+            0, -1, 1,                          ///< body id, left, right wheel id
+            4.8, 1.0, 1.0                      ///< ratio diff, engine torque, left-right split
         )
     }
     useWheeledCarDiff(
         fb_torque_ratio,
-        fb_limited_slip_ratio = 1.4,           // max/min between wheels speed
+        fb_limited_slip_ratio = 1.4,           ///< max/min between wheels speed
         lr_limited_slip_ratio = 1.4
     ) {
         this.handle.mDifferentialLimitedSlipRatio = fb_limited_slip_ratio
         this.setDifferential(                  ///< Front differential
             0, FL_WHEEL, FR_WHEEL,
-            fb_torque_ratio,
-            lr_limited_slip_ratio)
+            fb_torque_ratio)
         
         if (this.ctrl.mDifferentials.size() < 2) return
         
         this.setDifferential(                  ///< Rear differential
             1, BL_WHEEL, BR_WHEEL,
-            1.0 - fb_torque_ratio,             /// * check total torque sum = 1.0
-            lr_limited_slip_ratio)
+            1.0 - fb_torque_ratio)             /// * check total torque sum = 1.0
     }
     _syncWheel(id) {               
         let wh = this.wheels[id]
