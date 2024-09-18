@@ -4,7 +4,6 @@
 : 4! >r r@ 12 + ! r> 3! ;              \ ( x y z w a -- )
 \ shape types and default colors
 6.2832 constant 2PI                    \ 2*PI (for degree => radian calc)
-: rad ( d -- r ) 2PI * 360 / ;         
 6      constant SMAX                   \ shape 1:box, 2:ball, 3:cynlinder,
                                        \       4:capsule, 5:tapered capsule, 6:dumbbell
 create fg
@@ -20,7 +19,7 @@ create fg
 \ variables
 variable id 0 id !                     \ body id counter
 V3       px                            \ [x0, x1, x2], parameters for shapes
-DYNASET  ds                            \ dynamic setting [id,pos[3],rot[4],v[3],av[3]]
+DYNASET  ds                            \ dynamic setting [id,type,pos[3],rot[4],v[3],av[3]]
 : color ds 4 + @ cells fg + @ ;        \ fetch shape color
 \ randomized parameters
 : rx 2* rnd 0.5 - * ;                  \ ( n -- n' ) random with range [-n, n)
@@ -51,8 +50,9 @@ mesh
 : remove s" drop %d" JS ;              \ ( id -- ) remove body from scene
 : skew
   99 for i 1+ remove 100 delay next ;
-\ vehicle simulator  
+\ vehicle simulator
 variable ID 1000 ID !                  \ vehicle id
+: rad ( d -- r ) 2PI * 360 / ;         \ degree2radian conversion
 : wheel ( n -- ) ds !                  \ keep wheel index
   ID @ 3 px DSZ ds                     \ create wheel
   s" wheel %x %p %p" JS ;
