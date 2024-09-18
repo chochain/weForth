@@ -61,9 +61,11 @@ variable ID 1000 ID !                  \ vehicle id
   ID @ ds !                            \ car id
   0 10 0 ds .P! 0 0 0 1 ds .R!         \ pos[x,y,z], rot[x,y,z,w]
   $00ff00 3 px DSZ ds                  \ create chassis
-  s" fwd %x %p %p" JS                  \ for front wheel drive
+  s" fwd %x %p %p" JS ;                \ for front wheel drive
+: engine
   1000 10000 1000 px 3!                \ engine[torque,max/min RPMs]
-  ID @ 3 px s" engine %x %p" JS
+  ID @ 3 px s" engine %x %p" JS ;
+: gearbox
   2 8000 2000 px 3!                    \ transmission[clutch,up,down]
   ID @ 3 px s" gearbox %x %p" JS ;
 : wheels ( -- )
@@ -78,6 +80,7 @@ variable ID 1000 ID !                  \ vehicle id
   -0.1 0.2 -1.2  ds .P! 3 wheel ;      \ RR wheel, pos[x,y,z], same dim
 : start s" start" JS ;                 \ activate current vehicle
 : one_car ( -- )
-  chassis wheels start 1 ID +! ;
+  chassis engine gearbox wheels
+  start 1 ID +! ;
 : cars ( n -- ) for one_car next ;
-.( JOLT loaded )
+.( whisker.fs loaded )
