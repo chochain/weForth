@@ -45,38 +45,39 @@ mesh
   rnd_bdy rnd_geo rnd_v rnd_w          \ create random shape, geometry, velocities
   color 3 px DSZ ds                    \ get color, geometry, shape config
   s" body %x %p %p" JS ;               \ foreward to front-end thread
-: ten_body 9 for one 250 delay next ;
+: bodies ( n -- )
+  for one 100 delay next ;
 \ shape removal
 : remove s" drop %d" JS ;              \ ( id -- ) remove body from scene
 : skew
   99 for i 1+ remove 100 delay next ;
-\ car simulator  
-variable ID 1000 ID !                  \ car id
+\ vehicle simulator  
+variable ID 1000 ID !                  \ vehicle id
 : wheel ( n -- ) ds !                  \ keep wheel index
   ID @ 3 px DSZ ds                     \ create wheel
   s" wheel %x %p %p" JS ;
-: body ( -- )
-  1.2 0.8 0.8 px 3!                    \ car body px[width, height, length]
-  ID @ ds !                            \ body id
-  0 10 0 ds .P! 0 0 0 1 ds .R!         \ pos[3], rot[4]
-  $00ff00 3 px DSZ ds                  \ create car body
-  s" fwd %x %p %p" JS
-  1000 10000 1000 px 3!                \ set engine params
+: chassis ( -- )
+  1.2 0.8 0.8 px 3!                    \ chassis dim[width, height, length]
+  ID @ ds !                            \ car id
+  0 10 0 ds .P! 0 0 0 1 ds .R!         \ pos[x,y,z], rot[x,y,z,w]
+  $00ff00 3 px DSZ ds                  \ create chassis
+  s" fwd %x %p %p" JS                  \ for front wheel drive
+  1000 10000 1000 px 3!                \ engine[torque,max/min RPMs]
   ID @ 3 px s" engine %x %p" JS
-  2 8000 2000 px 3!                    \ set transmission params
+  2 8000 2000 px 3!                    \ transmission[clutch,up,down]
   ID @ 3 px s" gearbox %x %p" JS ;
 : wheels ( -- )
-  0.8 0.4 0.1    ds .P!                \ pos[x,y,z]
+  0.8 0.4 0.1    ds .P!                \ relative pos[x,y,z] to vehicle
   1.5 0.3 0.5    ds .V!                \ suspension[freq, min, max]
-  0 dup 500      ds .W!                \ steering, caster, break strength
-  0.5 0.5 0.1    px 3!  0 wheel        \ wheel dim[r1, r2, width], FL wheel
-  -0.8 0.4 0.1   ds .P! 1 wheel        \ pos[x,y,z], same dim, FR wheel
+  0 dup 500      ds .W!                \ angle[steering, caster], break strength
+  0.5 0.5 0.1    px 3!  0 wheel        \ FL wheel dim[r1, r2, width]
+  -0.8 0.4 0.1   ds .P! 1 wheel        \ FR wheel, pos[x,y,z], same dim
   0.1 0.2 -1.2   ds .P!                \ pos[x,y,z]
-  30 rad dup 500 ds .W!                \ steering, caster, break strength
-  0.3 0.3 0.1    px 3!  2 wheel        \ wheel dim[r1, r2, width], RL wheel
-  -0.1 0.2 -1.2  ds .P! 3 wheel ;      \ pos[x,y,z], RR wheel
-: start s" start" JS ;
+  30 rad dup 500 ds .W!                \ angle[steering, caster], break strength
+  0.3 0.3 0.1    px 3!  2 wheel        \ RL wheel dim[r1, r2, width]
+  -0.1 0.2 -1.2  ds .P! 3 wheel ;      \ RR wheel, pos[x,y,z], same dim
+: start s" start" JS ;                 \ activate current vehicle
 : one_car ( -- )
-  body wheels 1 ID +! start ;
+  chassis wheels start 1 ID +! ;
 : cars ( n -- ) for one_car next ;
 .( JOLT loaded )
