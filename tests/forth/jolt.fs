@@ -4,7 +4,6 @@
 : 4! >r r@ 12 + ! r> 3! ;              \ ( x y z w a -- )
 \ shape types and default colors
 6.2832 constant 2PI                    \ 2*PI (for degree => radian calc)
-: rad ( d -- r ) 2PI * 360 / ;         
 6      constant SMAX                   \ shape 1:box, 2:ball, 3:cynlinder,
                                        \       4:capsule, 5:tapered capsule, 6:dumbbell
 create fg
@@ -51,65 +50,53 @@ mesh
 : remove s" drop %d" JS ;              \ ( id -- ) remove body from scene
 : skew
   99 for i 1+ remove 100 delay next ;
-1000 constant ID
+\ bike and car simulator
+variable ID 1000 ID !                  \ body id
+: rad ( d -- r ) 2PI * 360 / ;         
 : bike
   0.4 0.5 0.8 px 3!                    \ bike body px[width, height, length]
-  ID ds !                              \ bike id
+  ID @ ds !                            \ bike id
   0 0 0 ds .P! 0 0 0 1 ds .R!          \ pos[3], rot[4]
   $00ff00 3 px DSZ ds                  \ create bike body
   s" bike %x %p %p" JS
   150 10000 1000 px 3!                 \ set engine params
-  ID 3 px s" engine %x %p" JS
+  ID @ 3 px s" engine %x %p" JS
   2 8000 2000 px 3!                    \ set transmission params
-  ID 3 px s" gearbox %x %p" JS ;
-: wheel ( -- )
-  ID 3 px DSZ ds                       \ create front wheel
+  ID @ 3 px s" gearbox %x %p" JS ;
+: wheel ( n -- ) ds !                  \ keep wheel index
+  ID @ 3 px DSZ ds                     \ create front wheel
   s" wheel %x %p %p" JS ;
 : front_wheel ( -- )
-  0              ds !                  \ front wheel
   0 -0.2 0.65    ds .P!                \ pos[x,y,z]
   1.5 0.3 0.5    ds .V!                \ suspension[freq, min, max]
   30 rad dup 500 ds .W!                \ steering, caster, break strength
-  0.3 0.3 0.08 px 3!                   \ wheel dim[r1, r2, width]
-  wheel ;
+  0.3 0.3 0.08   px 3!  0 wheel ;      \ front wheel dim[r1, r2, width]
 : back_wheel ( -- )
-  1              ds !                  \ back wheel
   0 -0.2 -0.95    ds .P!               \ pos[x,y,z]
   2.0 0.3 0.5    ds .V!                \ suspension[freq, min, max]
-  0 dup 250      ds .W!                \ steering[ang, caster, break]
-  wheel ;                              \ same dim as front wheel
+  0 dup 250      ds .W! 1 wheel ;      \ back wheel, steering[ang, caster, break]
 : car
   1.2 0.3 2.0 px 3!                    \ car body px[width, height, length]
-  ID ds !                              \ body id
+  ID @ ds !                            \ body id
   0 10 0 ds .P! 0 0 0 1 ds .R!         \ pos[3], rot[4]
   $00ff00 3 px DSZ ds                  \ create car body
   s" fwd %x %p %p" JS
   800 10000 1000 px 3!                 \ set engine params
-  ID 3 px s" engine %x %p" JS
+  ID @ 3 px s" engine %x %p" JS
   2 8000 2000 px 3!                    \ set transmission params
-  ID 3 px s" gearbox %x %p" JS ;
+  ID @ 3 px s" gearbox %x %p" JS ;
 : car_wheels ( -- )
-  0              ds !                  \ front wheel
-  0.8 0.1 1.2    ds .P!                \ pos[x,y,z]
+  0.8 0.1 1.2    ds .P!                \ relative pos[x,y,z]
   1.5 0.3 0.5    ds .V!                \ suspension[freq, min, max]
-  30 rad dup 500 ds .W!                \ steering, caster, break strength
-  0.3 0.3 0.1    px 3!                 \ wheel dim[r1, r2, width]
-  wheel
-  1              ds !                  \ back wheel
-  -0.8 0.1 1.2   ds .P!                \ pos[x,y,z]
-  wheel                                \ same dim as front wheel
-  2              ds !                  \ front wheel
+  30 rad dup 500 ds .W!                \ angle[steering, caster], break strength
+  0.3 0.3 0.1    px 3!   0 wheel       \ FL wheel dim[r1, r2, width]
+  -0.8 0.1 1.2   ds .P!  1 wheel       \ FR wheel, pos[x,y,z]
   0.8 0.1 -1.2   ds .P!                \ pos[x,y,z]
-  0 dup 500      ds .W!                \ steering, caster, break strength
-  wheel
-  3              ds !                  \ back wheel
- -0.8 0.1 -1.2   ds .P!                \ pos[x,y,z]
-  wheel ;                              \ same dim as front wheel
-: start s" start" JS ;
+  0 dup 500      ds .W!  2 wheel       \ RL wheel, steering, caster, break strength
+  -0.8 0.1 -1.2  ds .P!  3 wheel ;     \ RR wheel, pos[x,y,z]
+: start s" start" JS 1 ID +! ;
 : go_bike
-  bike front_wheel back_wheel
-  start ;
+  bike front_wheel back_wheel start ;
 : go_car
-  car car_wheels
-  start ;
+  car car_wheels start ;
 .( JOLT loaded )
