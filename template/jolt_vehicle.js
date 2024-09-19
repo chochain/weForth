@@ -97,6 +97,7 @@ export default class {
         
         this.wheels = Array(nwheel)                  /// ref to GUI wheels
         this.xkey   = { F: 0.7, R: 0 }
+        this.once   = 1
     }
     setCallback() {
         const ctrl = Jolt.castObject(cnst.GetController(), type)     // type=Jolt.MotorcycleController
@@ -114,29 +115,43 @@ export default class {
         
         cb.SetVehicleConstraint(cnst)
     }
-    update() {                         ///> update GUI from physics
-        for (let i=0; i < this.wheels.length; i++) this._syncWheel(i)
-        
+    ai() {
+        this.once = 0
         const body = this.cnst.GetVehicleBody()
         const rot  = Q4G(body.GetRotation().Conjugated())
         const lv   = V3G(body.GetLinearVelocity())
         const v1   = lv.applyQuaternion(rot).z
         const f    = this.xkey.F
         if (f > 0 && v1 < -0.1) {
+            console.log("f="+f.toString()+" v1="+v1.toString())
             this.xkey.F *= -1
-            this.xkey.R  = -0.3
+            //            this.xkey.R  = -0.3
+            let w0 = this.cnst.GetWheel(0)
+            let w1 = this.cnst.GetWheel(1)
+            console.log(w0.GetSteerAngle())
+            w0.SetSteerAngle(1.0)
+            w1.SetSteerAngle(1.0)
         }
         else if (f < 0 && v1 > 0.1) {
+            console.log("f="+f.toString()+" v1="+v1.toString())
             this.xkey.F *= -1
             this.xkey.R  = 0
+            let w0 = this.cnst.GetWheel(0)
+            let w1 = this.cnst.GetWheel(1)
+            console.log(w0.GetSteerAngle())
+            w0.SetSteerAngle(-1.0)
+            w1.SetSteerAngle(-1.0)
         }
-        
         this.handle.SetDriverInput(this.xkey.F, this.xkey.R, 0, 0)
     }
+    update() {                         ///> update GUI from physics
+        this.wheels.forEach(w=>w.sync())
+        this.ai()
+    }
     follow() {
-        const pos = wrapVec3(this.body.GetPosition())
-        jolt.orb.target = pos
-        jolt.cam.position.add(pos.clone().sub(oldPos))
+        const pos = V3G(this.body.GetPosition())
+        this.orb.target = pos
+        this.cam.position.add(pos.clone().sub(oldPos))
     }
     xkey_update(k, dv) {               // dv = steerSpeed * deltaTime
         let f0 = this.key.F, r0 = this.key.R
@@ -145,9 +160,10 @@ export default class {
         f1 = k.F ? 1.0 : (k.B ? -1.0 : 0.0)
 
         if (f0 * f1 < 0.0) {
-            const rot = Q4G(this.body.GetRotation().Conjugated())
-            const lv  = V3G(this.body.GetLinearVelocity())
-            const v1  = lv.applyQuaternion(rot).z
+            const body = this.cnst.GetVehicleBody()
+            const rot  = Q4G(body.GetRotation().Conjugated())
+            const lv   = V3G(body.GetLinearVelocity())
+            const v1   = lv.applyQuaternion(rot).z
             if ((f1 > 0.0 && v1 < -0.1) || (f1 < 0.0 && v1 > 0.1)) {
                 f1 = 0.0; x1 = 1.0    // Brake while we've not stopped yet
             }
@@ -273,10 +289,16 @@ export default class {
 
         /// create GUI wheel
         let wheel =
-             new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, w, 20, 1), this.mati)
-        this.wheels[id] = wheel         /// * keep ref
-        this.core.scene.add(wheel)      /// * shown in GUI
-        this._syncWheel(id)             /// * attach wheel to body
+            new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, w, 20, 1), this.mati)
+        wheel.sync = ()=>{                     /// * lambda to sync wheel/body
+            let tx = this.cnst.GetWheelLocalTransform(id, this.right, this.up)
+			wheel.position.copy(V3G(tx.GetTranslation()))
+			wheel.quaternion.copy(Q4G(tx.GetRotation().GetQuaternion()))
+        }
+        this.wheels[id] = wheel                /// * keep ref
+        this.core.scene.add(wheel)             /// * shown in GUI
+        wheel.sync()                           /// * sync GUI wheel to GUI body
+        
         console.log(cfg)
     }
     setAntiRoll(id, left, right, stiff=1000) {
@@ -308,6 +330,7 @@ export default class {
                 this.setDifferential(          ///< Rear differential
                     0, 2, 3, 1)
             }
+            else console.log("sum of fb_torque_ratio != 1.0")
             break
         case 2:
             this.setDifferential(              ///< Front differential
@@ -317,11 +340,5 @@ export default class {
             break
         }
         this.handle.mDifferentialLimitedSlipRatio = fb_limited_slip_ratio
-    }
-    _syncWheel(id) {               
-        let wh = this.wheels[id]
-        let tx = this.cnst.GetWheelWorldTransform(id, this.right, this.up)
-        wh.position.copy(V3G(tx.GetTranslation()))
-        wh.quaternion.copy(Q4G(tx.GetRotation().GetQuaternion()))
     }
 }
