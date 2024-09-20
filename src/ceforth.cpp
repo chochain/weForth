@@ -109,11 +109,11 @@ int  forth_include(const char *fn);       // load external Forth script
 ///
 ///> VM states (single task)
 ///
-typedef enum { STOP=0, HOLD, IO, RUN } vm_state;
+typedef enum { STOP=0, HOLD, QUERY, NEST, IO } vm_state;
 
 IU   IP      = 0;       ///< instruction pointer
 IU   DP      = 0;       ///< call frame depth (iterator design)
-int  VM      = RUN;     ///< VM state
+int  VM      = QUERY;   ///< VM state
 ///
 ///> user variables
 ///
@@ -127,10 +127,10 @@ IU   *dflt;             ///< use float data unit flag
 ///
 ///> Dictionary search functions - can be adapted for ROM+RAM
 ///
-int streq(const char *s1, const char *s2) {
-    return ucase ? strcasecmp(s1, s2)==0 : strcmp(s1, s2)==0;
-}
 IU find(const char *s) {
+    auto streq = [](const char *s1, const char *s2) {
+        return ucase ? strcasecmp(s1, s2)==0 : strcmp(s1, s2)==0;
+    };
     IU v = 0;
     for (IU i = dict.idx - 1; !v && i > 0; --i) {
         if (streq(s, dict[i].name)) v = i;
@@ -167,14 +167,14 @@ int  add_str(const char *s) {       ///< add a string to pmem
     return sz;
 }
 void add_w(IU w) {                  ///< add a word index into pmem
-    Code &c = IS_PRIM(w)
-        ? op_prim[w & ~EXT_FLAG]
-        : dict[w];                  ///< ref to dictionary entry
-    IU ip = (w & EXT_FLAG)
-        ? (UFP)c.xt                 ///< get primitive/built-in token
+    Code &c = IS_PRIM(w)            /// * is primitive?
+        ? op_prim[w & ~EXT_FLAG]    /// * ref to primitive word entry
+        : dict[w];                  /// * ref to dictionary entry
+    IU ip = (w & EXT_FLAG)          /// * is primitive?
+        ? (UFP)c.xt                 /// * get primitive/built-in token
         : (c.attr & UDF_ATTR        /// * colon word?
-           ? (c.pfa | EXT_FLAG)     ///< pfa with colon word flag
-           : c.xtoff());            ///< XT offset
+           ? (c.pfa | EXT_FLAG)     /// * pfa with colon word flag
+           : c.xtoff());            /// * XT offset of built-in
     add_iu(ip);
 #if CC_DEBUG > 1
     LOG_KV("add_w(", w); LOG_KX(") => ", ip);
@@ -182,7 +182,7 @@ void add_w(IU w) {                  ///< add a word index into pmem
 #endif // CC_DEBUG > 1
 }
 void add_var(IU op) {               ///< add a varirable header
-    add_w(op);                      /// VAR or VBRAN
+    add_w(op);                      /// * VAR or VBRAN
     if (op==VBRAN) add_iu(0);       /// * pad offset field
 #if DO_WASM
     pmem.idx = DALIGN(pmem.idx);    /// * data alignment (WASM 4, other 2)
@@ -247,11 +247,10 @@ inline DU   POP()      { DU n=top; top=ss.pop(); return n; }
     else VM = STOP
 
 void nest(IU pfa) {
-//    printf("nest DP=%d, IP=%4x", DP, IP);
     if (VM!=HOLD && VM!=IO) { DP = 1; IP = pfa; }    /// * reset IP & depth counter
-    VM = RUN;                                        /// * activate VM
+    VM = NEST;                                       /// * activate VM
 
-    while (VM==RUN) {
+    while (VM==NEST) {
         IU ix = IGET(IP);                            ///> fetched opcode, hopefully in register
 //        printf("DP=%d, [%4x]:%4x", DP, IP, ix);
         IP += sizeof(IU);
@@ -317,9 +316,11 @@ void nest(IU pfa) {
 ///> CALL - inner-interpreter proxy (inline macro does not run faster)
 ///
 void CALL(IU w) {
-    VM = RUN;
-    if (IS_UDF(w)) nest(dict[w].pfa);   /// colon word
-    else           dict[w].call();      /// built-in word
+    if (IS_UDF(w)) {                   /// colon word
+        VM = NEST;
+        nest(dict[w].pfa);
+    }
+    else dict[w].call();               /// built-in word
 }
 ///====================================================================
 ///
@@ -346,13 +347,12 @@ void s_quote(forth_opcode op) {
 #define TONAME(w) (dict[w].pfa - STRLEN(dict[w].name))
 int pfa2didx(IU ix) {                          ///> reverse lookup
     if (IS_PRIM(ix)) return (int)ix;           ///> primitives
-    IU   pfa = ix & ~EXT_FLAG;                 ///> pfa (mask colon word)
-    FPTR xt  = Code::XT(pfa);                  ///> lambda pointer
+    IU pfa = ix & ~EXT_FLAG;                   ///> pfa (mask colon word)
     for (int i = dict.idx - 1; i > 0; --i) {
         if (ix & EXT_FLAG) {                   /// colon word?
             if (dict[i].pfa == pfa) return i;  ///> compare pfa in PMEM
         }
-        else if (dict[i].xt == xt) return i;   ///> compare xt (built-in words)
+        else if (dict[i].xtoff() == pfa) return i;   ///> compare xt (built-in words)
     }
     return 0;                                  /// * not found
 }
@@ -360,7 +360,7 @@ int  pfa2nvar(IU pfa) {
     IU  w  = IGET(pfa);
     if (w != VAR && w != VBRAN) return 0;
     
-    IU i0 = pfa2didx(pfa | EXT_FLAG);
+    IU  i0 = pfa2didx(pfa | EXT_FLAG);
     if (!i0) return 0;
     IU  p1 = (i0+1) < dict.idx ? TONAME(i0+1) : HERE;
     int n  = p1 - pfa - sizeof(IU) * (w==VAR ? 1 : 2);    ///> CC: calc # of elements
@@ -490,15 +490,9 @@ void mem_dump(U32 p0, IU sz) {
     fout << setbase(*base) << setfill(' ');
 }
 void load(const char* fn) {
-    rs.push(VM);         /// save context
-    rs.push(DP);
-    rs.push(IP);
-    
-    forth_include(fn);   /// include file
-    
-    IP = UINT(rs.pop()); /// restore cotnext
-    DP = UINT(rs.pop());
-    VM = UINT(rs.pop());
+    rs.push(VM); rs.push(DP); rs.push(IP);                         /// save context
+    forth_include(fn);                                             /// include file
+    IP = UINT(rs.pop()); DP = UINT(rs.pop()); VM = UINT(rs.pop()); /// restore
 }
 ///====================================================================
 ///
@@ -668,17 +662,33 @@ void dict_compile() {  ///< compile built-in words into dictionary
     CODE("exec",   IU w = POP(); CALL(w));                      // execute word
     CODE("create", def_word(word()); add_var(VBRAN));           // bran + offset field
     IMMD("does>",  add_w(DOES));
-    CODE("to",              // 3 to x                           // alter the value of a constant
-         IU w = find(word()); if (!w) return;                   // to save the extra @ of a variable
-         *(DU*)(MEM(dict[w].pfa) + sizeof(IU)) = POP());
-    CODE("is",              // ' y is x                         // alias a word
-         IU w = find(word()); if (!w) return;                   // copy entire union struct
-         dict[POP()].xt = dict[w].xt);
+    IMMD("to",                                                  // alter the value of a constant, i.e. 3 to x
+         IU w = VM==NEST ? POP() : find(word());                // constant addr
+         if (!w) return;
+         if (compile) {
+             add_w(LIT); add_du((DU)w);                         // save addr on stack
+             add_w(find("to"));                                 // encode to opcode
+         }
+         else {
+             *(DU*)(MEM(dict[w].pfa) + sizeof(IU)) = POP();     // update constant
+         });
+    IMMD("is",              // ' y is x                         // alias a word, i.e. ' y is x
+         IU w = VM==NEST ? POP() : find(word());                // word addr
+         if (!w) return;
+         if (compile) {
+             add_w(LIT); add_du((DU)w);                         // save addr on stack
+             add_w(find("is"));
+         }
+         else {
+             dict[POP()].xt = dict[w].xt;
+         });
     ///
     /// be careful with memory access, especially BYTE because
     /// it could make access misaligned which slows the access speed by 2x
     ///
-    CODE("@",     IU w = UINT(POP()); PUSH(CELL(w)));           // w -- n
+    CODE("@",                                                   // w -- n
+         IU w = UINT(POP());
+         PUSH(w < USER_AREA ? (DU)IGET(w) : CELL(w)));          // check user area
     CODE("!",     IU w = UINT(POP()); CELL(w) = POP(););        // n w --
     CODE(",",     DU n = POP(); add_du(n));                     // n -- , compile a cell
     CODE("n,",    IU i = UINT(POP()); add_iu(i));               // compile a 16-bit value
