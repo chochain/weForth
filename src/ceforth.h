@@ -97,7 +97,7 @@ struct Code {
         };
     };
 #endif // DO_WASM
-    static FPTR XT(IU ix)   INLINE { return (FPTR)(XT0 + (UFP)ix); }
+    static FPTR XT(IU ix)   INLINE { return (FPTR)(XT0 + (UFP)(ix & MSK_ATTR)); }
     static void exec(IU ix) INLINE { (*XT(ix))(); }
 
     Code(const char *n, IU w) : name(n), xt((FPTR)((UFP)w)) {   ///< primitives
@@ -107,7 +107,7 @@ struct Code {
 #endif // CC_DEBUG > 1
     }
     Code(const char *n, FPTR fp, bool im) : name(n), xt(fp) {
-        if ((UFP)xt < XT0) XT0 = (UFP)xt;                ///> collect xt base
+        if ((UFP)xt < XT0) XT0 = (UFP)xt;                       ///> collect xt base
         if (im) attr |= IMM_ATTR;
 #if CC_DEBUG > 1
 		LOG_KX("XT0=", XT0);  LOG_KX(" xt=", (UFP)xt); 
@@ -115,7 +115,7 @@ struct Code {
 #endif // CC_DEBUG > 1
     }
     Code() {}               ///< create a blank struct (for initilization)
-    IU   xtoff() INLINE { return (IU)((UFP)xt - XT0); }  ///< xt offset in code space
+    IU   xtoff() INLINE { return (IU)(((UFP)xt - XT0) & MSK_ATTR); }  ///< xt offset in code space
     void call()  INLINE { (*(FPTR)((UFP)xt & MSK_ATTR))(); }
 };
 ///
