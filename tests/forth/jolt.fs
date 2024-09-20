@@ -51,20 +51,20 @@ mesh
 : skew
   99 for i 1+ remove 100 delay next ;
 \ bike and car simulator
-variable ID 1000 ID !                  \ body id
+1000 constant ID                       \ body id
 : rad ( d -- r ) 2PI * 360 / ;         
 : bike
   0.4 0.5 0.8 px 3!                    \ bike body px[width, height, length]
-  ID @ ds !                            \ bike id
+  ID ds !                              \ bike id
   0 0 0 ds .P! 0 0 0 1 ds .R!          \ pos[3], rot[4]
   $00ff00 3 px DSZ ds                  \ create bike body
   s" bike %x %p %p" JS
   150 10000 1000 px 3!                 \ set engine params
-  ID @ 3 px s" engine %x %p" JS
+  ID 3 px s" engine %x %p" JS
   2 8000 2000 px 3!                    \ set transmission params
-  ID @ 3 px s" gearbox %x %p" JS ;
+  ID 3 px s" gearbox %x %p" JS ;
 : wheel ( n -- ) ds !                  \ keep wheel index
-  ID @ 3 px DSZ ds                     \ create front wheel
+  ID 3 px DSZ ds                       \ create front wheel
   s" wheel %x %p %p" JS ;
 : front_wheel ( -- )
   0 -0.2 0.65    ds .P!                \ pos[x,y,z]
@@ -77,14 +77,14 @@ variable ID 1000 ID !                  \ body id
   0 dup 250      ds .W! 1 wheel ;      \ back wheel, steering[ang, caster, break]
 : car
   1.2 0.3 2.0 px 3!                    \ car body px[width, height, length]
-  ID @ ds !                            \ body id
+  ID ds !                              \ body id
   0 10 0 ds .P! 0 0 0 1 ds .R!         \ pos[3], rot[4]
   $00ff00 3 px DSZ ds                  \ create car body
   s" fwd %x %p %p" JS
   800 10000 1000 px 3!                 \ set engine params
-  ID @ 3 px s" engine %x %p" JS
+  ID 3 px s" engine %x %p" JS
   2 8000 2000 px 3!                    \ set transmission params
-  ID @ 3 px s" gearbox %x %p" JS ;
+  ID 3 px s" gearbox %x %p" JS ;
 : car_wheels ( -- )
   0.8 0.1 1.2    ds .P!                \ relative pos[x,y,z]
   1.5 0.3 0.5    ds .V!                \ suspension[freq, min, max]
@@ -94,7 +94,7 @@ variable ID 1000 ID !                  \ body id
   0.8 0.1 -1.2   ds .P!                \ pos[x,y,z]
   0 dup 500      ds .W!  2 wheel       \ RL wheel, steering, caster, break strength
   -0.8 0.1 -1.2  ds .P!  3 wheel ;     \ RR wheel, pos[x,y,z]
-: start s" start" JS 1 ID +! ;
+: start s" start" JS ID 1+ to ID ;
 : go_bike
   bike front_wheel back_wheel start ;
 : go_car
