@@ -51,23 +51,23 @@ mesh
 : skew
   99 for i 1+ remove 100 delay next ;
 \ vehicle simulator
-variable ID 1000 ID !                  \ vehicle id
+1000 constant ID                       \ vehicle id
 : rad ( d -- r ) 2PI * 360 / ;         \ degree2radian conversion
 : wheel ( n -- ) ds !                  \ keep wheel index
-  ID @ 3 px DSZ ds                     \ create wheel
+  ID 3 px DSZ ds                       \ create wheel
   s" wheel %x %p %p" JS ;
 : chassis ( -- )
   1.2 0.8 0.8 px 3!                    \ chassis dim[width, height, length]
-  ID @ ds !                            \ car id
+  ID ds !                              \ car id
   0 10 0 ds .P! 0 0 0 1 ds .R!         \ pos[x,y,z], rot[x,y,z,w]
   $00ff00 3 px DSZ ds                  \ create chassis
   s" fwd %x %p %p" JS ;                \ for front wheel drive
 : engine
   1000 10000 1000 px 3!                \ engine[torque,max/min RPMs]
-  ID @ 3 px s" engine %x %p" JS ;
+  ID 3 px s" engine %x %p" JS ;
 : gearbox
   2 8000 2000 px 3!                    \ transmission[clutch,up,down]
-  ID @ 3 px s" gearbox %x %p" JS ;
+  ID 3 px s" gearbox %x %p" JS ;
 : wheels ( -- )
   0.8 0.4 0.1    ds .P!                \ relative pos[x,y,z] to vehicle
   1.5 0.3 0.5    ds .V!                \ suspension[freq, min, max]
@@ -81,6 +81,6 @@ variable ID 1000 ID !                  \ vehicle id
 : start s" start" JS ;                 \ activate current vehicle
 : one_car ( -- )
   chassis engine gearbox wheels
-  start 1 ID +! ;
+  start ID 1+ to ID ;
 : cars ( n -- ) for one_car next ;
 .( whisker.fs loaded )
