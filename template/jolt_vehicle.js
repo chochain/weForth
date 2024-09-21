@@ -116,31 +116,18 @@ export default class {
         cb.SetVehicleConstraint(cnst)
     }
     ai() {
-        this.once = 0
         const body = this.cnst.GetVehicleBody()
         const rot  = Q4G(body.GetRotation().Conjugated())
         const lv   = V3G(body.GetLinearVelocity())
-        const v1   = lv.applyQuaternion(rot).z
+        const vz   = lv.applyQuaternion(rot).z      ///< local z velocity
         const f    = this.xkey.F
-        if (f > 0 && v1 < -0.1) {
-            console.log("f="+f.toString()+" v1="+v1.toString())
+        if (f > 0 && vz < -0.1) {
             this.xkey.F *= -1
-            //            this.xkey.R  = -0.3
-            let w0 = this.cnst.GetWheel(0)
-            let w1 = this.cnst.GetWheel(1)
-            console.log(w0.GetSteerAngle())
-            w0.SetSteerAngle(1.0)
-            w1.SetSteerAngle(1.0)
+//            this.xkey.R  = -0.3
         }
-        else if (f < 0 && v1 > 0.1) {
-            console.log("f="+f.toString()+" v1="+v1.toString())
+        else if (f < 0 && vz > 0.1) {
             this.xkey.F *= -1
-            this.xkey.R  = 0
-            let w0 = this.cnst.GetWheel(0)
-            let w1 = this.cnst.GetWheel(1)
-            console.log(w0.GetSteerAngle())
-            w0.SetSteerAngle(-1.0)
-            w1.SetSteerAngle(-1.0)
+//            this.xkey.R  = 0
         }
         this.handle.SetDriverInput(this.xkey.F, this.xkey.R, 0, 0)
     }
@@ -163,8 +150,8 @@ export default class {
             const body = this.cnst.GetVehicleBody()
             const rot  = Q4G(body.GetRotation().Conjugated())
             const lv   = V3G(body.GetLinearVelocity())
-            const v1   = lv.applyQuaternion(rot).z
-            if ((f1 > 0.0 && v1 < -0.1) || (f1 < 0.0 && v1 > 0.1)) {
+            const vz   = lv.applyQuaternion(rot).z
+            if ((f1 > 0.0 && vz < -0.1) || (f1 < 0.0 && vz > 0.1)) {
                 f1 = 0.0; x1 = 1.0    // Brake while we've not stopped yet
             }
             else this.key.F = f1      // When we've come to a stop, accept the new direction
@@ -291,7 +278,7 @@ export default class {
         let wheel =
             new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, w, 20, 1), this.mati)
         wheel.sync = ()=>{                     /// * lambda to sync wheel/body
-            let tx = this.cnst.GetWheelLocalTransform(id, this.right, this.up)
+            let tx = this.cnst.GetWheelWorldTransform(id, this.right, this.up)
 			wheel.position.copy(V3G(tx.GetTranslation()))
 			wheel.quaternion.copy(Q4G(tx.GetRotation().GetQuaternion()))
         }
