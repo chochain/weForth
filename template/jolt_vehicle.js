@@ -36,7 +36,7 @@ export default class {
         switch (vtype) {
         case '2':
             ctl   = new Jolt.MotorcycleControllerSettings()
-            ctype = Jolt.MotorcycleControllerx
+            ctype = Jolt.MotorcycleController
             break
         case '4':
             ctl   = new Jolt.WheeledVehicleControllerSettings()
@@ -64,7 +64,7 @@ export default class {
         this.handle = Jolt.castObject(this.cnst.GetController(), ctype) ///< VehicleController
         this.wheels = Array(nwheel)                  /// ref to GUI wheels
         this.xkey   = { F: 0.7, R: 0 }
-        this.count  = 4
+        this.count  = 2
     }
     setCallback() {
         const ctrl = Jolt.castObject(cnst.GetController(), type)     // type=Jolt.MotorcycleController
@@ -90,10 +90,15 @@ export default class {
         const f    = this.xkey.F
         if (f > 0 && vz < -0.1) {
             this.xkey.F *= -1
-//            this.xkey.R = 0.3
+            this.xkey.R = Math.random() > 0.5 ? 0.3 : -0.3
         }
         else if (f < 0 && vz > 0.1) {
             this.xkey.F *= -1
+        }
+        else if (f < 0 && vz < -5.0) {
+            this.xkey.F *= -1
+            this.xkey.R = 0
+            this.count  = 2
         }
         this.handle.SetDriverInput(this.xkey.F, this.xkey.R, 0, 0)
     }
@@ -196,10 +201,10 @@ export default class {
         tran.mShiftUpRPM     = rpm_up     //8000
         tran.mShiftDownRPM   = rpm_down   //2000
         tran.mClutchStrength = clutch     //2
-        console.log(this.handle.GetTransmission())
+//        console.log(tran)
     }
     setDifferential(
-        id, left, right,                ///< diff, wheel index[left, right]
+        id, left, right,                ///< diff id, wheel index[left, right]
         diff_ratio           = 3.42,    ///< rotation speed between gearbox and wheel 3.42
         engine_torque_ratio  = 1.0,     ///< engine torque apply (sum should =1.0)
         lr_split             = 0.5,     ///< engine torque between l/r wheel 0.5
@@ -212,7 +217,7 @@ export default class {
         d.mLeftRightSplit    = lr_split               // 0=left, 0.5=center, 1.0=right
         d.mLimitedSlipRatio  = lr_limited_slip_ratio  // max/min between two wheels
         d.mEngineTorqueRatio = engine_torque_ratio    // 1.0
-        console.log(this.handle.GetDifferentials().at(id))
+//        console.log(d)
     }
     setWheel(                           ///> set wheel physical properties
         id, pos,                        ///< wheel id, positions, radius, width
@@ -225,7 +230,9 @@ export default class {
         torque_break  = 1500,           ///< break torque, hand break torque
         torque_hbreak = 4000
     ) {
-        let cfg = this.cnst.GetWheel(id).GetSettings()
+        let cfg = Jolt.castObject(
+            this.cnst.GetWheel(id).GetSettings(), Jolt.WheelSettingsWV)
+        /// WheelSettings attributes
         cfg.mPosition            = pos
         cfg.mSuspensionDirection = new Jolt.Vec3(0, -1, Math.tan(ang_caster)).Normalized()   // bike point opposites to mSteeringAxis
         cfg.mSteeringAxis        = new Jolt.Vec3(0, 1, -Math.tan(ang_caster)).Normalized()
@@ -234,40 +241,35 @@ export default class {
         cfg.mSuspensionSpring.mFrequency = sus_freq
         cfg.mRadius              = (r1 > r2) ? r1 : r2
         cfg.mWidth               = w
-        /// Wheeled Vehicle specific
+        /// WheelSettingsWV specific
         cfg.mMaxSteerAngle       = ang_steer
         cfg.mMaxBrakeTorque      = torque_break
         cfg.mMaxHandBrakeTorque  = torque_hbreak
-
+        
         /// create GUI wheel
         let wheel =
             new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, w, 20, 1), this.mati)
         wheel.sync = ()=>{                     /// * lambda to sync wheel/body
-            let tx = this.cnst.GetWheelLocalTransform(id, this.right, this.up)
-            if (this.count > 0) {
-                console.log(id)
-                console.log(this.cnst.GetWheel(id))
-                this.count -= 1
-            }
-			wheel.position.copy(V3G(tx.GetTranslation()))
+            let tx = this.cnst.GetWheelWorldTransform(id, this.right, this.up)
+            wheel.position.copy(V3G(tx.GetTranslation()))
 			wheel.quaternion.copy(Q4G(tx.GetRotation().GetQuaternion()))
         }
         this.wheels[id] = wheel                /// * keep ref
         this.core.scene.add(wheel)             /// * shown in GUI
         wheel.sync()                           /// * sync GUI wheel to GUI body
         
-        console.log(wheel)
+//        console.log(wheel)
     }
     setAntiRoll(id, left, right, stiff=1000) {
         let rb = this.config.mAntiRollBars.at(id)
         rb.mLeftWheel  = left
         rb.mRightWheel = right
         rb.mStiffness  = stiff
-        console.log(rb)
+//        console.log(rb)
     }
     useMotorcycleDiff() {
         this.setDifferential(
-            0, -1, 1,                          ///< body id, left, right wheel id
+            0, -1, 1,                          ///< diff id, left, right wheel id
             4.8, 1.0, 1.0                      ///< ratio diff, engine torque, left-right split
         )
     }
@@ -276,7 +278,7 @@ export default class {
         fb_limited_slip_ratio = 1.4,           ///< max/min between wheels speed
         lr_limited_slip_ratio = 1.4
     ) {
-        const n = this.ctrl.mDifferentials.size()
+        const n = this.handle.GetDifferentials().size()
         switch (n) {
         case 1:
             if (fb_torque_ratio > 0.99) {
