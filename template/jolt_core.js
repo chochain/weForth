@@ -87,6 +87,19 @@ function checkerTexture() {
 
     return tex
 }
+function syncToBody(msh) {
+    const body = msh.userData.body
+    
+    msh.position.copy(V3G(body.GetPosition()))
+    msh.quaternion.copy(Q4G(body.GetRotation()))
+    
+    if (body.GetBodyType() == Jolt.EBodyType_SoftBody) {
+        if (msh.userData.updateVertex) {
+            msh.userData.updateVertex()
+        }
+        else msh.geometry = getMesh(body.GetShape())
+    }
+}
 ///
 ///> THREE mesh factory
 ///
@@ -123,12 +136,11 @@ function meshFactory(body, color, tex=null) {
             : new THREE.Mesh(getMesh(shape), mati)
         break
     }
-    msh.position.copy(V3G(body.GetPosition()))
-    msh.quaternion.copy(Q4G(body.GetRotation()))
 //    msh.receiveShadow        = true
 //    msh.castShadow           = true
 //    msh.material.flatShading = true
-    msh.userData.body        = body;                     // keep GUI->PhyX cross-ref
+    msh.userData.body        = body;     /// * keep GUI->PhyX cross-ref
+    syncToBody(msh)                      /// * synchronize THREE mesh to JOLT body
 
     return msh
 }
@@ -174,32 +186,20 @@ export default class {
         this.rndr.setSize(w, h)
     }
     render() {
-        this.update.forEach(fn=>fn(this))               /// * callback functions
-        
-        /// update physics system
-        for (let id in this.ospace) {
-            let msh  = this.ospace[id]
-            let body = msh.userData.body
+        this.update.forEach(fn=>fn(this))      /// * callback functions
 
-            msh.position.copy(V3G(body.GetPosition()))
-            msh.quaternion.copy(Q4G(body.GetRotation()))
-
-            if (body.GetBodyType() == Jolt.EBodyType_SoftBody) {
-                if (msh.userData.updateVertex) {
-                    msh.userData.updateVertex()
-                }
-                else msh.geometry = getMesh(body.GetShape())
-            }
-        }
-        /// update GUI
-        let dt = Math.min(this.clock.getDelta(), 1.0 / 30.0) // stay above 30Hz
+        let dt = Math.min(this.clock.getDelta(), 1.0 / 30.0) /// * stay above 30Hz
         this.time += dt
-        this.jolt.Step(dt, dt > 1.0 / 55.0 ? 2 : 1)          // 2 steps if below 55 Hz
+        this.jolt.Step(dt, dt > 1.0 / 55.0 ? 2 : 1)          /// * 2 steps if below 55 Hz
+        /// update GUI
+        for (let id in this.ospace) {
+            syncToBody(this.ospace[id])        /// * synchronize THREE to JOLT body
+        }
         this.orb.update(dt)
         this.rndr.render(this.scene, this.cam)
         this.stats.update()
         /// repaint screen (with frame-rate control)
-        requestAnimationFrame(()=>this.render())             // enqueue GUI event loop (default 60Hz)
+        requestAnimationFrame(()=>this.render())             /// * enqueue GUI event loop (default 60Hz)
 /*        
         setTimeout(                                          // enqueue GUI event loop
             ()=>requestAnimationFrame(()=>this.render()),
