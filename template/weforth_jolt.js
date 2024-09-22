@@ -7,10 +7,11 @@
 function build_mesh(n, sz, h) {    // nxn, sz=tileSize, h:max_height
     // Create regular grid of triangles
     const n2   = n * 0.5, ctr = n2 * sz
+    const bump = (x, z) => h * ((x==z || (x+z)==n) ? 0.3 : 0)
     const hmap = (x, z) => {
         return (x==0 || x==n || z==0 || z==n)
             ? h * 8
-            : h * (1 - Math.cos((x-n2)/4) * Math.cos((z-n2)/3))
+            : (h * (1 - Math.cos((x-n2)/4) * Math.cos((z-n2)/3)) + bump(x, z))
     }
     const tlst = new Jolt.TriangleList
     tlst.resize(n * n * 2)         // allot the space
