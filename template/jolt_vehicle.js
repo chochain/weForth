@@ -65,7 +65,6 @@ export default class {
         ///
         let cfg = new Jolt.VehicleConstraintSettings()
         let ctl, ctype
-        cfg.mAntiRollBars.clear()
         cfg.mMaxPitchRollAngle = ang_pitch_roll
         switch (vtype) {
         case '2':
@@ -90,17 +89,19 @@ export default class {
         init_part(ctl.mDifferentials, ndiff,  Jolt.VehicleDifferentialSettings)
         init_part(cfg.mAntiRollBars,  narbar, Jolt.VehicleAntiRollBar)
 
-        this.ctrl   = cfg.mController = ctl          ///< short ref to controller
-        this.config = cfg                            ///< vehicle configuration
-        this.cnst   = core.setConstraint(id, cfg)    ///< set collision testsr
-        this.handle = Jolt.castObject(this.cnst.GetController(), ctype)
+        this.ctrl   = cfg.mController = ctl          ///< VehicleControllerSettings
+        this.config = cfg                            ///< VehicleConstraintSettings
+        this.cnst   = core.setConstraint(id, cfg)    ///< VehicleConstraint
+        this.handle = Jolt.castObject(this.cnst.GetController(), ctype) ///< VehicleController
+        console.log("cnst")
+        console.log(this.cnst)
         
         this.wheels = Array(nwheel)                  /// ref to GUI wheels
         this.xkey   = { F: 0.7, R: 0 }
         this.once   = 1
     }
     setCallback() {
-        const ctrl = Jolt.castObject(cnst.GetController(), type)     // type=Jolt.MotorcycleController
+        const ctrl = this.handle
         
         // Optional step: Set the vehicle constraint callbacks
         let cb = new Jolt.VehicleConstraintCallbacksJS()
@@ -132,8 +133,8 @@ export default class {
         this.handle.SetDriverInput(this.xkey.F, this.xkey.R, 0, 0)
     }
     update() {                         ///> update GUI from physics
-        this.wheels.forEach(w=>w.sync())
         this.ai()
+        this.wheels.forEach(w=>w.sync())
     }
     follow() {
         const pos = V3G(this.body.GetPosition())
@@ -179,7 +180,8 @@ export default class {
         let tankMat2 = new THREE.MeshPhongMaterial({ color: 0x663333 })
         for (let t = 0; t < 2; t++) {
             const track = this.ctrl.get_mTracks(t)
-            track.mDrivenWheel = this.config.mWheels.size() + (wheelPos.length - 1)
+            const ctrl  = this.cnst.GetController()
+            track.mDrivenWheel = ctrl.mWheels.size() + (wheelPos.length - 1)
             wheelPos.forEach((loc, i)=>{
                 const w = new Jolt.WheelSettingsTV();
                 w.mPosition = new Jolt.Vec3(t == 0 ? w/2 : -w/2, loc[0], loc[1]);
@@ -190,7 +192,7 @@ export default class {
                 w.mSuspensionSpring.mFrequency = sus_freq
 
                 track.mWheels.push_back(vehicle.mWheels.size())
-                this.config.mWheels.push_back(w)
+                ctrlmWheels.push_back(w)
             })
         }
         const turret = new THREE.Mesh(new THREE.BoxGeometry(tw, th, tl, 1, 1, 1), tankMat1)
@@ -246,7 +248,6 @@ export default class {
         d.mLeftRightSplit    = lr_split               // 0=left, 0.5=center, 1.0=right
         d.mLimitedSlipRatio  = lr_limited_slip_ratio  // max/min between two wheels
         d.mEngineTorqueRatio = engine_torque_ratio    // 1.0
-        console.log(id)
         console.log(this.handle.GetDifferentials().at(id))
     }
     setWheel(                           ///> set wheel physical properties
@@ -285,8 +286,7 @@ export default class {
         this.wheels[id] = wheel                /// * keep ref
         this.core.scene.add(wheel)             /// * shown in GUI
         wheel.sync()                           /// * sync GUI wheel to GUI body
-        
-        console.log(cfg)
+        console.log(wheel)
     }
     setAntiRoll(id, left, right, stiff=1000) {
         let rb = this.config.mAntiRollBars.at(id)
