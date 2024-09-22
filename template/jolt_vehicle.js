@@ -2,46 +2,13 @@ const V3G = v=> new THREE.Vector3(v.GetX(), v.GetY(), v.GetZ())              // 
 const Q4G = q=> new THREE.Quaternion(q.GetX(), q.GetY(), q.GetZ(), q.GetW()) // => GUI quaternion
 const RAD = d=> d*Math.PI/180.0
 
-function createVehicleTrack(core) {
-	const track = [
-		[[[38, 64, -14], [38, 64, -16], [38, -64, -16], [38, -64, -14], [64, -64, -16], [64, -64, -14], [64, 64, -16], [64, 64, -14]], [[-16, 64, -14], [-16, 64, -16], [-16, -64, -16], [-16, -64, -14], [10, -64, -16], [10, -64, -14], [10, 64, -16], [10, 64, -14]], [[10, -48, -14], [10, -48, -16], [10, -64, -16], [10, -64, -14], [38, -64, -16], [38, -64, -14], [38, -48, -16], [38, -48, -14]], [[10, 64, -14], [10, 64, -16], [10, 48, -16], [10, 48, -14], [38, 48, -16], [38, 48, -14], [38, 64, -16], [38, 64, -14]]],
-		[[[38, 48, -10], [38, 48, -14], [38, -48, -14], [38, -48, -10], [40, -48, -14], [40, -48, -10], [40, 48, -14], [40, 48, -10]], [[62, 62, -10], [62, 62, -14], [62, -64, -14], [62, -64, -10], [64, -64, -14], [64, -64, -10], [64, 62, -14], [64, 62, -10]], [[8, 48, -10], [8, 48, -14], [8, -48, -14], [8, -48, -10], [10, -48, -14], [10, -48, -10], [10, 48, -14], [10, 48, -10]], [[-16, 62, -10], [-16, 62, -14], [-16, -64, -14], [-16, -64, -10], [-14, -64, -14], [-14, -64, -10], [-14, 62, -14], [-14, 62, -10]], [[-14, -62, -10], [-14, -62, -14], [-14, -64, -14], [-14, -64, -10], [62, -64, -14], [62, -64, -10], [62, -62, -14], [62, -62, -10]], [[8, -48, -10], [8, -48, -14], [8, -50, -14], [8, -50, -10], [40, -50, -14], [40, -50, -10], [40, -48, -14], [40, -48, -10]], [[8, 50, -10], [8, 50, -14], [8, 48, -14], [8, 48, -10], [40, 48, -14], [40, 48, -10], [40, 50, -14], [40, 50, -10]], [[-16, 64, -10], [-16, 64, -14], [-16, 62, -14], [-16, 62, -10], [64, 62, -14], [64, 62, -10], [64, 64, -14], [64, 64, -10]]],
-		[[[-4, 22, -14], [-4, -14, -14], [-4, -14, -10], [4, -14, -14], [4, -14, -10], [4, 22, -14]], [[-4, -27, -14], [-4, -48, -14], [-4, -48, -11], [4, -48, -14], [4, -48, -11], [4, -27, -14]], [[-4, 50, -14], [-4, 30, -14], [-4, 30, -12], [4, 30, -14], [4, 30, -12], [4, 50, -14]], [[46, 50, -14], [46, 31, -14], [46, 50, -12], [54, 31, -14], [54, 50, -12], [54, 50, -14]], [[46, 16, -14], [46, -19, -14], [46, 16, -10], [54, -19, -14], [54, 16, -10], [54, 16, -14]], [[46, -28, -14], [46, -48, -14], [46, -28, -11], [54, -48, -14], [54, -28, -11], [54, -28, -14]]]
-	];
-
-	const mapColors = [0x666666, 0x006600, 0x000066];
-
-	let tempVec = new Jolt.Vec3(0, 1, 0);
-	const mapRot = Jolt.Quat.prototype.sRotation(tempVec, 0.5 * Math.PI);
-	let tempRVec = new Jolt.RVec3(0, 0, 0);
-	track.forEach((type, tIdx) => {
-		type.forEach(block => {
-			const hull = new Jolt.ConvexHullShapeSettings;
-			block.forEach(v => {
-				tempVec.Set(-v[1], v[2], v[0]);
-				hull.mPoints.push_back(tempVec);
-			});
-			const shape = hull.Create().Get();
-			tempRVec.Set(0, 10, 0);
-			const creationSettings = new Jolt.BodyCreationSettings(shape, tempRVec, mapRot, Jolt.EMotionType_Static, LAYER_NON_MOVING);
-			Jolt.destroy(hull);
-			const body = core.intf.CreateBody(creationSettings);
-			Jolt.destroy(creationSettings);
-			body.SetFriction(1.0);
-			addToScene(body, mapColors[tIdx]);
-		});
-	});
-	Jolt.destroy(tempVec);
-	Jolt.destroy(tempRVec);
-}
-
 export default class {
     constructor(
         core,                         ///< jolt_core instance
         id, vtype,                    ///< vehicle id, and type
         w, h, l,                      ///< vehicle dimensions [width, height, length]
         pos, rot, color,              ///< dynaset and body color
-        nwheel, ndiff=1, narbar=0,    ///< number of wheels, diffs, and anti-roll bars
+        nwheel, ndiff, narbar,        ///< number of wheels, diffs, and anti-roll bars
         mass=1500,                    ///< body mass
         ang_pitch_roll=RAD(60)        ///< max pitch/roll angle
     ) {
@@ -51,7 +18,7 @@ export default class {
         this.mati    = new THREE.MeshPhongMaterial({ color: 0xcccccc })
         this.mati.map= core.tex         // set checker texture
         ///
-        /// create physical body
+        ///> create physical body
         ///
         this.id      = id
         this.shape   = new Jolt.OffsetCenterOfMassShapeSettings(
@@ -61,7 +28,7 @@ export default class {
         core.addShape(id, this.shape, pos, rot, color, mass)
         core.tick(id, false)            // deactivate body update for now
         ///
-        /// Vehicle configurations
+        ///> Vehicle configurations (constraint settings)
         ///
         let cfg = new Jolt.VehicleConstraintSettings()
         let ctl, ctype
@@ -69,7 +36,7 @@ export default class {
         switch (vtype) {
         case '2':
             ctl   = new Jolt.MotorcycleControllerSettings()
-            ctype = Jolt.MotorcycleController
+            ctype = Jolt.MotorcycleControllerx
             break
         case '4':
             ctl   = new Jolt.WheeledVehicleControllerSettings()
@@ -80,28 +47,27 @@ export default class {
             ctype = Jolt.TrackedVehicleController
         }
         ///
-        /// initialize differentials, wheels, and anti-roll bars
+        ///> initialize wheels, and anti-roll bars, and differentials
         ///
         const init_part = (a, n, p)=>{
             a.clear(); for (let i=0; i<n; i++) a.push_back(new p())
         }
         init_part(cfg.mWheels,        nwheel, Jolt.WheelSettingsWV)
-        init_part(ctl.mDifferentials, ndiff,  Jolt.VehicleDifferentialSettings)
         init_part(cfg.mAntiRollBars,  narbar, Jolt.VehicleAntiRollBar)
-
+        init_part(ctl.mDifferentials, ndiff,  Jolt.VehicleDifferentialSettings)
+        ///
+        ///> init attributes
+        ///
         this.ctrl   = cfg.mController = ctl          ///< VehicleControllerSettings
         this.config = cfg                            ///< VehicleConstraintSettings
         this.cnst   = core.setConstraint(id, cfg)    ///< VehicleConstraint
         this.handle = Jolt.castObject(this.cnst.GetController(), ctype) ///< VehicleController
-        console.log("cnst")
-        console.log(this.cnst)
-        
         this.wheels = Array(nwheel)                  /// ref to GUI wheels
         this.xkey   = { F: 0.7, R: 0 }
-        this.once   = 1
+        this.count  = 4
     }
     setCallback() {
-        const ctrl = this.handle
+        const ctrl = Jolt.castObject(cnst.GetController(), type)     // type=Jolt.MotorcycleController
         
         // Optional step: Set the vehicle constraint callbacks
         let cb = new Jolt.VehicleConstraintCallbacksJS()
@@ -124,11 +90,10 @@ export default class {
         const f    = this.xkey.F
         if (f > 0 && vz < -0.1) {
             this.xkey.F *= -1
-//            this.xkey.R  = -0.3
+//            this.xkey.R = 0.3
         }
         else if (f < 0 && vz > 0.1) {
             this.xkey.F *= -1
-//            this.xkey.R  = 0
         }
         this.handle.SetDriverInput(this.xkey.F, this.xkey.R, 0, 0)
     }
@@ -180,8 +145,7 @@ export default class {
         let tankMat2 = new THREE.MeshPhongMaterial({ color: 0x663333 })
         for (let t = 0; t < 2; t++) {
             const track = this.ctrl.get_mTracks(t)
-            const ctrl  = this.cnst.GetController()
-            track.mDrivenWheel = ctrl.mWheels.size() + (wheelPos.length - 1)
+            track.mDrivenWheel = this.config.mWheels.size() + (wheelPos.length - 1)
             wheelPos.forEach((loc, i)=>{
                 const w = new Jolt.WheelSettingsTV();
                 w.mPosition = new Jolt.Vec3(t == 0 ? w/2 : -w/2, loc[0], loc[1]);
@@ -192,7 +156,7 @@ export default class {
                 w.mSuspensionSpring.mFrequency = sus_freq
 
                 track.mWheels.push_back(vehicle.mWheels.size())
-                ctrlmWheels.push_back(w)
+                this.config.mWheels.push_back(w)
             })
         }
         const turret = new THREE.Mesh(new THREE.BoxGeometry(tw, th, tl, 1, 1, 1), tankMat1)
@@ -279,13 +243,19 @@ export default class {
         let wheel =
             new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, w, 20, 1), this.mati)
         wheel.sync = ()=>{                     /// * lambda to sync wheel/body
-            let tx = this.cnst.GetWheelWorldTransform(id, this.right, this.up)
+            let tx = this.cnst.GetWheelLocalTransform(id, this.right, this.up)
+            if (this.count > 0) {
+                console.log(id)
+                console.log(this.cnst.GetWheel(id))
+                this.count -= 1
+            }
 			wheel.position.copy(V3G(tx.GetTranslation()))
 			wheel.quaternion.copy(Q4G(tx.GetRotation().GetQuaternion()))
         }
         this.wheels[id] = wheel                /// * keep ref
         this.core.scene.add(wheel)             /// * shown in GUI
         wheel.sync()                           /// * sync GUI wheel to GUI body
+        
         console.log(wheel)
     }
     setAntiRoll(id, left, right, stiff=1000) {
