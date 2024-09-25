@@ -47,6 +47,48 @@ function setupJolt() {
 
     return jolt
 }
+function setupCaster(core) {
+    const caster = new Object()
+    const ray    = caster.ray = new Jolt.RRayCast()
+    ray.draw = ()=>{
+		core.addLine(ray.mOrigin, ray.mOrigin.Clone().Add(ray.mDirection), 0xff0000)
+	}
+	// Create collector
+	const hits      = caster.hits = new Jolt.CastRayCollectorJS()
+	const drawHit   = (body, hit) => {
+		const pt   = ray.GetPointOnRay(hit.mFraction)
+		const norm = body.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, pt)
+		addLine(pt, pt.Clone().Add(norm.Mul(2)), 0x00ff00)
+	}
+	hits.OnBody = (body) => {
+        // Store the body for the AddHit callback,
+        // note this is called whenever there is a collision with the bounding box of
+        // the object so you may not receive an AddHit callback for this body
+		hits.body = Jolt.wrapPointer(body, Jolt.Body)
+	}
+	hits.AddHit = hit => {
+	    hit = Jolt.wrapPointer(hit, Jolt.RayCastResult)
+		drawHit(hits.body, hit)
+		
+		// Update the collector so that it won't receive any hits further away than this hit
+		hits.UpdateEarlyOutFraction(hit.mFraction)
+	}
+	caster.reset = () => {
+		// Reset your bookkeeping, in any case we'll need to reset the early out fraction for the base class
+		hits.ResetEarlyOutFraction()
+	}
+	caster.draw = ()={
+        core.phyx.GetNarrowPhaseQuery().CastRay(
+            ray,
+            new Jolt.RayCastSettings(),
+            hits,
+            new Jolt.DefaultBroadPhaseLayerFilter(core.GetObjectVsBroadPhaseLayerFilter(), L_MOVING),
+            new Jolt.DefaultObjectLayerFilter(core.GetObjectLayerPairFilter(), L_MOVING),
+	        new Jolt.BodyFilter(),                  // We don't want to filter out any bodies
+	        new Jolt.ShapeFilter())                 // We don't want to filter out any shapes
+    }
+    return caster
+}
 ///
 ///> THREE geomotry mesh factory
 ///
@@ -285,7 +327,6 @@ export default class {
         this.fused = new THREE.AmbientLight(0x404040)
         this.scene = new THREE.Scene()
         this.stats = new Stats()
-        this.caster= new THREE.Raycaster()
         this.mouse = new THREE.Vector2()
         this.arrow = new THREE.ArrowHelper(
             new THREE.Vector3(0,1,0).normalize(), new THREE.Vector3(0,-5,0), 2, 0xff0000)
@@ -317,9 +358,10 @@ export default class {
             'pointerdown', e=>this._click(e), false)
     }
     _initPhysics() {
-        this.jolt = setupJolt()                          // setup collision interface
-        this.phyx = this.jolt.GetPhysicsSystem()         // physics system instance
-        this.intf = this.phyx.GetBodyInterface()         // binding interface
+        this.jolt   = setupJolt()                        // setup collision interface
+        this.phyx   = this.jolt.GetPhysicsSystem()       // physics system instance
+        this.intf   = this.phyx.GetBodyInterface()       // binding interface
+        this.caster = setupCaster(this)
     }
     _getBody(shape, pos, rot, type, layer, mass) {       // create physical body
         let config = new Jolt.BodyCreationSettings(
@@ -370,26 +412,12 @@ export default class {
     _click(e) {
         this.mouse.set(
             (e.clientX / this.rndr.domElement.clientWidth)  * 2 - 1,
-           -(e.clientY / this.rndr.domElement.clientHeight) * 2 + 1)
-        this.caster.setFromCamera(this.mouse, this.cam)
-
-        const hits = this.caster.intersectObjects(this.scene.children, false)
-
-        console.log('hit=' + hits.length)
-        if (hits.length == 0) return
+            -(e.clientY / this.rndr.domElement.clientHeight) * 2 + 1)
         
-        let x = hits[0]
-        
-        console.log(x)
-        x.object.material.color.set(0xffffff)
-        
-        const n = new THREE.Vector3()
-        n.copy(x.face.normal)
-        n.transformDirection(x.object.matrixWorld)
-        this.arrow.setDirection(n)
-        this.arrow.position.copy(x.point)
-
-        console.log('hit!')
+        this.caster.ray.mOrigin = V3W(this.cam.position)
+        this.caster.ray.mDirection.Set(0,0,0)
+        this.caster.draw()
+        this.caster.reset()
     }
 }  // class JoltCore
 
