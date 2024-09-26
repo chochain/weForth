@@ -263,7 +263,7 @@ function jolt_update(core) {
         return nobj
     case 'bike':
         this_veh = new Vehicle(
-            core, id, '2',
+            core, id, '2',             ///< Jolt core, bike id, '2 wheel model'
             x[0], x[1], x[2],          ///< dim[width, height, length]
             pos, rot, color,           ///< position, rotation, color
             2, 1, 0                    ///< number of wheels, diff, anti-roll bars
@@ -272,46 +272,48 @@ function jolt_update(core) {
         return this_veh
     case 'fwd':
         this_veh = new Vehicle(
-            core, id, '4',
-            x[0], x[1], x[2],              // width, height, length
+            core, id, '4',             ///< Jolt core, car id, '4 wheel model'
+            x[0], x[1], x[2],          ///< width, height, length
             pos, rot, color,
-            4, 1, 1                        // number of wheels, diff, anti-roll bars
+            4, 1, 1                    ///< number of wheels, diff, anti-roll bars
         )
-        this_veh.useWheeledCarDiff(1)      // fb_torque_ratio = 1.0
+        this_veh.useWheeledCarDiff(1)  ///< fb_torque_ratio = 1.0
         this_veh.setAntiRoll(0, 0, 1)
         return this_veh
     case 'rwd':
         this_veh = new Vehicle(
-            core, id, '4',
-            x[0], x[1], x[2],              // width, height, length
+            core, id, '4',             ///< Jolt core, car id, '4 wheel model'
+            x[0], x[1], x[2],          ///< width, height, length
             pos, rot, color,
-            4, 1, 1                        // number of wheels, diff, anti-roll bars
+            4, 1, 1                    ///< number of wheels, diff, anti-roll bars
         )
-        this_veh.useWheeledCarDiff(0)      // fb_torque_ratio = 0.0
+        this_veh.useWheeledCarDiff(0)  ///< fb_torque_ratio = 0.0
         this_veh.setAntiRoll(0, 2, 3)
         return this_veh
     case '4x4':
         this_veh = new Vehicle(
-            core, id, '4',
-            x[0], x[1], x[2],              // width, height, length
+            core, id, '4',             ///< Jolt core, car id, '4 wheel model'
+            x[0], x[1], x[2],          ///< width, height, length
             pos, rot, color,
-            4, 2, 1                        // number of diff, wheels, anti-roll bars
+            4, 2, 1                    ///< number of diff, wheels, anti-roll bars
         )
         this_veh.useWheeledCarDiff(0.5)
         return this_veh
     case 'wheel':
         this_veh.setWheel(             ///> create wheel
-            id, pos,                   ///< id, pos[x,y,z]
+            id, pos,                   ///< wheel id, pos[x,y,z]
             x[0], x[1], x[2],          ///< dim[r1, r2, w]
             ds[9],  ds[10], ds[11],    ///< suspension freq, min, max
             ds[12], ds[13], ds[14]     ///< steering, caster, break strength
         )
         return this_veh
     case 'engine':
-        this_veh.setEngine(x[0], x[1], x[2])
+        this_veh.setEngine(
+            x[0], x[1], x[2])          ///< torque, max RPM, min RPM
         return this_veh
     case 'gearbox':
-        this_veh.setTransmission(x[0], x[1], x[2])
+        this_veh.setTransmission(
+            x[0], x[1], x[2])          ///< clutch strength, up RPM, down RPM
         return this_veh
     case 'start':
         veh_update_req(this_veh)
