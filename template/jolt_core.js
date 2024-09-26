@@ -42,51 +42,28 @@ function setupJolt() {
             L_MAIN
         )
 
-    let jolt = new Jolt.JoltInterface(config)            // create physics system
+    let jolt = new Jolt.JoltInterface(config)       ///< create physics system
     Jolt.destroy(config)
 
     return jolt
 }
 function setupCaster(core) {
     const caster = new Object()
-    const ray    = caster.ray = new Jolt.RRayCast()
-    ray.draw = ()=>{
-		core.addLine(ray.mOrigin, ray.mOrigin.Clone().Add(ray.mDirection), 0xff0000)
-	}
-	// Create collector
-	const hits      = caster.hits = new Jolt.CastRayCollectorJS()
-	const drawHit   = (body, hit) => {
-		const pt   = ray.GetPointOnRay(hit.mFraction)
-		const norm = body.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, pt)
-		addLine(pt, pt.Clone().Add(norm.Mul(2)), 0x00ff00)
-	}
-	hits.OnBody = (body) => {
-        // Store the body for the AddHit callback,
-        // note this is called whenever there is a collision with the bounding box of
-        // the object so you may not receive an AddHit callback for this body
-		hits.body = Jolt.wrapPointer(body, Jolt.Body)
-	}
-	hits.AddHit = hit => {
-	    hit = Jolt.wrapPointer(hit, Jolt.RayCastResult)
-		drawHit(hits.body, hit)
-		
-		// Update the collector so that it won't receive any hits further away than this hit
-		hits.UpdateEarlyOutFraction(hit.mFraction)
-	}
-	caster.reset = () => {
-		// Reset your bookkeeping, in any case we'll need to reset the early out fraction for the base class
-		hits.ResetEarlyOutFraction()
-	}
-	caster.draw = ()={
+    caster.ray   = new Jolt.RRayCast()
+    caster.hit   = new Jolt.RayCastResult()
+	caster.Cast  = ()=>{
         core.phyx.GetNarrowPhaseQuery().CastRay(
-            ray,
-            new Jolt.RayCastSettings(),
-            hits,
-            new Jolt.DefaultBroadPhaseLayerFilter(core.GetObjectVsBroadPhaseLayerFilter(), L_MOVING),
-            new Jolt.DefaultObjectLayerFilter(core.GetObjectLayerPairFilter(), L_MOVING),
-	        new Jolt.BodyFilter(),                  // We don't want to filter out any bodies
-	        new Jolt.ShapeFilter())                 // We don't want to filter out any shapes
+            caster.ray,
+            caster.hit,
+            new Jolt.DefaultBroadPhaseLayerFilter(core.jolt.GetObjectVsBroadPhaseLayerFilter(), L_MOVING),
+            new Jolt.DefaultObjectLayerFilter(core.jolt.GetObjectLayerPairFilter(), L_MOVING)
+        )
+        // core.addLine(V3W(core.cam.position), new Jolt.Vec3(0,0,0), 0xff0000)
+        // core.arrow.setDirection(V3G(pt.Add(norm.Mul(20))))
+        console.log('hit')
+        console.log(caster.hit)
     }
+    caster.Reset = ()=>caster.hit.Reset()
     return caster
 }
 ///
@@ -291,8 +268,8 @@ export default class {
     addLine(from, to, color) {
         const mati = new THREE.LineBasicMaterial({ color: color })
         const pts  = []
-        pts.push(from)
-        pts.push(to)
+        pts.push(V3G(from))
+        pts.push(V3G(to))
 
         const geom = new THREE.BufferGeometry().setFromPoints(pts)
         const line = new THREE.Line(geom, mati)
@@ -335,7 +312,7 @@ export default class {
         this.rndr.setClearColor(0xbfd1e5)
         this.rndr.setPixelRatio(px_ratio)
         this.rndr.setSize(w, h)
-        this.cam.position.set(0, 15, 30)
+        this.cam.position.set(30, 15, 0)
         this.cam.lookAt(new THREE.Vector3(0, 0, 0))
         this.orb.enableDamping = false
         this.orb.enablePan     = true
@@ -414,10 +391,10 @@ export default class {
             (e.clientX / this.rndr.domElement.clientWidth)  * 2 - 1,
             -(e.clientY / this.rndr.domElement.clientHeight) * 2 + 1)
         
-        this.caster.ray.mOrigin = V3W(this.cam.position)
-        this.caster.ray.mDirection.Set(0,0,0)
-        this.caster.draw()
-        this.caster.reset()
+        this.caster.ray.mOrigin.Set(new Jolt.Vec3(-20, 0, 0))
+        this.caster.ray.mDirection.Set(new Jolt.Vec3(20,0,0))
+        console.log(this.caster.ray)
+        this.caster.Cast()
     }
 }  // class JoltCore
 
