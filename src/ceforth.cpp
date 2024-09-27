@@ -491,6 +491,7 @@ void mem_dump(U32 p0, IU sz) {
 }
 void load(const char* fn) {
     rs.push(VM); rs.push(DP); rs.push(IP);                         /// save context
+    VM = NEST;                                                     /// +recursive
     forth_include(fn);                                             /// include file
     IP = UINT(rs.pop()); DP = UINT(rs.pop()); VM = UINT(rs.pop()); /// restore
 }
@@ -841,25 +842,29 @@ int forth_vm(const char *line, void(*hook)(int, const char*)) {
             }
         }
     }
+    if (!hold && !compile && VM!=NEST) {
 #if DO_WASM
-    if (!hold && !compile) fout << "ok" << ENDL;
+        fout << "ok" << ENDL;                 /// * no stack dump
 #else // !DO_WASM
-    if (!hold && !compile) ss_dump();         /// * dump stack and display ok prompt
+        ss_dump();                            /// * dump stack and display ok prompt
 #endif  // DO_WASM
+    }
     return hold;
 }
 #include <iostream>
+void outer(istream &in) {
+    string cmd;
+    while (getline(in, cmd)) {                /// * read line-by-line
+        while (forth_vm(cmd.c_str()));
+    }
+}
 int  main(int ac, char* av[]) {
     forth_init();
     srand(time(0));
     
 #if !DO_WASM
     cout << APP_VERSION << endl;
-    string cmd;
-    while (getline(cin, cmd)) {         ///> fetch user input
-        // printf("cmd=<%s>\n", cmd.c_str());
-        while (forth_vm(cmd.c_str()));  ///> execute outer interpreter
-    }
+    outer(cin);
     cout << "done!" << endl;
 #endif // DO_WASM
     
@@ -977,8 +982,9 @@ void native_api() {                        ///> ( n addr u -- )
 ///
 ///> External file loader
 ///
-int  forth_include(const char *fn) {
-    const int rst = EM_ASM_INT({
+int  forth_include(const char *fn) {              ///> include with Javascript
+    static int bidx = E4_PMEM_SZ;                 ///< read buffer index
+    const  int rst  = EM_ASM_INT({
         const txt = sync_fetch($0);               ///< fetch file from server subdir
         if (!txt) return 0;
         
@@ -993,21 +999,32 @@ int  forth_include(const char *fn) {
         buf[len-1] = '\0';                        /// * \0 terminated str
         
         return adj;
-        }, fn, E4_PMEM_SZ);
+        }, fn, bidx);
     if (rst==0) {
         fout << fn << " load failed!" << ENDL;    /// * fetch failed, bail
         return 0;
     }
+    bidx -= rst;                                  /// * buffer allocated
     ///
     /// preserve I/O states, call VM, restore IO states
     ///
-    void (*cb)(int, const char*) = fout_cb;       ///< keep output function
-    string in; getline(fin, in);                  ///< keep input buffers
+    void (*cb)(int, const char*) = fout_cb;       ///< keep output port
+    string in; getline(fin, in);                  ///< keep input buffer
     fout << ENDL;                                 /// * flush output
-    
-    while (forth_vm((const char*)&pmem[E4_PMEM_SZ-rst])); /// * send script to VM
-    
-    fout_cb = cb;                                 /// * restore output cb
+
+#if 1
+    struct strbuf : public streambuf {            ///> in-place buffer
+        strbuf(char *s, size_t n) { setg(s, s, s+n); }
+    }
+    strbuf((char*)&pmem[bidx], rst);              ///< create in-place string buf
+    istream ss(&strbuf);                          ///< attach string to stream
+    outer(ss);
+#else    
+    while (forth_vm((const char*)&pmem[bidx]));   /// * send script to VM
+#endif
+
+    bidx += rst;                                  /// * release buffer
+    fout_cb = cb;                                 /// * restore output port
     fin.clear(); fin.str(in);                     /// * restore input
     
     return 0;
