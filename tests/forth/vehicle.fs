@@ -1,4 +1,6 @@
 \ weForth Vehicle demo
+s" forth/jolt.fs" included
+sandbox
 1000 constant ID                       \ body id
 : rad ( d -- r ) 2PI * 360 / ;         
 : bike
