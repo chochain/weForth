@@ -49,19 +49,36 @@ function setupJolt() {
 }
 function setupCaster(core) {
     const caster = new Object()
-    caster.ray   = new Jolt.RRayCast()
-    caster.hit   = new Jolt.RayCastResult()
+    const ray    = caster.ray = new Jolt.RRayCast()
+    const hit    = caster.hit = new Jolt.RayCastResult()
 	caster.Cast  = ()=>{
         core.phyx.GetNarrowPhaseQuery().CastRay(
-            caster.ray,
-            caster.hit,
+            ray,
+            hit,
             new Jolt.DefaultBroadPhaseLayerFilter(core.jolt.GetObjectVsBroadPhaseLayerFilter(), L_MOVING),
             new Jolt.DefaultObjectLayerFilter(core.jolt.GetObjectLayerPairFilter(), L_MOVING)
         )
-        // core.addLine(V3W(core.cam.position), new Jolt.Vec3(0,0,0), 0xff0000)
-        // core.arrow.setDirection(V3G(pt.Add(norm.Mul(20))))
         console.log('hit')
-        console.log(caster.hit)
+        console.log(hit)
+        const pt   = ray.GetPointOnRay(hit.mFraction)
+        const bid  = hit.mBodyID
+        console.log('pt')
+        console.log(pt)
+        console.log(bid)
+        console.log(hit.mSubShapeID2.GetValue())
+        if (!core.intf.IsAdded(bid)) {
+            console.log('not added')
+            return
+        }
+        const shape= core.intf.GetShape(bid)
+        console.log('shape')
+        console.log(shape)
+        const norm = shape.GetSurfaceNormal(hit.mSubShapeID2, pt)
+        console.log('norm')
+        console.log(norm)
+
+        core.arrow.position.copy(V3G(pt))
+        core.arrow.setDirection(V3G(norm))
     }
     caster.Reset = ()=>caster.hit.Reset()
     return caster
@@ -390,10 +407,15 @@ export default class {
         this.mouse.set(
             (e.clientX / this.rndr.domElement.clientWidth)  * 2 - 1,
             -(e.clientY / this.rndr.domElement.clientHeight) * 2 + 1)
+
+        const orig = new Jolt.Vec3(0, -4, 0)
+        const dir  = new Jolt.Vec3(1, 0, 0)
         
-        this.caster.ray.mOrigin.Set(new Jolt.Vec3(-20, 0, 0))
-        this.caster.ray.mDirection.Set(new Jolt.Vec3(20,0,0))
-        console.log(this.caster.ray)
+        this.arrow.position.copy(V3G(orig))
+        this.arrow.setDirection(V3G(dir))
+        
+        this.caster.ray.mOrigin.Set(orig)
+        this.caster.ray.mDirection.Set(dir)
         this.caster.Cast()
     }
 }  // class JoltCore
