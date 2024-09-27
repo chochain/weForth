@@ -23,5 +23,6 @@ variable id 0 id !                     \ object id
 \ shape removal
 : remove ( id -- ) s" drop %d" JS ;    \ remove body with given id from scene
 : wipe
-  99 for i 1+ remove 100 delay next ;
+  id @ for i 1+ remove 100 delay next
+  0 id ! ;
 .( shapes.fs loaded )
