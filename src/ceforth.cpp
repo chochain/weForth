@@ -111,9 +111,8 @@ int  forth_include(const char *fn);       // load external Forth script
 ///
 typedef enum { STOP=0, HOLD, QUERY, NEST, IO } vm_state;
 
-IU   IP      = 0;       ///< instruction pointer
-IU   DP      = 0;       ///< call frame depth (iterator design)
-int  VM      = QUERY;   ///< VM state
+IU       IP = 0;        ///< instruction pointer
+vm_state VM = QUERY;    ///< VM state
 ///
 ///> user variables
 ///
@@ -242,20 +241,16 @@ inline DU   POP()      { DU n=top; top=ss.pop(); return n; }
 #define DISPATCH(op) switch(op)
 #define CASE(op, g)  case op : { g; } break
 #define OTHER(g)     default : { g; } break
-#define RETURN()                                    \
-    if (--DP > 0) { IP=UINT(rs.pop()); VM=HOLD; }   \
-    else VM = STOP
+#define UNNEST()     (VM = (IP=UINT(rs.pop())) ? HOLD : STOP)
 
-void nest(IU pfa) {
-    if (VM!=HOLD && VM!=IO) { DP = 1; IP = pfa; }    /// * reset IP & depth counter
+void nest() {
     VM = NEST;                                       /// * activate VM
-
-    while (VM==NEST) {
+    while (VM==NEST && IP) {
         IU ix = IGET(IP);                            ///> fetched opcode, hopefully in register
-//        printf("DP=%d, [%4x]:%4x", DP, IP, ix);
+        printf("[%4x]:%4x", IP, ix);
         IP += sizeof(IU);
         DISPATCH(ix) {                               /// * opcode dispatcher
-        CASE(EXIT, RETURN());
+        CASE(EXIT, UNNEST());
         CASE(NOP,  { /* do nothing */});
         CASE(NEXT,
              if (GT(rs[-1] -= DU1, -DU1)) {          ///> loop done?
@@ -277,7 +272,7 @@ void nest(IU pfa) {
              ss.push(top);
              top = *(DU*)MEM(IP);                    ///> from hot cache, hopefully
              IP += sizeof(DU));                      /// * hop over the stored value
-        CASE(VAR, PUSH(DALIGN(IP)); RETURN());       ///> get var addr, alignment?
+        CASE(VAR, PUSH(DALIGN(IP)); UNNEST());       ///> get var addr, alignment?
         CASE(STR,
              const char *s = (const char*)MEM(IP);   ///< get string pointer
              IU    len = STRLEN(s);
@@ -294,22 +289,19 @@ void nest(IU pfa) {
         CASE(DOES,
              IU *p = (IU*)MEM(LAST.pfa);             ///< memory pointer to pfa 
              *(p+1) = IP;                            /// * encode current IP, and bail
-             RETURN());
-        CASE(FOR,  rs.push(POP()));                     /// * setup FOR..NEXT call frame
-        CASE(DO,   rs.push(ss.pop()); rs.push(POP()));  /// * setup DO..LOOP call frame
-        CASE(KEY,  key(); VM=IO);                       /// * fetch single keypress
+             UNNEST());
+        CASE(FOR,  rs.push(POP()));                  /// * setup FOR..NEXT call frame
+        CASE(DO,                                     /// * setup DO..LOOP call frame
+             rs.push(ss.pop()); rs.push(POP()));
+        CASE(KEY,  key(); VM = IO);                  /// * fetch single keypress
         OTHER(
             if (ix & EXT_FLAG) {                     /// * colon word?
                 rs.push(IP);                         /// * setup call frame
-                DP++;
                 IP = ix & ~EXT_FLAG;                 /// * IP = word.pfa
             }
-            else {
-                Code::exec(ix);                      ///> execute built-in word
-                if (VM==STOP) { RETURN(); }
-            });
+            else Code::exec(ix));                    ///> execute built-in word
         }
-//        printf("   =>DP=%d, IP=%4x, rs.idx=%d, VM=%d\n", DP, IP, rs.idx, VM);
+        printf("   => IP=%4x, rs.idx=%d, VM=%d\n", IP, rs.idx, VM);
     }
 }
 ///
@@ -317,8 +309,9 @@ void nest(IU pfa) {
 ///
 void CALL(IU w) {
     if (IS_UDF(w)) {                   /// colon word
-        VM = NEST;
-        nest(dict[w].pfa);
+        rs.push(DU0);
+        IP = dict[w].pfa;              /// setup task context
+        nest();
     }
     else dict[w].call();               /// built-in word
 }
@@ -368,9 +361,10 @@ int  pfa2nvar(IU pfa) {
 }
 void to_s(IU w, U8 *ip) {
 #if CC_DEBUG
-    fout << "( " << setfill('0') << setw(4) << (ip - MEM0) << "["; ///> addr
-    fout << setfill(' ') << setw(4) << w;
-    fout << "] ) ";
+    fout << setbase(16) << "( ";
+    fout << setfill('0') << setw(4) << (ip - MEM0);       ///> addr
+    fout << '[' << setfill(' ') << setw(4) << w << ']';   ///> word ref
+    fout << " ) " << setbase(*base);
 #endif // CC_DEBUG
     
     ip += sizeof(IU);                  ///> calculate next ip
@@ -397,17 +391,17 @@ void to_s(IU w, U8 *ip) {
         break;
     default: /* do nothing */ break;
     }
-    fout << setfill(' ') << setw(-1); ///> restore output format settings
+    fout << setfill(' ') << setw(-1);   ///> restore output format settings
 }
-void see(IU pfa, int dp=1) {
+void see(IU pfa) {
     U8 *ip = MEM(pfa);
     while (1) {
         IU w = pfa2didx(*(IU*)ip);      ///> fetch word index by pfa
         if (!w) break;                  ///> loop guard
         
-        fout << ENDL; for (int i=DP; i>0; i--) fout << "  ";    ///> indent
-        to_s(w, ip);                    ///> display opcode
-        if (w==EXIT || w==VAR) return;  ///> end of word
+        fout << ENDL; fout << "  ";     /// * indent
+        to_s(w, ip);                    /// * display opcode
+        if (w==EXIT || w==VAR) return;  /// * end of word
         
         ip += sizeof(IU);               ///> advance ip (next opcode)
         switch (w) {                    ///> extra bytes to skip
@@ -417,12 +411,6 @@ void see(IU pfa, int dp=1) {
         case NEXT:  case LOOP:  ip += sizeof(IU);        break;
         case VBRAN: ip = MEM(*(IU*)ip);                  break;
         }
-#if CC_DEBUG > 1
-        ///> walk recursively
-        if (!IS_PRIM(w) && IS_UDF(w) && DP < 2) {      ///> is a colon word
-            see(dict[w].pfa, DP+1);                    ///> recursive into child
-        }
-#endif // CC_DEBUG > 1
     }
 }
 void words() {
@@ -490,10 +478,10 @@ void mem_dump(U32 p0, IU sz) {
     fout << setbase(*base) << setfill(' ');
 }
 void load(const char* fn) {
-    rs.push(VM); rs.push(DP); rs.push(IP);                         /// save context
-    VM = NEST;                                                     /// +recursive
-    forth_include(fn);                                             /// include file
-    IP = UINT(rs.pop()); DP = UINT(rs.pop()); VM = UINT(rs.pop()); /// restore
+    rs.push(IP);                          /// * save context
+    VM = NEST;                            /// * +recursive
+    forth_include(fn);                    /// * include file
+    IP = UINT(rs.pop());                  /// * restore context
 }
 ///====================================================================
 ///
@@ -588,7 +576,7 @@ void dict_compile() {  ///< compile built-in words into dictionary
     CODE("u.r",     fout << setbase(*base) << setw(POP()) << UINT(POP()));
     CODE("type",    POP();                    // string length (not used)
          fout << (const char*)MEM(POP()));    // get string pointer
-    IMMD("key",     if (compile) add_w(KEY); else PUSH(word()[0]));
+    IMMD("key",     if (compile) add_w(KEY); else key());
     CODE("emit",    char b = (char)POP(); fout << b);
     CODE("space",   spaces(1));
     CODE("spaces",  spaces(POP()));
@@ -636,7 +624,7 @@ void dict_compile() {  ///< compile built-in words into dictionary
     /// @{
     IMMD("do" ,     add_w(DO); PUSH(HERE));                     // for ( -- here )
     CODE("i",       PUSH(rs[-1]));
-    CODE("leave",   rs.pop(); rs.pop(); VM = STOP);             // quit DO..LOOP
+    CODE("leave",   rs.pop(); rs.pop(); UNNEST());              // quit DO..LOOP
     IMMD("loop",    add_w(LOOP); add_iu(POP()));                // next ( here -- )
     /// @}
     /// @defgrouop return stack ops
@@ -649,7 +637,7 @@ void dict_compile() {  ///< compile built-in words into dictionary
     /// @{
     CODE(":",       compile = def_word(word()));
     IMMD(";",       add_w(EXIT); compile = false);
-    CODE("exit",    VM = STOP);                                 // early exit the colon word
+    CODE("exit",    UNNEST());                                  // early exit the colon word
     CODE("variable",def_word(word()); add_var(VAR));            // create a variable
     CODE("constant",                                            // create a constant
          def_word(word());                                      // create a new word on dictionary
@@ -664,7 +652,7 @@ void dict_compile() {  ///< compile built-in words into dictionary
     CODE("create", def_word(word()); add_var(VBRAN));           // bran + offset field
     IMMD("does>",  add_w(DOES));
     IMMD("to",                                                  // alter the value of a constant, i.e. 3 to x
-         IU w = VM==NEST ? POP() : find(word());                // constant addr
+         IU w = VM==QUERY ? find(word()) : POP();               // constant addr
          if (!w) return;
          if (compile) {
              add_w(LIT); add_du((DU)w);                         // save addr on stack
@@ -674,7 +662,7 @@ void dict_compile() {  ///< compile built-in words into dictionary
              *(DU*)(MEM(dict[w].pfa) + sizeof(IU)) = POP();     // update constant
          });
     IMMD("is",              // ' y is x                         // alias a word, i.e. ' y is x
-         IU w = VM==NEST ? POP() : find(word());                // word addr
+         IU w = VM==QUERY ? find(word()) : POP();               // word addr
          if (!w) return;
          if (compile) {
              add_w(LIT); add_du((DU)w);                         // save addr on stack
@@ -773,7 +761,8 @@ DU parse_number(const char *idiom, int *err) {
     return n;
 }
 
-void forth_core(const char *idiom) {
+void forth_core(const char *idiom) {     ///> aka QUERY
+    VM = QUERY;
     IU w = find(idiom);                  ///> * get token by searching through dict
     if (w) {                             ///> * word found?
         if (compile && !IS_IMM(w)) {     /// * in compile mode?
@@ -803,53 +792,52 @@ void forth_core(const char *idiom) {
 ///
 void forth_init() {
     static bool init = false;
-    if (init) return;            ///> check dictionary initilized
+    if (init) return;                    ///> check dictionary initilized
 
-    add_w(EXIT);                 /// * COLD
-    if (sizeof(IU)==2) add_iu(0);/// * 4-byte aligned
+    add_w(EXIT);                         /// * COLD
+    if (sizeof(IU)==2) add_iu(0);        /// * 4-byte aligned
 
-    base = &IGET(HERE);          ///< set pointer to base
-    add_iu(10);                  ///< allocate space for base
-    dflt = &IGET(HERE);          ///< set pointer to dfmt
+    base = &IGET(HERE);                  ///< set pointer to base
+    add_iu(10);                          ///< allocate space for base
+    dflt = &IGET(HERE);                  ///< set pointer to dfmt
     add_iu(USE_FLOAT);
     
     for (int i=pmem.idx; i<USER_AREA; i+=sizeof(IU)) {
-        add_iu(EXIT);            /// * padding user area
+        add_iu(EXIT);                    /// * padding user area
     }
     dict_compile();                      ///> compile dictionary
 }
 int forth_vm(const char *line, void(*hook)(int, const char*)) {
-    static long t0 = 0;
+    auto time_up = []() {                /// * time slice up
+        static long t0 = 0;              /// * real-time support, 10ms = 100Hz
+        long t1 = millis();              ///> check timing
+        return (t1 >= t0) ? (t0 = t1 + t0, 1) : 0;
+    };
     auto cb = [](int, const char *rst) { printf("%s", rst); };
-    fout_cb = hook ? hook : cb;  ///< serial output hook up
+    fout_cb = hook ? hook : cb;          ///< serial output hook up
 
-    bool hold = (VM==HOLD || VM==IO);         ///< check VM resume status
-    if (!hold) {                              ///> refresh buffer if not resuming
-        fout.str("");                         /// * clean output buffer
-        fin.clear();                          /// * clear input stream error bit if any
-        fin.str(line);                        /// * reload user command into input stream
+    bool resume = (VM==HOLD || VM==IO);  ///< check VM resume status
+    if (resume) IP = UINT(rs.pop());     /// * restore context
+    else {                               ///> refresh buffer if not resuming
+        fout.str("");                    /// * clean output buffer
+        fin.clear();                     /// * clear input stream error bit if any
+        fin.str(line);                   /// * reload user command into input stream
     }
     string idiom;
-    while (hold || (fin >> idiom)) {          ///> fetch a word
-        if (hold) nest(0);                    /// * continue without parsing
-        else      forth_core(idiom.c_str());  ///> send to Forth core
-        hold = VM==HOLD;                      /// * no holding on STOP, IO, RUN
-        if (hold) {                           ///> multi-threading support
-            long t1 = millis();               ///> check timing
-            if (t1 >= t0) {                   /// * time slice up
-                t0 = t1 + 10;                 /// * real-time support, 10ms = 100Hz
-                break;                        /// * pause, yield to front-end task
-            }
-        }
+    while (resume || fin >> idiom) {     /// * parse a word
+        printf(">> IP=%4x, rs.idx=%d, VM=%d %s\n", IP, rs.idx, VM, idiom.c_str());
+        if (resume) nest();                    /// * resume task
+        else        forth_core(idiom.c_str()); /// * send to Forth core
+        resume = VM==HOLD;
+        if (resume && time_up()) break;  ///> multi-threading support
+        printf("<< IP=%4x, rs.idx=%d, VM=%d\n", IP, rs.idx, VM);
     }
-    if (!hold && !compile && VM!=NEST) {
-#if DO_WASM
-        fout << "ok" << ENDL;                 /// * no stack dump
-#else // !DO_WASM
-        ss_dump();                            /// * dump stack and display ok prompt
-#endif  // DO_WASM
-    }
-    return hold;
+    bool yield = VM==HOLD || VM==IO;     /// * yield to other tasks
+    
+    if (yield)         rs.push(IP);      /// * save context
+    else if (!compile) ss_dump();        /// * optionally display stack contents
+    
+    return yield;
 }
 #include <iostream>
 void outer(istream &in) {
