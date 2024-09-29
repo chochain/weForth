@@ -247,7 +247,7 @@ void nest() {
     VM = NEST;                                       /// * activate VM
     while (VM==NEST && IP) {
         IU ix = IGET(IP);                            ///> fetched opcode, hopefully in register
-        printf("[%4x]:%4x", IP, ix);
+//        printf("[%4x]:%4x", IP, ix);
         IP += sizeof(IU);
         DISPATCH(ix) {                               /// * opcode dispatcher
         CASE(EXIT, UNNEST());
@@ -301,7 +301,7 @@ void nest() {
             }
             else Code::exec(ix));                    ///> execute built-in word
         }
-        printf("   => IP=%4x, rs.idx=%d, VM=%d\n", IP, rs.idx, VM);
+//        printf("   => IP=%4x, rs.idx=%d, VM=%d\n", IP, rs.idx, VM);
     }
 }
 ///
@@ -436,7 +436,10 @@ void words() {
     }
     fout << setbase(*base) << ENDL;
 }
-void ss_dump() {
+void ss_dump(bool forced=false) {
+#if DO_WASM    
+    if (!forced) { fout << "ok" << ENDL; return; }
+#endif //    
     static char buf[34];
     auto rdx = [](DU v, int b) {          ///> display v by radix
 #if USE_FLOAT
@@ -694,7 +697,7 @@ void dict_compile() {  ///< compile built-in words into dictionary
     CODE("abort", top = -DU1; ss.clear(); rs.clear());          // clear ss, rs
     CODE("here",  PUSH(HERE));
     CODE("'",     IU w = find(word()); if (w) PUSH(w));
-    CODE(".s",    ss_dump());
+    CODE(".s",    ss_dump(true));
     CODE("depth", PUSH(ss.idx));
     CODE("r",     PUSH(rs.idx));
     CODE("words", words());
@@ -836,7 +839,8 @@ int forth_vm(const char *line, void(*hook)(int, const char*)) {
     
     if (yield)         rs.push(IP);      /// * save context
     else if (!compile) ss_dump();        /// * optionally display stack contents
-    
+
+    printf("%s => %d\n", idiom.c_str(), VM);
     return yield;
 }
 #include <iostream>
@@ -1007,8 +1011,8 @@ int  forth_include(const char *fn) {              ///> include with Javascript
     strbuf((char*)&pmem[bidx], rst);              ///< create in-place string buf
     istream ss(&strbuf);                          ///< attach string to stream
     outer(ss);
-#else    
-    while (forth_vm((const char*)&pmem[bidx]));   /// * send script to VM
+#else
+    while (forth_vm((const char*)&pmem[bidx]));   /// * send entire script to VM
 #endif
 
     bidx += rst;                                  /// * release buffer
