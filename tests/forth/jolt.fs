@@ -1,4 +1,6 @@
 \ weForth demo - Jolt Core
+6.2832 constant 2PI                    \ for radian => degree
+: rad ( d -- r ) 2PI * 360 / ;         
 : V3 create 3 cells allot ;            \ geometry/vec3
 : 3! >r r@ 8 + ! r@ 4 + ! r> ! ;       \ ( x y z a -- )
 : 4! >r r@ 12 + ! r> 3! ;              \ ( x y z w a -- )
