@@ -243,11 +243,17 @@ inline DU   POP()      { DU n=top; top=ss.pop(); return n; }
 #define OTHER(g)     default : { g; } break
 #define UNNEST()     (VM = (IP=UINT(rs.pop())) ? HOLD : STOP)
 
+void rs_dump(const char *hdr) {
+    printf("%s [", hdr);
+    for (int i=0; i<rs.idx; i++) printf(" %04x", static_cast<int>(rs[i]));
+    printf(" ]\n");
+}
 void nest() {
+    rs_dump("nest>>");
     VM = NEST;                                       /// * activate VM
     while (VM==NEST && IP) {
         IU ix = IGET(IP);                            ///> fetched opcode, hopefully in register
-//        printf("[%4x]:%4x", IP, ix);
+        printf("[%4x]:%4x", IP, ix);
         IP += sizeof(IU);
         DISPATCH(ix) {                               /// * opcode dispatcher
         CASE(EXIT, UNNEST());
@@ -272,7 +278,8 @@ void nest() {
              ss.push(top);
              top = *(DU*)MEM(IP);                    ///> from hot cache, hopefully
              IP += sizeof(DU));                      /// * hop over the stored value
-        CASE(VAR, PUSH(DALIGN(IP)); UNNEST());       ///> get var addr, alignment?
+        CASE(VAR,
+             PUSH(DALIGN(IP)); UNNEST());       ///> get var addr, alignment?
         CASE(STR,
              const char *s = (const char*)MEM(IP);   ///< get string pointer
              IU    len = STRLEN(s);
@@ -284,6 +291,7 @@ void nest() {
         CASE(ZBRAN,                                  /// * conditional branch
              IP = POP() ? IP+sizeof(IU) : IGET(IP));
         CASE(VBRAN,
+             printf("vbran IP=%x", IP);
              PUSH(DALIGN(IP + sizeof(IU)));          /// * skip target address
              IP = IGET(IP));                         /// * create..
         CASE(DOES,
@@ -301,13 +309,15 @@ void nest() {
             }
             else Code::exec(ix));                    ///> execute built-in word
         }
-//        printf("   => IP=%4x, rs.idx=%d, VM=%d\n", IP, rs.idx, VM);
+        printf("   => IP=%4x, rs.idx=%d, VM=%d\n", IP, rs.idx, VM);
+        rs_dump("nest <<");
     }
 }
 ///
 ///> CALL - inner-interpreter proxy (inline macro does not run faster)
 ///
 void CALL(IU w) {
+    rs_dump("call");
     if (IS_UDF(w)) {                   /// colon word
         rs.push(DU0);
         IP = dict[w].pfa;              /// setup task context
@@ -827,20 +837,20 @@ int forth_vm(const char *line, void(*hook)(int, const char*)) {
         fin.str(line);                   /// * reload user command into input stream
     }
     string idiom;
+    rs_dump("forth_vm >>");
     while (resume || fin >> idiom) {     /// * parse a word
-        printf(">> IP=%4x, rs.idx=%d, VM=%d %s\n", IP, rs.idx, VM, idiom.c_str());
+        printf(" idiom=%s\n", idiom.c_str());
         if (resume) nest();                    /// * resume task
         else        forth_core(idiom.c_str()); /// * send to Forth core
         resume = VM==HOLD;
         if (resume && time_up()) break;  ///> multi-threading support
-        printf("<< IP=%4x, rs.idx=%d, VM=%d\n", IP, rs.idx, VM);
     }
     bool yield = VM==HOLD || VM==IO;     /// * yield to other tasks
     
     if (yield)         rs.push(IP);      /// * save context
     else if (!compile) ss_dump();        /// * optionally display stack contents
 
-    printf("%s => %d\n", idiom.c_str(), VM);
+    rs_dump("forth_vm <<");
     return yield;
 }
 #include <iostream>
