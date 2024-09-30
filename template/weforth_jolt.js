@@ -178,7 +178,7 @@ function get_q4(
 
 let   req_q   = []
 const CMD_LST = [
-    'mesh', 'body', 'drop',
+    'sandbox', 'body', 'drop',
     'bike', 'fwd', 'rwd', '4x4',
     'wheel', 'engine', 'gearbox',
     'start'
