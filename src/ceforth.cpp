@@ -278,8 +278,7 @@ void nest() {
              ss.push(top);
              top = *(DU*)MEM(IP);                    ///> from hot cache, hopefully
              IP += sizeof(DU));                      /// * hop over the stored value
-        CASE(VAR,
-             PUSH(DALIGN(IP)); UNNEST());       ///> get var addr, alignment?
+        CASE(VAR, PUSH(DALIGN(IP)); UNNEST());       ///> get var addr, alignment?
         CASE(STR,
              const char *s = (const char*)MEM(IP);   ///< get string pointer
              IU    len = STRLEN(s);
@@ -291,9 +290,8 @@ void nest() {
         CASE(ZBRAN,                                  /// * conditional branch
              IP = POP() ? IP+sizeof(IU) : IGET(IP));
         CASE(VBRAN,
-             printf("vbran IP=%x", IP);
              PUSH(DALIGN(IP + sizeof(IU)));          /// * skip target address
-             IP = IGET(IP));                         /// * create..
+             if ((IP = IGET(IP))==0) UNNEST());      /// * jump target of does> if given
         CASE(DOES,
              IU *p = (IU*)MEM(LAST.pfa);             ///< memory pointer to pfa 
              *(p+1) = IP;                            /// * encode current IP, and bail
@@ -807,16 +805,13 @@ void forth_init() {
     static bool init = false;
     if (init) return;                    ///> check dictionary initilized
 
-    add_w(EXIT);                         /// * COLD
-    if (sizeof(IU)==2) add_iu(0);        /// * 4-byte aligned
-
     base = &IGET(HERE);                  ///< set pointer to base
     add_iu(10);                          ///< allocate space for base
     dflt = &IGET(HERE);                  ///< set pointer to dfmt
     add_iu(USE_FLOAT);
     
     for (int i=pmem.idx; i<USER_AREA; i+=sizeof(IU)) {
-        add_iu(EXIT);                    /// * padding user area
+        add_iu(0xffff);                  /// * padding user area
     }
     dict_compile();                      ///> compile dictionary
 }
