@@ -4,7 +4,7 @@
 ///
 'use strict'
 
-function build_mesh(n, sz, h) {    // nxn, sz=tileSize, h:max_height
+function build_sandbox(n, sz, h) {    // nxn, sz=tileSize, h:max_height
     // Create regular grid of triangles
     const n2   = n * 0.5, ctr = n2 * sz
     const bump = (x, z) => h * ((x==z || (x+z)==n) ? 0.3 : 0)
@@ -52,7 +52,7 @@ function get_shape(t, v=null) {
     let config = null
     switch (t) {
     case 0: {
-        config = build_mesh(x[0], x[1], x[2])
+        config = build_sandbox(x[0], x[1], x[2])
         break
     }
     case 1: {                       // Sphere
@@ -251,9 +251,9 @@ function jolt_update(core) {
         rot  = get_q4(ds[5], ds[6], ds[7], ds[8])
     }
     switch (cmd) {
-    case 'mesh':
-        const mesh = get_shape(0, x)
-        return core.addShape(id, mesh, pos, rot, color, 0, false)
+    case 'sandbox':
+        const sb = get_shape(0, x)
+        return core.addShape(id, sb, pos, rot, color, 0, false)
     case 'body':
         const shape = get_shape(ds[1]|0)
         const nobj  = core.addShape(id, shape, pos, rot, color)
