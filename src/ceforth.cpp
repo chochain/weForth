@@ -118,7 +118,8 @@ vm_state VM = QUERY;    ///< VM state
 ///
 DU   top     = -DU1;    ///< top of stack (cached)
 bool compile = false;   ///< compiler flag
-bool ucase   = false;   ///< case sensitivity control
+bool upper   = false;   ///< case sensitivity control
+IU   load_dp = 0;       ///< depth of recursive include
 IU   *base;             ///< numeric radix (a pointer)
 IU   *dflt;             ///< use float data unit flag
 ///
@@ -128,7 +129,7 @@ IU   *dflt;             ///< use float data unit flag
 ///
 IU find(const char *s) {
     auto streq = [](const char *s1, const char *s2) {
-        return ucase ? strcasecmp(s1, s2)==0 : strcmp(s1, s2)==0;
+        return upper ? strcasecmp(s1, s2)==0 : strcmp(s1, s2)==0;
     };
     IU v = 0;
     for (IU i = dict.idx - 1; !v && i > 0; --i) {
@@ -243,17 +244,11 @@ inline DU   POP()      { DU n=top; top=ss.pop(); return n; }
 #define OTHER(g)     default : { g; } break
 #define UNNEST()     (VM = (IP=UINT(rs.pop())) ? HOLD : STOP)
 
-void rs_dump(const char *hdr) {
-    printf("%s [", hdr);
-    for (int i=0; i<rs.idx; i++) printf(" %04x", static_cast<int>(rs[i]));
-    printf(" ]\n");
-}
 void nest() {
-    rs_dump("nest>>");
     VM = NEST;                                       /// * activate VM
     while (VM==NEST && IP) {
-        IU ix = IGET(IP);                            ///> fetched opcode, hopefully in register
-        printf("[%4x]:%4x", IP, ix);
+        IU ix = IGET(IP);                            ///< fetched opcode, hopefully in register
+//        printf("[%4x]:%4x", IP, ix);
         IP += sizeof(IU);
         DISPATCH(ix) {                               /// * opcode dispatcher
         CASE(EXIT, UNNEST());
@@ -307,15 +302,13 @@ void nest() {
             }
             else Code::exec(ix));                    ///> execute built-in word
         }
-        printf("   => IP=%4x, rs.idx=%d, VM=%d\n", IP, rs.idx, VM);
-        rs_dump("nest <<");
+//        printf("   => IP=%4x, rs.idx=%d, VM=%d\n", IP, rs.idx, VM);
     }
 }
 ///
 ///> CALL - inner-interpreter proxy (inline macro does not run faster)
 ///
 void CALL(IU w) {
-    rs_dump("call");
     if (IS_UDF(w)) {                   /// colon word
         rs.push(DU0);
         IP = dict[w].pfa;              /// setup task context
@@ -445,11 +438,12 @@ void words() {
     fout << setbase(*base) << ENDL;
 }
 void ss_dump(bool forced=false) {
+    if (load_dp) return;                  /// * skip when including file
 #if DO_WASM    
     if (!forced) { fout << "ok" << ENDL; return; }
 #endif //    
-    static char buf[34];
-    auto rdx = [](DU v, int b) {          ///> display v by radix
+    static char buf[34];                  ///< static buffer
+    auto rdx = [](DU v, int b) {          ///< display v by radix
 #if USE_FLOAT
         sprintf(buf, "%0.6g", v);
         return buf;
@@ -489,10 +483,12 @@ void mem_dump(U32 p0, IU sz) {
     fout << setbase(*base) << setfill(' ');
 }
 void load(const char* fn) {
+    load_dp++;                            /// * increment depth counter
     rs.push(IP);                          /// * save context
     VM = NEST;                            /// * +recursive
     forth_include(fn);                    /// * include file
     IP = UINT(rs.pop());                  /// * restore context
+    --load_dp;                            /// * decrement depth counter
 }
 ///====================================================================
 ///
@@ -575,7 +571,7 @@ void dict_compile() {  ///< compile built-in words into dictionary
     /// @}
     /// @defgroup IO ops
     /// @{
-    CODE("case!",   ucase = POP() == DU0);    // case insensitive
+    CODE("case!",   upper = POP() == DU0);    // case insensitive
     CODE("base",    PUSH(((U8*)base - MEM0)));
     CODE("decimal", fout << setbase(*base = 10));
     CODE("hex",     fout << setbase(*base = 16));
@@ -832,9 +828,7 @@ int forth_vm(const char *line, void(*hook)(int, const char*)) {
         fin.str(line);                   /// * reload user command into input stream
     }
     string idiom;
-    rs_dump("forth_vm >>");
     while (resume || fin >> idiom) {     /// * parse a word
-        printf(" idiom=%s\n", idiom.c_str());
         if (resume) nest();                    /// * resume task
         else        forth_core(idiom.c_str()); /// * send to Forth core
         resume = VM==HOLD;
@@ -845,7 +839,6 @@ int forth_vm(const char *line, void(*hook)(int, const char*)) {
     if (yield)         rs.push(IP);      /// * save context
     else if (!compile) ss_dump();        /// * optionally display stack contents
 
-    rs_dump("forth_vm <<");
     return yield;
 }
 #include <iostream>
@@ -1009,16 +1002,12 @@ int  forth_include(const char *fn) {              ///> include with Javascript
     string in; getline(fin, in);                  ///< keep input buffer
     fout << ENDL;                                 /// * flush output
 
-#if 1
     struct strbuf : public streambuf {            ///> in-place buffer
         strbuf(char *s, size_t n) { setg(s, s, s+n); }
     }
     strbuf((char*)&pmem[bidx], rst);              ///< create in-place string buf
     istream ss(&strbuf);                          ///< attach string to stream
     outer(ss);
-#else
-    while (forth_vm((const char*)&pmem[bidx]));   /// * send entire script to VM
-#endif
 
     bidx += rst;                                  /// * release buffer
     fout_cb = cb;                                 /// * restore output port
