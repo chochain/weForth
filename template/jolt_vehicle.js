@@ -95,9 +95,12 @@ export default class {
         else if (f < 0 && vz > 0.1) {
             this.xkey.F *= -1
         }
+        else if (f > 0 && vz > 5.0) {
+            this.xkey.R = 0
+        }
         else if (f < 0 && vz < -5.0) {
             this.xkey.F *= -1
-            this.xkey.R = 0
+            this.xkey.R *= -1
             this.count  = 2
         }
         this.handle.SetDriverInput(this.xkey.F, this.xkey.R, 0, 0)
