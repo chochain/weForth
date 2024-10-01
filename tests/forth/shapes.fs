@@ -2,7 +2,6 @@
 s" forth/jolt.fs" included             \ load jolt core
 sandbox                                \ display meshed floor
 \ randomized parameters
-6.2832 constant 2PI                    \ 2*PI (for degree => radian calc)
 6  constant SMAX                       \ shape 1:ball, 2:box, 3:cynlinder, 4:capsule
                                        \       5:tapered capsule, 6:dumbbell
 : rx 2* rnd 0.5 - * ;                  \ ( n -- n' ) random with range [-n, n)

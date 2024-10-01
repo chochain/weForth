@@ -1,8 +1,7 @@
 \ weForth Vehicle demo
 s" forth/jolt.fs" included
 sandbox
-1000 constant ID                       \ body id
-: rad ( d -- r ) 2PI * 360 / ;         
+1000   constant ID                     \ body id
 : bike
   0.4 0.5 0.8 px 3!                    \ bike body px[width, height, length]
   ID ds !                              \ bike id
