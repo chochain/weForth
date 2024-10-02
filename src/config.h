@@ -75,7 +75,6 @@ typedef int32_t         DU;
 #define ALIGN16(sz)     ((sz) + (-(sz) & 0xf))
 #define ALIGN32(sz)     ((sz) + (-(sz) & 0x1f))
 #define ALIGN(sz)       ALIGN2(sz)
-#define STRLEN(s)       (ALIGN(strlen(s)+1))  /** calculate string size with alignment */
 ///@}
 ///@name Multi-platform support
 ///@{
