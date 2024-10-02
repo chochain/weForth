@@ -83,13 +83,13 @@ VM  vm;                            ///< eForth context (single task)
 ///
 ///> Primitive words (to simplify compiler), see nest() for details
 ///
-Code op_prim[] = {
+Code prim[] = {
     Code(";",   EXIT), Code("nop",  NOP),   Code("next", NEXT),  Code("loop", LOOP),
     Code("lit", LIT),  Code("var",  VAR),   Code("str",  STR),   Code("dotq", DOTQ),
     Code("bran",BRAN), Code("0bran",ZBRAN), Code("vbran",VBRAN), Code("does>",DOES),
     Code("for", FOR),  Code("do",   DO),    Code("key",  KEY)
 };
-#define DICT(w) (IS_PRIM(w) ? op_prim[w & ~EXT_FLAG] : dict[w])
+#define DICT(w) (IS_PRIM(w) ? prim[w & ~EXT_FLAG] : dict[w])
 ///
 ///====================================================================
 ///
