@@ -386,7 +386,8 @@ void to_s(IU w, U8 *ip) {
     switch (w) {
     case NEXT: case LOOP:
     case BRAN: case ZBRAN: case VBRAN:             ///> display jmp target
-        fout << ' ' << setfill('0') << setw(4) << *(IU*)ip;
+        fout << ' ' << setfill('0') << setbase(16)
+             << setw(4) << *(IU*)ip;
         break;
     default: /* do nothing */ break;
     }
