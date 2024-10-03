@@ -1,7 +1,8 @@
 #ifndef __EFORTH_SRC_CEFORTH_H
 #define __EFORTH_SRC_CEFORTH_H
-#include <stdio.h>
-#include <stdint.h>     // uintxx_t
+#include <cstdio>
+#include <cstdint>      // uintxx_t
+#include <string>       // string, strlen
 #include "config.h"     // configuation and cross-platform support
 using namespace std;
 ///
@@ -128,10 +129,32 @@ struct Code {
     }
 #define CODE(n, g) ADD_CODE(n, g, false)
 #define IMMD(n, g) ADD_CODE(n, g, true)
-
-extern void forth_init();
-extern int  forth_vm(const char *cmd, void(*hook)(int, const char*)=NULL);
-extern int  forth_include(const char *fn);
-;
-
+///
+///> System interface
+///
+void forth_init();
+int  forth_vm(const char *cmd, void(*hook)(int, const char*)=NULL);
+int  forth_include(const char *fn);       // load external Forth script
+void outer(istream &in);
+///
+///> IO functions
+///
+void key();                               // read key from console
+char *scan(char c);
+int  fetch(string &idiom);
+void spaces(int n);
+///
+///> Debug functions
+///
+void see(IU pfa);
+void words();
+void ss_dump(bool forced=false);
+void dict_dump();                         // dump dictionary
+void mem_stat();                          // display memory statistics
+void mem_dump(U32 addr, IU sz);
+///
+///> Javascript interface
+///
+void native_api();
+///
 #endif // __EFORTH_SRC_CEFORTH_H
