@@ -23,10 +23,10 @@ function get_ss() {
            : new Uint32Array(wa.memory.buffer, p, n))
     const len = wa.vm_ss_idx()>0 ? wa.vm_ss_idx() : 0
     const ss  = toa(wa.vm_ss(), len)
-    const top = toa(wa.top, 1)
+    const tos = toa(wa.tos, 1)
     let   div = []
     ss.forEach(v=>div.push(FX(v)))
-    div.push(FX(top[0]))
+    div.push(FX(tos[0]))
 
     return '[ '+div.join(' ')+' ]'
 }
