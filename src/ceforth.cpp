@@ -80,9 +80,8 @@ VM  vm;                            ///< eForth context (single task)
 #define CELL(a)   (*(DU*)&pmem[a])         /**< fetch a cell from parameter memory      */
 #define SETJMP(a) (*(IU*)&pmem[a] = HERE)  /**< address offset for branching opcodes    */
 ///@}
-///
-///> Primitive words (to simplify compiler), see nest() for details
-///
+///@name Primitive words
+///@{
 Code prim[] = {
     Code(";",   EXIT), Code("nop",  NOP),   Code("next", NEXT),  Code("loop", LOOP),
     Code("lit", LIT),  Code("var",  VAR),   Code("str",  STR),   Code("dotq", DOTQ),
@@ -91,10 +90,15 @@ Code prim[] = {
 };
 #define DICT(w) (IS_PRIM(w) ? prim[w & ~EXT_FLAG] : dict[w])
 ///
+///> inline functions to reduce verbosity
+///
+inline void PUSH(DU v) { SS.push(TOS); TOS = v; }
+inline DU   POP()      { DU n=TOS; TOS=SS.pop(); return n; }
+///
 ///====================================================================
 ///
-///> Dictionary search functions - can be adapted for ROM+RAM
-///
+///@name Dictionary search functions - can be adapted for ROM+RAM
+///@{
 IU find(const char *s) {
     auto streq = [](const char *s1, const char *s2) {
         return vm.upper ? strcasecmp(s1, s2)==0 : strcmp(s1, s2)==0;
@@ -108,14 +112,15 @@ IU find(const char *s) {
 #endif // CC_DEBUG > 1
     return v;
 }
+///@}
 ///====================================================================
 ///
-///> Colon word compiler
-///  Note:
+///@name Colon word compiler
+///@brief
 ///    * we separate dict and pmem space to make word uniform in size
 ///    * if they are combined then can behaves similar to classic Forth
 ///    * with an addition link field added.
-///
+///@{
 void colon(const char *name) {
     char *nfa = (char*)&pmem[HERE]; ///> current pmem pointer
     int sz = STRLEN(name);          ///> string length, aligned
@@ -153,26 +158,17 @@ void add_var(IU op) {               ///< add a varirable header
     pmem.idx = DALIGN(pmem.idx);    /// * data alignment (WASM 4, other 2)
     if (op==VAR)   add_du(DU0);     /// * default variable = 0
 }
-///====================================================================
-///
-///> functions to reduce verbosity
-///
-inline void PUSH(DU v) { SS.push(TOS); TOS = v; }
-inline DU   POP()      { DU n=TOS; TOS=SS.pop(); return n; }
-
 int def_word(const char* name) {    ///< display if redefined
-    if (name[0]=='\0') {            /// * missing name?
-        pstr(" name?", CR); return 0;
-    }  
+    if (name[0]=='\0') { pstr(" name?", CR); return 0; }  /// * missing name?
     if (find(name)) {               /// * word redefined?
-        pstr(name); pstr(" reDef? ", CR);
+        pstr(" reDef? ", CR);
     }
     colon(name);                    /// * create a colon word
     return 1;                       /// * created OK
 }
 char *word() {                      ///< get next idiom
-    static string tmp;              ///< temp string holder
-    if (!fetch(tmp)) tmp.clear();   /// * input buffer exhausted?
+    static string tmp;              ///< tmp string holder
+    if (!(fetch(tmp))) tmp.clear();  /// * input buffer exhausted?
     return (char*)tmp.c_str();
 }
 void s_quote(prim_op op) {
@@ -189,14 +185,7 @@ void s_quote(prim_op op) {
         HERE = h0;                  ///> restore memory addr
     }
 }
-void load(const char* fn) {
-    vm.load_dp++;                   /// * increment depth counter
-    rs.push(IP);                    /// * save context
-    vm.state = NEST;                /// * +recursive
-    forth_include(fn);              /// * include file
-    IP = UINT(rs.pop());            /// * restore context
-    --vm.load_dp;                   /// * decrement depth counter
-}
+///@}
 ///====================================================================
 ///
 ///> Forth inner interpreter (handles a colon word)
@@ -289,6 +278,17 @@ void CALL(IU w) {
         nest();
     }
     else dict[w].call();               /// built-in word
+}
+///
+///> Forth script loader
+///
+void load(const char* fn) {
+    vm.load_dp++;                      /// * increment depth counter
+    rs.push(IP);                       /// * save context
+    vm.state = NEST;                   /// * +recursive
+    forth_include(fn);                 /// * include file
+    IP = UINT(rs.pop());               /// * restore context
+    --vm.load_dp;                      /// * decrement depth counter
 }
 ///====================================================================
 ///
@@ -506,7 +506,7 @@ void dict_compile() {  ///< compile built-in words into dictionary
     CODE("words", words());
     CODE("see",
          IU w = find(word()); if (!w) return;
-         pstr(dict[w].name);
+         pstr(": "); pstr(dict[w].name);
          if (IS_UDF(w)) see(dict[w].pfa);
          else           pstr(" ( built-ins ) ;");
          put(CR));

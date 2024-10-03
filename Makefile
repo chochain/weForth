@@ -1,4 +1,4 @@
-EM = em++ -Wall -O2 # -O3 does not work
+EM = em++ -Wall -O2 # -O3 does not work???
 CC = g++ -Wall -O2
 
 SRC = ./src/ceforth.cpp ./src/ceforth_sys.cpp

@@ -1,8 +1,8 @@
 #ifndef __EFORTH_SRC_CEFORTH_H
 #define __EFORTH_SRC_CEFORTH_H
-#include <stdio.h>
-#include <stdint.h>     // uintxx_t
-#include <string>       // string class
+#include <cstdio>
+#include <cstdint>      // uintxx_t
+#include <string>       // string, strlen
 #include "config.h"     // configuation and cross-platform support
 using namespace std;
 ///
@@ -161,29 +161,30 @@ struct Code {
 ///
 void forth_init();
 int  forth_vm(const char *cmd, void(*hook)(int, const char*)=NULL);
-int  forth_include(const char *fn);
-void outer(istream &in);
+int  forth_include(const char *fn);       /// load external Forth script
+void outer(istream &in);                  ///< Forth outer loop
 ///
 ///> IO functions
 ///
 typedef enum { BASE=0, BL, CR, DOT, DOTR, EMIT, SPCS } io_op;
-void key();
+void key();                               ///< read key from console
 void fin_setup(const char *line);
-void fout_setup(void (*hook)(int, const char*));
-char *scan(char c);
-int  fetch(string &idiom);
-void spaces(int n);
-void put(io_op op, DU v=DU0, DU v2=DU0);
-void pstr(const char *str, io_op op=BL);
+void fout_setup(void (*hook)(int, const char*)=NULL);
+
+char *scan(char c);                       ///< scan input stream for a given char
+int  fetch(string &idiom);                ///< read input stream into string
+void spaces(int n);                       ///< show spaces
+void put(io_op op, DU v=DU0, DU v2=DU0);  ///< print literals
+void pstr(const char *str, io_op op=BL);  ///< print string
 ///
 ///> Debug functions
 ///
-void see(IU pfa);
-void words();
-void ss_dump(bool forced=false);
-void mem_dump(U32 addr, IU sz);
-void mem_stat();
-void dict_dump();
+void see(IU pfa);                         ///< disassemble user defined word
+void words();                             ///< list dictionary words
+void ss_dump(bool forced=false);          ///< show data stack content
+void dict_dump();                         ///< dump dictionary
+void mem_dump(U32 addr, IU sz);           ///< dump memory frm addr...addr+sz
+void mem_stat();                          ///< display memory statistics
 ///
 ///> Javascript interface
 ///
