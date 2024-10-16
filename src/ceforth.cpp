@@ -168,11 +168,11 @@ void add_w(IU w) {                  ///< add a word index into pmem
     LOGS(" "); LOGS(c.name); LOGS("\n");
 #endif // CC_DEBUG > 1
 }
-void add_var(IU op) {               ///< add a varirable header
+void add_var(IU op, DU v=DU0) {     ///< add a literal/varirable header
     add_w(op);                      /// * VAR or VBRAN
     if (op==VBRAN) add_iu(0);       /// * pad offset field
     pmem.idx = DALIGN(pmem.idx);    /// * data alignment (WASM 4, other 2)
-    if (op==VAR)   add_du(DU0);     /// * default variable = 0
+    if (op!=VBRAN) add_du(v);       /// * default variable = 0
 }
 int def_word(const char* name) {    ///< display if redefined
     if (name[0]=='\0') { pstr(" name?", CR); return 0; }  /// * missing name?
@@ -250,8 +250,9 @@ void nest() {
              });
         CASE(LIT,
              ss.push(tos);
+             IP  = DALIGN(IP);                       /// * 32-bit data align (WASM only)
              tos = *(DU*)MEM(IP);                    ///> from hot cache, hopefully
-             IP += sizeof(DU));                      /// * hop over the stored value
+             IP  += sizeof(DU));
         CASE(VAR, PUSH(DALIGN(IP)); UNNEST());       ///> get var addr
         CASE(STR,
              const char *s = (const char*)MEM(IP);   ///< get string pointer
@@ -463,7 +464,7 @@ void dict_compile() {  ///< compile built-in words into dictionary
     CODE("variable",def_word(word()); add_var(VAR));            // create a variable (default 0)
     CODE("constant",                                            // create a constant
          def_word(word());                                      // create a new word on dictionary
-         add_var(VBRAN); add_du(POP()));                        // VBRAN 0000 literal
+         add_var(LIT, POP()); add_w(EXIT));                     // add literal
     IMMD("immediate", dict[-1].attr |= IMM_ATTR);
     /// @}
     /// @defgroup metacompiler
@@ -476,18 +477,18 @@ void dict_compile() {  ///< compile built-in words into dictionary
          IU w = VM==QUERY ? find(word()) : POP();               // constant addr
          if (!w) return;
          if (compile) {
-             add_w(LIT); add_du((DU)w);                         // save addr on stack
+             add_var(LIT, (DU)w);                               // save addr on stack
              add_w(find("to"));                                 // encode to opcode
          }
          else {
-             w = dict[w].pfa + 2*sizeof(IU);                    // calculate address to memory (VBRAN + offset)
+             w = dict[w].pfa + sizeof(IU);                      // get memory addr to constant
              *(DU*)MEM(DALIGN(w)) = POP();                      // update constant
          });
     IMMD("is",              // ' y is x                         // alias a word, i.e. ' y is x
          IU w = VM==QUERY ? find(word()) : POP();               // word addr
          if (!w) return;
          if (compile) {
-             add_w(LIT); add_du((DU)w);                         // save addr on stack
+             add_var(LIT, (DU)w);                               // save addr on stack
              add_w(find("is"));
          }
          else {
@@ -603,8 +604,7 @@ void forth_core(const char *idiom) {     ///> aka QUERY
     }
     // is a number
     if (compile) {                       /// * a number in compile mode?
-        add_w(LIT);                      ///> add to current word
-        add_du(n);
+        add_var(LIT, n);                 ///> add to current word
     }
     else PUSH(n);                        ///> or, add value onto data stack
 }
@@ -766,7 +766,9 @@ void to_s(IU w, U8 *ip) {
     
     ip += sizeof(IU);                  ///> calculate next ip
     switch (w) {
-    case LIT:  fout << *(DU*)ip << " ( lit )";      break;
+    case LIT:
+        w = (IU)(ip - MEM0);
+        fout << *(DU*)MEM(DALIGN(w)) << " ( lit )"; break;
     case STR:  fout << "s\" " << (char*)ip << '"';  break;
     case DOTQ: fout << ".\" " << (char*)ip << '"';  break;
     case VAR:
@@ -806,8 +808,8 @@ void see(IU pfa) {
         ip += sizeof(IU);               ///> advance ip (next opcode)
         switch (w) {                    ///> extra bytes to skip
         case LIT:
-            w  = (IU)DALIGN(ip - MEM0);
-            ip = MEM(w + sizeof(DU));                    break;
+            w  = (IU)(ip - MEM0);
+            ip = MEM(DALIGN(w) + sizeof(DU));            break;
         case STR:   case DOTQ:  ip += STRLEN((char*)ip); break;
         case BRAN:  case ZBRAN:
         case NEXT:  case LOOP:  ip += sizeof(IU);        break;
