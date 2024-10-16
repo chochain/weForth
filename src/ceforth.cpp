@@ -252,7 +252,7 @@ void nest() {
              ss.push(tos);
              tos = *(DU*)MEM(IP);                    ///> from hot cache, hopefully
              IP += sizeof(DU));                      /// * hop over the stored value
-        CASE(VAR, PUSH(DALIGN(IP)); UNNEST());       ///> get var addr, alignment?
+        CASE(VAR, PUSH(DALIGN(IP)); UNNEST());       ///> get var addr
         CASE(STR,
              const char *s = (const char*)MEM(IP);   ///< get string pointer
              IU    len = STRLEN(s);
@@ -264,7 +264,7 @@ void nest() {
         CASE(ZBRAN,                                  /// * conditional branch
              IP = POP() ? IP+sizeof(IU) : IGET(IP));
         CASE(VBRAN,
-             PUSH(DALIGN(IP + sizeof(IU)));          /// * skip target address
+             PUSH(DALIGN(IP + sizeof(IU)));          /// * put param addr on tos
              if ((IP = IGET(IP))==0) UNNEST());      /// * jump target of does> if given
         CASE(DOES,
              IU *p = (IU*)MEM(LAST.pfa);             ///< memory pointer to pfa 
@@ -460,18 +460,17 @@ void dict_compile() {  ///< compile built-in words into dictionary
     CODE(":",       compile = def_word(word()));
     IMMD(";",       add_w(EXIT); compile = false);
     CODE("exit",    UNNEST());                                  // early exit the colon word
-    CODE("variable",def_word(word()); add_var(VAR));            // create a variable
+    CODE("variable",def_word(word()); add_var(VAR));            // create a variable (default 0)
     CODE("constant",                                            // create a constant
          def_word(word());                                      // create a new word on dictionary
-         add_w(LIT); add_du(POP());                             // dovar (+parameter field)
-         add_w(EXIT));
+         add_var(VBRAN); add_du(POP()));                        // VBRAN 0000 literal
     IMMD("immediate", dict[-1].attr |= IMM_ATTR);
     /// @}
     /// @defgroup metacompiler
     /// @brief - dict is directly used, instead of shield by macros
     /// @{
     CODE("exec",   IU w = POP(); CALL(w));                      // execute word
-    CODE("create", def_word(word()); add_var(VBRAN));           // bran + offset field
+    CODE("create", def_word(word()); add_var(VBRAN));           // vbran + offset field
     IMMD("does>",  add_w(DOES));
     IMMD("to",                                                  // alter the value of a constant, i.e. 3 to x
          IU w = VM==QUERY ? find(word()) : POP();               // constant addr
@@ -481,8 +480,8 @@ void dict_compile() {  ///< compile built-in words into dictionary
              add_w(find("to"));                                 // encode to opcode
          }
          else {
-             w = DALIGN(dict[w].pfa + 2*sizeof(IU));            // calculate address to memory
-             *(DU*)MEM(w) = POP();                              // update constant
+             w = dict[w].pfa + 2*sizeof(IU);                    // calculate address to memory (VBRAN + offset)
+             *(DU*)MEM(DALIGN(w)) = POP();                      // update constant
          });
     IMMD("is",              // ' y is x                         // alias a word, i.e. ' y is x
          IU w = VM==QUERY ? find(word()) : POP();               // word addr
@@ -508,7 +507,7 @@ void dict_compile() {  ///< compile built-in words into dictionary
     CODE("allot",                                               // n --
          IU n = UINT(POP());                                    // number of bytes
          for (int i = 0; i < n; i+=sizeof(DU)) add_du(DU0));    // zero padding
-    CODE("th",    IU n = POP(); tos += n * sizeof(DU));         // w i -- w'
+    CODE("th",    IU i = UINT(POP()); tos += i * sizeof(DU));   // w i -- w'
     CODE("+!",    IU w = UINT(POP()); CELL(w) += POP());        // n w --
     CODE("?",     IU w = UINT(POP()); put(DOT, CELL(w)));       // w --
     /// @}
@@ -742,15 +741,17 @@ int pfa2didx(IU ix) {                          ///> reverse lookup
 ///
 ///> calculate number of variables by given pfa
 ///
-int  pfa2nvar(IU pfa) {
-    IU  w  = IGET(pfa);
-    if (w != VAR && w != VBRAN) return 0;
-    
-    IU  i0 = pfa2didx(pfa | EXT_FLAG);
+int  pfa2allot(IU pfa) {
+    IU  op = IGET(pfa);                        ///< fetch opcode
+    if (op != VAR && op != VBRAN) return 0;
+
+    IU  i0 = pfa2didx(pfa | EXT_FLAG);         ///< index to this word
     if (!i0) return 0;
+    
     IU  p1 = (i0+1) < dict.idx ? TONAME(i0+1) : HERE;
-    int n  = p1 - pfa - sizeof(IU) * (w==VAR ? 1 : 2);    ///> CC: calc # of elements
-    return n;
+    pfa += (op==VBRAN ? 2 : 1) * sizeof(IU);   ///> get parameter field
+    
+    return p1 - DALIGN(pfa);                   ///< calc bytes allot
 }
 ///
 ///> display opcode and literal
@@ -770,9 +771,10 @@ void to_s(IU w, U8 *ip) {
     case DOTQ: fout << ".\" " << (char*)ip << '"';  break;
     case VAR:
     case VBRAN: {
-        int n  = pfa2nvar(UINT(ip - MEM0 - sizeof(IU)));
-        IU  ix = (IU)(ip - MEM0 + (w==VAR ? 0 : sizeof(IU)));
-        for (int i = 0, a=DALIGN(ix); i < n; i+=sizeof(DU)) {
+        int pfa = ip - sizeof(IU) - MEM0;
+        int n   = pfa2allot(pfa);
+        pfa += sizeof(IU) * (w==VBRAN ? 2 : 1);
+        for (int i = 0, a=DALIGN(pfa); i < n; i+=sizeof(DU)) {
             fout << *(DU*)MEM(a + i) << ' ';
         }
     }                                               /// no break, fall through
@@ -803,11 +805,15 @@ void see(IU pfa) {
         
         ip += sizeof(IU);               ///> advance ip (next opcode)
         switch (w) {                    ///> extra bytes to skip
-        case LIT:   ip += sizeof(DU);                    break; /// alignment?
+        case LIT:
+            w  = (IU)DALIGN(ip - MEM0);
+            ip = MEM(w + sizeof(DU));                    break;
         case STR:   case DOTQ:  ip += STRLEN((char*)ip); break;
         case BRAN:  case ZBRAN:
         case NEXT:  case LOOP:  ip += sizeof(IU);        break;
-        case VBRAN: ip = MEM(*(IU*)ip);                  break;
+        case VBRAN:
+            w  = *(IU*)ip; if (w==0) return;  ///> skip if no jmp target
+            ip = MEM(w);                                 break;
         }
     }
 }
