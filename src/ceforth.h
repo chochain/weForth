@@ -38,7 +38,7 @@ struct List {
 
 #else  // !RANGE_CHECK
     T pop()     INLINE { return v[--idx]; }
-    T push(T t) INLINE { return v[max=idx++] = t; }   ///< deep copy element
+    T push(T t) INLINE { return v[idx++] = t; }   ///< deep copy element
 
 #endif // RANGE_CHECK
     void push(T *a, int n) INLINE { for (int i=0; i<n; i++) push(*(a+i)); }
@@ -118,8 +118,7 @@ struct Code {
 #endif // CC_DEBUG > 1
     }
     Code(const char *n, FPTR fp, bool im) : name(n), xt(fp) {
-        if ((UFP)xt < XT0) XT0 = (UFP)xt;                       ///> collect xt base
-        if (im) attr |= IMM_ATTR;
+        attr |= im ? IMM_ATTR : 0;
 #if CC_DEBUG > 1
 		LOG_KX("XT0=", XT0);  LOG_KX(" xt=", (UFP)xt); 
 		LOG_KX(", nm=", (UFP)n); LOGS(" "); LOGS(n); LOGS("\n");
