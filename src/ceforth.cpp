@@ -2,7 +2,7 @@
 /// @file
 /// @brief eForth implemented in 100% C/C++ for portability and education
 ///
-#include <strings.h>   // strcasecmp
+#include <strings.h>     // strcasecmp
 #include "ceforth.h"
 ///====================================================================
 ///
@@ -93,8 +93,8 @@ Code prim[] = {
 ///@{
 typedef enum { STOP=0, HOLD, QUERY, NEST, IO } vm_state;
 
-IU       IP = 0;        ///< instruction pointer
-vm_state VM = QUERY;    ///< VM state
+IU       IP  = 0;       ///< instruction pointer
+vm_state VM  = QUERY;   ///< VM state
 ///
 ///> user variables
 ///
@@ -129,8 +129,6 @@ IU find(const char *s) {
     return v;
 }
 ///@}
-///====================================================================
-///
 ///@name Colon word compiler
 ///@brief
 ///    * we separate dict and pmem space to make word uniform in size
@@ -142,7 +140,7 @@ void colon(const char *name) {
     int sz = STRLEN(name);          ///> string length, aligned
     pmem.push((U8*)name,  sz);      ///> setup raw name field
 
-    Code c(nfa, (FPTR)~0, false);   ///> create a local blank word
+    Code c(nfa, (FPTR)0, false);    ///> create a local blank word
     c.attr = UDF_ATTR;              ///> specify a colon (user defined) word
     c.pfa  = HERE;                  ///> capture code field index
 
@@ -184,7 +182,7 @@ int def_word(const char* name) {    ///< display if redefined
 }
 char *word() {                      ///< get next idiom
     static string tmp;              ///< tmp string holder
-    if (!(fetch(tmp))) tmp.clear();  /// * input buffer exhausted?
+    if (!(fetch(tmp))) tmp.clear(); /// * input buffer exhausted?
     return (char*)tmp.c_str();
 }
 void s_quote(prim_op op) {
@@ -252,7 +250,7 @@ void nest() {
              ss.push(tos);
              IP  = DALIGN(IP);                       /// * 32-bit data align (WASM only)
              tos = *(DU*)MEM(IP);                    ///> from hot cache, hopefully
-             IP  += sizeof(DU));
+             IP += sizeof(DU));                      /// * hop over the stored value
         CASE(VAR, PUSH(DALIGN(IP)); UNNEST());       ///> get var addr
         CASE(STR,
              const char *s = (const char*)MEM(IP);   ///< get string pointer
@@ -559,6 +557,22 @@ void dict_compile() {  ///< compile built-in words into dictionary
     /// @}
     CODE("boot",  dict.clear(find("boot") + 1); pmem.clear(sizeof(DU)));
 }
+
+void dict_validate() {
+    /// collect Code::XT0 i.e. xt base pointer
+    UFP max = (UFP)0;
+    for (int i=0; i < dict.idx; i++) {
+        Code &c = dict[i];
+        if ((UFP)c.xt < Code::XT0) Code::XT0 = (UFP)c.xt;
+        if ((UFP)c.xt > max)       max       = (UFP)c.xt;
+    }
+    /// check xtoff range
+    max -= Code::XT0;
+    if (max & EXT_FLAG) {                   // range check
+        LOG_KX("*** Init ERROR *** xtoff overflow max = 0x", max);
+        LOGS("\nEnter 'dict' to verify, and please contact author!\n");
+    }
+}
 ///====================================================================
 ///
 ///> ForthVM - Outer interpreter
@@ -624,7 +638,8 @@ void forth_init() {
     for (int i=pmem.idx; i<USER_AREA; i+=sizeof(IU)) {
         add_iu(0xffff);                  /// * padding user area
     }
-    dict_compile();                      ///> compile dictionary
+    dict_compile();                      ///< compile dictionary
+    dict_validate();                     ///< collect XT0, and check xtoff range
 }
 int forth_vm(const char *line, void(*hook)(int, const char*)) {
     auto time_up = []() {                /// * time slice up
@@ -632,7 +647,7 @@ int forth_vm(const char *line, void(*hook)(int, const char*)) {
         long t1 = millis();              ///> check timing
         return (t1 >= t0) ? (t0 = t1 + t0, 1) : 0;
     };
-    fout_setup();
+    fout_setup();                        ///< serial output hook up
 
     bool resume = (VM==HOLD || VM==IO);  ///< check VM resume status
     if (resume) IP = UINT(rs.pop());     /// * restore context
@@ -731,10 +746,8 @@ int pfa2didx(IU ix) {                          ///> reverse lookup
     if (IS_PRIM(ix)) return (int)ix;           ///> primitives
     IU pfa = ix & ~EXT_FLAG;                   ///> pfa (mask colon word)
     for (int i = dict.idx - 1; i > 0; --i) {
-        if (ix & EXT_FLAG) {                   /// colon word?
-            if (dict[i].pfa == pfa) return i;  ///> compare pfa in PMEM
-        }
-        else if (dict[i].xtoff() == pfa) return i;   ///> compare xt (built-in words)
+        Code &c = dict[i];
+        if (pfa == (IS_UDF(i) ? c.pfa : c.xtoff())) return i;
     }
     return 0;                                  /// * not found
 }
@@ -852,7 +865,7 @@ void ss_dump(bool forced) {
     if (load_dp) return;                  /// * skip when including file
 #if DO_WASM    
     if (!forced) { fout << "ok" << ENDL; return; }
-#endif //    
+#endif // DO_WASM
     static char buf[34];                  ///< static buffer
     auto rdx = [](DU v, int b) {          ///< display v by radix
 #if USE_FLOAT
@@ -930,10 +943,10 @@ void dict_dump() {
     for (int i=0; i<dict.idx; i++) {
         Code &c = dict[i];
         fout << setfill('0') << setw(3) << i
-             << "> attr=" << (c.attr & 0x3)
-             << ", xt="   << setw(4) << (IS_UDF(i) ? c.pfa : c.xtoff())
-             << ":"       << setw(8) << (UFP)c.xt
-             << ", name=" << setw(8) << (UFP)c.name
+             << "> name=" << setw(8) << (UFP)c.name
+             << ", xt="   << setw(8) << (UFP)c.xt
+             << ", attr=" << (c.attr & 0x3)
+             << ", xtoff="<< setw(4) << (IS_UDF(i) ? c.pfa : c.xtoff())
              << " "       << c.name << ENDL;
     }
     fout << setbase(*base) << setfill(' ') << setw(-1);
