@@ -953,10 +953,9 @@ void dict_dump() {
         bool ud = IS_UDF(i);
         fout << setfill('0') << setw(3) << i
              << "> name=" << setw(8) << (UFP)c.name
-             << ", xt="   << setw(8) << (UFP)c.xt
-             << ", attr=" << (c.attr & 0x3)
-             << (ud ? ",   pfa=" : ", xtoff=")
-             << setw(4)   << (ud ? c.pfa : c.xtoff())
+             << (ud ? ", pfa=" : ",  xt=")
+             << setw(8)   << ((UFP)c.xt & MSK_ATTR)
+             << ", attr=" << setw(4) << c.attr
              << " "       << c.name << ENDL;
     }
     fout << setbase(*base) << setfill(' ') << setw(-1);
