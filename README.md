@@ -144,6 +144,7 @@ Note:
   + CSG i.e. compound shape, [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
   + review Jolt::RefTarget class (for ref counter, can apply to tensorForth)
 * inter-VM communication
+  + A 16-node SHA-256 demo, [Medium SHA-2 step-by-step](https://medium.com/bootdotdev/how-sha-2-works-step-by-step-sha-256-90ecd4f09e4d)
 * add network system (SD_net)
 * review WebSerial
 * review wasmtime (CLI), perf+hotspot (profiling)
