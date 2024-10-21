@@ -11,17 +11,8 @@ typedef uint32_t U32;
 typedef uint64_t U64;
 
 class SHA256 {
-public:
-	SHA256();
-	void update(const U8 * data, size_t length);
-	void update(const string &data);
-	array<U8, 32> digest();
-
-	static string toString(const array<U8, 32> & digest);
-
-private:
 	U8  _data[64];
-	U32 _h[8]; //A, B, C, D, E, F, G, H
+	U32 _h[8];        // a, b, c, d, e, f, g, h
 	U32 _blocklen;
 	U64 _bitlen;
 
@@ -43,15 +34,22 @@ private:
 		0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,
 		0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
 	};
-
-	void transform();
-	void pad();
-	void revert(array<U8, 32> & hash);
+	void _transform();
+	void _pad();
+	void _revert(array<U8, 32> & hash);
+    
+public:
+	static string toString(const array<U8, 32> &digest);
+    
+	void init();
+	void update(const U8 *msg, size_t length);
+	void update(const string &msg);
+	array<U8, 32> digest();
 };
 
 constexpr array<U32, 64> SHA256::K;
 
-SHA256::SHA256(): _blocklen(0), _bitlen(0) {
+void SHA256::init() {
 	_h[0] = 0x6a09e667;
 	_h[1] = 0xbb67ae85;
 	_h[2] = 0x3c6ef372;
@@ -60,13 +58,15 @@ SHA256::SHA256(): _blocklen(0), _bitlen(0) {
 	_h[5] = 0x9b05688c;
 	_h[6] = 0x1f83d9ab;
 	_h[7] = 0x5be0cd19;
+    _blocklen = 0;
+    _bitlen   = 0;
 }
 
-void SHA256::update(const U8 *data, size_t length) {
+void SHA256::update(const U8 *msg, size_t length) {
 	for (size_t i = 0 ; i < length ; i++) {
-		_data[_blocklen++] = data[i];
+		_data[_blocklen++] = msg[i];
 		if (_blocklen == 64) {
-			transform();
+			_transform();
 
 			// End of the block
 			_bitlen += 512;
@@ -75,15 +75,15 @@ void SHA256::update(const U8 *data, size_t length) {
 	}
 }
 
-void SHA256::update(const string &data) {
-	update(reinterpret_cast<const U8*>(data.c_str()), data.size());
+void SHA256::update(const string &msg) {
+	update(reinterpret_cast<const U8*>(msg.c_str()), msg.size());
 }
 
 array<U8,32> SHA256::digest() {
 	array<U8,32> hash;
 
-	pad();
-	revert(hash);
+	_pad();
+	_revert(hash);
 
 	return hash;
 }
@@ -96,25 +96,23 @@ array<U8,32> SHA256::digest() {
 #define E0(x)      (ROR(x, 2) ^ ROR(x, 13) ^ ROR(x, 22))
 #define E4(x)      (ROR(x, 6) ^ ROR(x, 11) ^ ROR(x, 25))
 
-void SHA256::transform() {
+void SHA256::_transform() {
     U32 w[64], h[8];
-
-	for (U8 i = 0, j = 0; i < 16; i++, j += 4) { // Split data in 32 bit blocks for the 16 first words
+    
+    // split data in 32 bit blocks for the 16 first words
+	for (int i=0, j=0; i < 16; i++, j += 4) {
 		w[i] = (_data[j] << 24) | (_data[j + 1] << 16) | (_data[j + 2] << 8) | (_data[j + 3]);
 	}
-
-	for (U8 k = 16 ; k < 64; k++) { // Remaining 48 blocks
+    // remaining 48 blocks
+	for (int k = 16 ; k < 64; k++) { 
 		w[k] = SIG1(w[k - 2]) + w[k - 7] + SIG0(w[k - 15]) + w[k - 16];
 	}
-
-	for(U8 i = 0 ; i < 8 ; i++) {
+    
+	for(int i = 0 ; i < 8 ; i++) {
 		h[i] = _h[i];
 	}
-
-	for (U8 i = 0; i < 64; i++) {
-		U32 t1 = h[7] + E4(h[4]) + 
-            CH(h[4], h[5], h[6]) +
-            K[i] + w[i];
+	for (int i = 0; i < 64; i++) {
+		U32 t1 = h[7] + E4(h[4]) + CH(h[4], h[5], h[6]) + K[i] + w[i];
         U32 t2 = E0(h[0]) + MAJ(h[0], h[1], h[2]);
 
 		h[7] = h[6];
@@ -126,28 +124,25 @@ void SHA256::transform() {
 		h[1] = h[0];
 		h[0] = t1 + t2;
 	}
-
 	for(U8 i = 0 ; i < 8 ; i++) {
 		_h[i] += h[i];
 	}
 }
 
-void SHA256::pad() {
-	U64 i   = _blocklen;
-	U8  end = _blocklen < 56 ? 56 : 64;
+void SHA256::_pad() {
+	int i   = _blocklen;
+	int end = _blocklen < 56 ? 56 : 64;
 
-	_data[i++] = 0x80; // Append a bit 1
+	_data[i++] = 0x80;     // append a bit 1
 	while (i < end) {
-		_data[i++] = 0x00; // Pad with zeros
+		_data[i++] = 0x00; // pad with zeros
 	}
-
 	if(_blocklen >= 56) {
-		transform();
+		_transform();
 		memset(_data, 0, 56);
 	}
-
-	// Append to the padding the total message's length in bits and transform.
-	_bitlen += _blocklen * 8;
+	// append to the padding the total message's length in bits and transform.
+	_bitlen  += _blocklen * 8;
 	_data[63] = _bitlen;
 	_data[62] = _bitlen >> 8;
 	_data[61] = _bitlen >> 16;
@@ -156,15 +151,16 @@ void SHA256::pad() {
 	_data[58] = _bitlen >> 40;
 	_data[57] = _bitlen >> 48;
 	_data[56] = _bitlen >> 56;
-	transform();
+    
+	_transform();
 }
 
-void SHA256::revert(array<U8, 32> & hash) {
-	// SHA uses big endian byte ordering
-	// Revert all bytes
+void SHA256::_revert(array<U8, 32> &hash) {
+	// SHA uses Big Endian byte ordering
+	// revert all bytes
 	for (U8 i = 0 ; i < 4 ; i++) {
 		for(U8 j = 0 ; j < 8 ; j++) {
-			hash[i + (j * 4)] = (_h[j] >> (24 - i * 8)) & 0x000000ff;
+			hash[i + (j * 4)] = (_h[j] >> (24 - i * 8)) & 0xff;
 		}
 	}
 }
@@ -209,11 +205,12 @@ int main(int argc, char ** argv) {
         "The quick brown fox jumps over the lazy dog",
         "This test tries to use the n-block utility from the hash library and as a matter of fact we're trying to get only 128 characters"
     };
+    SHA256 ctx;
     for (int i=0; i< sizeof(input)/sizeof(string); i++) {
-        SHA256 sha256;
-		sha256.update(input[i]);
+        ctx.init();
+		ctx.update(input[i]);
         
-		array<U8, 32> digest = sha256.digest();
+		array<U8, 32> digest = ctx.digest();
         string output = SHA256::toString(digest);
         
         cout << ((output==gold[i]) ? "OK " : "ERR")
