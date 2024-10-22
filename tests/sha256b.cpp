@@ -95,13 +95,14 @@ array<U8,32> SHA256::digest() {
 #define SIG1(x)    (ROR(x, 17) ^ ROR(x, 19) ^ (x >> 10))
 #define E0(x)      (ROR(x, 2) ^ ROR(x, 13) ^ ROR(x, 22))
 #define E4(x)      (ROR(x, 6) ^ ROR(x, 11) ^ ROR(x, 25))
+#define PACK(x)    ((*x<<24) | (*(x+1)<<16) | (*(x+2)<<8) | *(x+3))
 
 void SHA256::_transform() {
     U32 w[64], h[8];
     
     // split data in 32 bit blocks for the 16 first words
 	for (int i=0, j=0; i < 16; i++, j += 4) {
-		w[i] = (_data[j] << 24) | (_data[j + 1] << 16) | (_data[j + 2] << 8) | (_data[j + 3]);
+		w[i] = PACK(&_data[j]);
 	}
     // remaining 48 blocks
 	for (int k = 16 ; k < 64; k++) { 

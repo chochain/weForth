@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
         "The quick brown fox jumps over the lazy dog",
         "This test tries to use the n-block utility from the hash library and as a matter of fact we're trying to get only 128 characters"
     };
-    SHA256 ctx = SHA256();
+    SHA256 ctx;
     for (int i=0; i< sizeof(input)/sizeof(string); i++) {
         string output = sha256(ctx, input[i]);
         cout << ((output==gold[i]) ? "OK " : "ERR")
