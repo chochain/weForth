@@ -79,7 +79,7 @@ void SHA256::update(const string &msg) {
 array<U8,32> SHA256::digest() {
 	array<U8,32> hash;
 
-	_pad();
+	_pad();                // pad the last block if needed
 	_transform();
 	// SHA uses Big Endian byte ordering
 	// revert each 32-bit word to Little Endian
@@ -139,13 +139,13 @@ void SHA256::_pad() {
 	int i   = _blocklen;
 	int end = _blocklen < 56 ? 56 : 64;
 
-	_data[i++] = 0x80;     // append a bit 1
+	_data[i++] = 0x80;        // append a bit 1
 	while (i < end) {
-		_data[i++] = 0x00; // pad with zeros
+		_data[i++] = 0x00;    // pad with zeros
 	}
 	if(_blocklen >= 56) {
 		_transform();
-		memset(_data, 0, 56);
+		memset(_data, 0, 56); // wipe it for next process
 	}
 	// append to the padding the total message's length in bits and transform.
 	_bitlen  += _blocklen * 8;
