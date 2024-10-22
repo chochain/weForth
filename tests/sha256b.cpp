@@ -41,7 +41,7 @@ public:
 	static string toString(const array<U8, 32> &digest);
     
 	void init();
-	void update(const U8 *msg, size_t length);
+	void update(const U8 *msg, size_t len);
 	void update(const string &msg);
 	array<U8, 32> digest();
 };
@@ -61,12 +61,12 @@ void SHA256::init() {
     _bitlen   = 0;
 }
 
-void SHA256::update(const U8 *msg, size_t length) {
-	for (size_t i = 0 ; i < length ; i++) {
+void SHA256::update(const U8 *msg, size_t len) {
+	for (size_t i = 0; i < len; i++) {
 		_data[_blocklen++] = msg[i];  // fill current block
 		if (_blocklen == 64) {
-			_transform();             // hash current block
-			_bitlen += 512;           // next block
+            _transform();             // hash current block
+            _bitlen += 512;           // next block
 			_blocklen = 0;
 		}
 	}
@@ -74,6 +74,22 @@ void SHA256::update(const U8 *msg, size_t length) {
 
 void SHA256::update(const string &msg) {
 	update(reinterpret_cast<const U8*>(msg.c_str()), msg.size());
+}
+
+array<U8,32> SHA256::digest() {
+	array<U8,32> hash;
+
+	_pad();
+	_transform();
+	// SHA uses Big Endian byte ordering
+	// revert each 32-bit word to Little Endian
+    for(U8 j = 0, *p=&hash[0]; j < 8 ; j++) {
+        *p++ = _h[j] >> 24;
+        *p++ = _h[j] >> 16;
+        *p++ = _h[j] >> 8;
+        *p++ = _h[j];
+    }
+	return hash;
 }
 
 #define ROR(x,n)   ((x >> n) | (x << (32 - n)))
@@ -84,20 +100,6 @@ void SHA256::update(const string &msg) {
 #define E0(x)      (ROR(x, 2) ^ ROR(x, 13) ^ ROR(x, 22))
 #define E4(x)      (ROR(x, 6) ^ ROR(x, 11) ^ ROR(x, 25))
 #define PACK(x)    ((*x<<24) | (*(x+1)<<16) | (*(x+2)<<8) | *(x+3))
-#define UNPACK(x)  ((*x>>24) | (*(x+1)>>16) | (*(x+2)>>8) | *(x+3))
-
-array<U8,32> SHA256::digest() {
-	array<U8,32> hash;
-
-	_pad();
-	_transform();
-	// SHA uses Big Endian byte ordering
-	// revert all bytes
-    for(U8 j = 0 ; j < 8 ; j++) {
-        hash[j * 4] = UNPACK(&_h[j]);
-	}
-	return hash;
-}
 
 void SHA256::_transform() {
     U32 w[64], h[8];
@@ -111,7 +113,7 @@ void SHA256::_transform() {
 		w[k] = SIG1(w[k - 2]) + w[k - 7] + SIG0(w[k - 15]) + w[k - 16];
 	}
     
-	for(int i = 0 ; i < 8 ; i++) {
+	for (int i = 0 ; i < 8 ; i++) {
 		h[i] = _h[i];
 	}
 	for (int i = 0; i < 64; i++) {
@@ -127,7 +129,7 @@ void SHA256::_transform() {
 		h[1] = h[0];
 		h[0] = t1 + t2;
 	}
-	for(U8 i = 0 ; i < 8 ; i++) {
+	for (int i = 0 ; i < 8 ; i++) {
 		_h[i] += h[i];
 	}
 }
@@ -146,8 +148,8 @@ void SHA256::_pad() {
 	}
 	// append to the padding the total message's length in bits and transform.
 	_bitlen  += _blocklen * 8;
-    for (int i = 0; i < 8; i++) {
-        _data[56 + i] = _bitlen >> (56 - 8 * i);
+    for (int i=0; i < 8; i++) {
+        _data[56 + i] = _bitlen >> (56 - i * 8);
     }
 }
 
@@ -155,14 +157,13 @@ void SHA256::_pad() {
 #include <chrono>
 #include <ctime>
 
-string SHA256::toString(const array<U8, 32> & digest) {
+string SHA256::toString(const array<U8, 32> &digest) {
 	stringstream s;
+    
 	s << setfill('0') << hex;
-
-	for(U8 i = 0 ; i < 32 ; i++) {
-		s << setw(2) << (U32)digest[i];
+	for(int i = 0 ; i < 32 ; i++) {
+		s << setw(2) << (unsigned int) digest[i];
 	}
-
 	return s.str();
 }
 
