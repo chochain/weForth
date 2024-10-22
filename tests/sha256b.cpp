@@ -63,12 +63,10 @@ void SHA256::init() {
 
 void SHA256::update(const U8 *msg, size_t length) {
 	for (size_t i = 0 ; i < length ; i++) {
-		_data[_blocklen++] = msg[i];
+		_data[_blocklen++] = msg[i];  // fill current block
 		if (_blocklen == 64) {
-			_transform();
-
-			// End of the block
-			_bitlen += 512;
+			_transform();             // hash current block
+			_bitlen += 512;           // next block
 			_blocklen = 0;
 		}
 	}
@@ -92,6 +90,7 @@ array<U8,32> SHA256::digest() {
 	array<U8,32> hash;
 
 	_pad();
+	_transform();
 	// SHA uses Big Endian byte ordering
 	// revert all bytes
     for(U8 j = 0 ; j < 8 ; j++) {
@@ -150,7 +149,6 @@ void SHA256::_pad() {
     for (int i = 0; i < 8; i++) {
         _data[56 + i] = _bitlen >> (56 - 8 * i);
     }
-	_transform();
 }
 
 #include <iostream>
@@ -162,7 +160,7 @@ string SHA256::toString(const array<U8, 32> & digest) {
 	s << setfill('0') << hex;
 
 	for(U8 i = 0 ; i < 32 ; i++) {
-		s << setw(2) << (unsigned int) digest[i];
+		s << setw(2) << (U32)digest[i];
 	}
 
 	return s.str();
