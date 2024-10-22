@@ -83,11 +83,12 @@ array<U8,32> SHA256::digest() {
 	_transform();
 	// SHA uses Big Endian byte ordering
 	// revert each 32-bit word to Little Endian
-    for(U8 j = 0, *p=&hash[0]; j < 8 ; j++) {
-        *p++ = _h[j] >> 24;
-        *p++ = _h[j] >> 16;
-        *p++ = _h[j] >> 8;
-        *p++ = _h[j];
+    for(U8 i = 0, *p=&hash[0]; i < 8; i++) {
+        U32 h = _h[i];
+        *p++ = (h >> 24) & 0xff;
+        *p++ = (h >> 16) & 0xff;
+        *p++ = (h >> 8)  & 0xff;
+        *p++ = (h >> 0)  & 0xff;
     }
 	return hash;
 }
