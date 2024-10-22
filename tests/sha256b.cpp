@@ -36,7 +36,6 @@ class SHA256 {
 	};
 	void _transform();
 	void _pad();
-	void _revert(array<U8, 32> & hash);
     
 public:
 	static string toString(const array<U8, 32> &digest);
@@ -79,15 +78,6 @@ void SHA256::update(const string &msg) {
 	update(reinterpret_cast<const U8*>(msg.c_str()), msg.size());
 }
 
-array<U8,32> SHA256::digest() {
-	array<U8,32> hash;
-
-	_pad();
-	_revert(hash);
-
-	return hash;
-}
-
 #define ROR(x,n)   ((x >> n) | (x << (32 - n)))
 #define CH(e,f,g)  ((e & f) ^ (~e & g))
 #define MAJ(a,b,c) ((a & (b | c)) | (b & c))
@@ -96,6 +86,19 @@ array<U8,32> SHA256::digest() {
 #define E0(x)      (ROR(x, 2) ^ ROR(x, 13) ^ ROR(x, 22))
 #define E4(x)      (ROR(x, 6) ^ ROR(x, 11) ^ ROR(x, 25))
 #define PACK(x)    ((*x<<24) | (*(x+1)<<16) | (*(x+2)<<8) | *(x+3))
+#define UNPACK(x)  ((*x>>24) | (*(x+1)>>16) | (*(x+2)>>8) | *(x+3))
+
+array<U8,32> SHA256::digest() {
+	array<U8,32> hash;
+
+	_pad();
+	// SHA uses Big Endian byte ordering
+	// revert all bytes
+    for(U8 j = 0 ; j < 8 ; j++) {
+        hash[j * 4] = UNPACK(&_h[j]);
+	}
+	return hash;
+}
 
 void SHA256::_transform() {
     U32 w[64], h[8];
@@ -144,26 +147,10 @@ void SHA256::_pad() {
 	}
 	// append to the padding the total message's length in bits and transform.
 	_bitlen  += _blocklen * 8;
-	_data[63] = _bitlen;
-	_data[62] = _bitlen >> 8;
-	_data[61] = _bitlen >> 16;
-	_data[60] = _bitlen >> 24;
-	_data[59] = _bitlen >> 32;
-	_data[58] = _bitlen >> 40;
-	_data[57] = _bitlen >> 48;
-	_data[56] = _bitlen >> 56;
-    
+    for (int i = 0; i < 8; i++) {
+        _data[56 + i] = _bitlen >> (56 - 8 * i);
+    }
 	_transform();
-}
-
-void SHA256::_revert(array<U8, 32> &hash) {
-	// SHA uses Big Endian byte ordering
-	// revert all bytes
-	for (U8 i = 0 ; i < 4 ; i++) {
-		for(U8 j = 0 ; j < 8 ; j++) {
-			hash[i + (j * 4)] = (_h[j] >> (24 - i * 8)) & 0xff;
-		}
-	}
 }
 
 #include <iostream>
