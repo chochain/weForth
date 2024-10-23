@@ -13,8 +13,6 @@ typedef uint64_t U64;
 class SHA256 {
 	U8  _data[64];
 	U32 _h[8];        // a, b, c, d, e, f, g, h
-	U32 _blocklen;
-	U64 _bitlen;
 
 	static constexpr array<U32, 64> K = {
 		0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,
@@ -35,7 +33,7 @@ class SHA256 {
 		0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
 	};
 	void _transform();
-	void _pad();
+	void _final(U32 nblk, U64 nbit);
     
 public:
 	static string toString(const array<U8, 32> &digest);
@@ -57,19 +55,21 @@ void SHA256::init() {
 	_h[5] = 0x9b05688c;
 	_h[6] = 0x1f83d9ab;
 	_h[7] = 0x5be0cd19;
-    _blocklen = 0;
-    _bitlen   = 0;
 }
 
 void SHA256::update(const U8 *msg, size_t len) {
+    U32 nblk = 0;
+    U64 nbit = 0;
 	for (size_t i = 0; i < len; i++) {
-		_data[_blocklen++] = msg[i];  // fill current block
-		if (_blocklen == 64) {
-            _transform();             // hash current block
-            _bitlen += 512;           // next block
-			_blocklen = 0;
+		_data[nblk++] = msg[i];   // fill current block
+		if (nblk == 64) {
+            _transform();         // hash current block
+            nbit += 512;          // next block
+			nblk = 0;
 		}
 	}
+    nbit += nblk * 8;
+	_final(nblk, nbit);           // pad the last block if needed
 }
 
 void SHA256::update(const string &msg) {
@@ -78,9 +78,6 @@ void SHA256::update(const string &msg) {
 
 array<U8,32> SHA256::digest() {
 	array<U8,32> hash;
-
-	_pad();                // pad the last block if needed
-	_transform();
 	// SHA uses Big Endian byte ordering
 	// revert each 32-bit word to Little Endian
     for(U8 i = 0, *p=&hash[0]; i < 8; i++) {
@@ -96,28 +93,32 @@ array<U8,32> SHA256::digest() {
 #define ROR(x,n)   ((x >> n) | (x << (32 - n)))
 #define CH(e,f,g)  ((e & f) ^ (~e & g))
 #define MAJ(a,b,c) ((a & (b | c)) | (b & c))
-#define SIG0(x)    (ROR(x, 7) ^ ROR(x, 18) ^ (x >> 3))
+#define SIG0(x)    (ROR(x, 7)  ^ ROR(x, 18) ^ (x >> 3))
 #define SIG1(x)    (ROR(x, 17) ^ ROR(x, 19) ^ (x >> 10))
-#define E0(x)      (ROR(x, 2) ^ ROR(x, 13) ^ ROR(x, 22))
-#define E4(x)      (ROR(x, 6) ^ ROR(x, 11) ^ ROR(x, 25))
+#define E0(x)      (ROR(x, 2)  ^ ROR(x, 13) ^ ROR(x, 22))
+#define E4(x)      (ROR(x, 6)  ^ ROR(x, 11) ^ ROR(x, 25))
 #define PACK(x)    ((*x<<24) | (*(x+1)<<16) | (*(x+2)<<8) | *(x+3))
 
 void SHA256::_transform() {
     U32 w[64], h[8];
-    
+/*
     // split data in 32 bit blocks for the 16 first words
-	for (int i=0, j=0; i < 16; i++, j += 4) {
-		w[i] = PACK(&_data[j]);
+	for (int i=0; i < 16; i++) {
+		w[i] = PACK(&_data[i*4]);
 	}
     // remaining 48 blocks
 	for (int k = 16 ; k < 64; k++) { 
 		w[k] = SIG1(w[k - 2]) + w[k - 7] + SIG0(w[k - 15]) + w[k - 16];
 	}
-    
+*/  
 	for (int i = 0 ; i < 8 ; i++) {
 		h[i] = _h[i];
 	}
+    // 32*8=256-bit block morphing
 	for (int i = 0; i < 64; i++) {
+        w[i] = (i < 16)
+            ? PACK(&_data[i * 4])
+            : SIG1(w[i - 2]) + w[i - 7] + SIG0(w[i - 15]) + w[i - 16];
 		U32 t1 = h[7] + E4(h[4]) + CH(h[4], h[5], h[6]) + K[i] + w[i];
         U32 t2 = E0(h[0]) + MAJ(h[0], h[1], h[2]);
 
@@ -135,23 +136,24 @@ void SHA256::_transform() {
 	}
 }
 
-void SHA256::_pad() {
-	int i   = _blocklen;
-	int end = _blocklen < 56 ? 56 : 64;
+void SHA256::_final(U32 nblk, U64 nbit) {
+	int i   = nblk;
+	int end = nblk < 56 ? 56 : 64;
 
 	_data[i++] = 0x80;        // append a bit 1
 	while (i < end) {
 		_data[i++] = 0x00;    // pad with zeros
 	}
-	if(_blocklen >= 56) {
-		_transform();
-		memset(_data, 0, 56); // wipe it for next process
+	if (end == 64) {          // this block is full
+		_transform();         // process it and
+		memset(_data, 0, 56); // add another block
+        printf("extra block\n");
 	}
-	// append to the padding the total message's length in bits and transform.
-	_bitlen  += _blocklen * 8;
+	// pad the total message's length in bits
     for (int i=0; i < 8; i++) {
-        _data[56 + i] = _bitlen >> (56 - i * 8);
+        _data[56 + i] = nbit >> (56 - i * 8);
     }
+	_transform();             // process the last block
 }
 
 #include <iostream>
