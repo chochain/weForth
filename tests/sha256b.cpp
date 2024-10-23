@@ -80,7 +80,7 @@ array<U8,32> SHA256::digest() {
 	array<U8,32> hash;
 	// SHA uses Big Endian byte ordering
 	// revert each 32-bit word to Little Endian
-    for(U8 i = 0, *p=&hash[0]; i < 8; i++) {
+    for (U8 i = 0, *p=&hash[0]; i < 8; i++) {
         U32 h = _h[i];
         *p++ = (h >> 24) & 0xff;
         *p++ = (h >> 16) & 0xff;
@@ -101,24 +101,24 @@ array<U8,32> SHA256::digest() {
 
 void SHA256::_transform() {
     U32 w[64], h[8];
-/*
     // split data in 32 bit blocks for the 16 first words
 	for (int i=0; i < 16; i++) {
 		w[i] = PACK(&_data[i*4]);
 	}
     // remaining 48 blocks
-	for (int k = 16 ; k < 64; k++) { 
-		w[k] = SIG1(w[k - 2]) + w[k - 7] + SIG0(w[k - 15]) + w[k - 16];
+	for (int i = 16 ; i < 64; i++) { 
+		w[i] = SIG1(w[i - 2]) + w[i - 7] + SIG0(w[i - 15]) + w[i - 16];
 	}
-*/  
+    // 32*8=256-bit block morphing
 	for (int i = 0 ; i < 8 ; i++) {
 		h[i] = _h[i];
 	}
-    // 32*8=256-bit block morphing
 	for (int i = 0; i < 64; i++) {
+/*        
         w[i] = (i < 16)
             ? PACK(&_data[i * 4])
             : SIG1(w[i - 2]) + w[i - 7] + SIG0(w[i - 15]) + w[i - 16];
+*/
 		U32 t1 = h[7] + E4(h[4]) + CH(h[4], h[5], h[6]) + K[i] + w[i];
         U32 t2 = E0(h[0]) + MAJ(h[0], h[1], h[2]);
 
@@ -150,8 +150,8 @@ void SHA256::_final(U32 nblk, U64 nbit) {
         printf("extra block\n");
 	}
 	// pad the total message's length in bits
-    for (int i=0; i < 8; i++) {
-        _data[56 + i] = nbit >> (56 - i * 8);
+    for (int i=0, s=56; i < 8; i++, s-=8) {
+        _data[56 + i] = nbit >> s;
     }
 	_transform();             // process the last block
 }
