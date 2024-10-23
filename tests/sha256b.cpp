@@ -102,23 +102,16 @@ array<U8,32> SHA256::digest() {
 void SHA256::_transform() {
     U32 w[64], h[8];
     // split data in 32 bit blocks for the 16 first words
-	for (int i=0; i < 16; i++) {
-		w[i] = PACK(&_data[i*4]);
-	}
-    // remaining 48 blocks
-	for (int i = 16 ; i < 64; i++) { 
-		w[i] = SIG1(w[i - 2]) + w[i - 7] + SIG0(w[i - 15]) + w[i - 16];
+	for (int i=0; i < 64; i++) {
+        w[i] = (i < 16)
+            ? PACK(&_data[i * 4])       // first 16 blocks (to Big Endian)
+            : SIG1(w[i - 2]) + w[i - 7] + SIG0(w[i - 15]) + w[i - 16];
 	}
     // 32*8=256-bit block morphing
 	for (int i = 0 ; i < 8 ; i++) {
 		h[i] = _h[i];
 	}
 	for (int i = 0; i < 64; i++) {
-/*        
-        w[i] = (i < 16)
-            ? PACK(&_data[i * 4])
-            : SIG1(w[i - 2]) + w[i - 7] + SIG0(w[i - 15]) + w[i - 16];
-*/
 		U32 t1 = h[7] + E4(h[4]) + CH(h[4], h[5], h[6]) + K[i] + w[i];
         U32 t2 = E0(h[0]) + MAJ(h[0], h[1], h[2]);
 
