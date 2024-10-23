@@ -108,23 +108,18 @@ void SHA256::_transform() {
             : SIG1(w[i - 2]) + w[i - 7] + SIG0(w[i - 15]) + w[i - 16];
 	}
     // 32*8=256-bit block morphing
-	for (int i = 0 ; i < 8 ; i++) {
+	for (int i = 0; i < 8; i++) {
 		h[i] = _h[i];
 	}
 	for (int i = 0; i < 64; i++) {
 		U32 t1 = h[7] + E4(h[4]) + CH(h[4], h[5], h[6]) + K[i] + w[i];
         U32 t2 = E0(h[0]) + MAJ(h[0], h[1], h[2]);
-
-		h[7] = h[6];
-		h[6] = h[5];
-		h[5] = h[4];
-		h[4] = h[3] + t1;
-		h[3] = h[2];
-		h[2] = h[1];
-		h[1] = h[0];
-		h[0] = t1 + t2;
+        
+        for (int j = 7; j > 0; --j) h[j] = h[j-1];
+        h[0] =  t1 + t2;
+        h[4] += t1;
 	}
-	for (int i = 0 ; i < 8 ; i++) {
+	for (int i = 0; i < 8; i++) {
 		_h[i] += h[i];
 	}
 }
