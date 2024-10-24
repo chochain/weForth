@@ -13,7 +13,6 @@
 #define AES_BITS       256       /* 128, 192, 256 */
 #define AES_NBLOCK     16        /* Block length in bytes - AES is 128b block only */
 #define Nb             4         /* number of columns comprising a state in AES    */
-#define MULTIPLY_AS_FN 0
 
 #if AES_BITS==256
 #define AES_keyExpSize 240
@@ -111,98 +110,76 @@ static void KeyExpansion(U8* rk, const U8* key)
 }
 // This function adds the round key to state.
 // The round key is added to the state by an XOR function.
-static void AddRoundKey(U8 n, state_t* st, const U8* rk) {
+static void AddRoundKey(U8 n, state_t& st, const U8* rk) {
     for (U8 i = 0; i < 4; ++i) {
         for (U8 j = 0; j < 4; ++j) {
-            (*st)[i][j] ^= rk[(n * Nb * 4) + (i * Nb) + j];
+            st[i][j] ^= rk[(n * Nb * 4) + (i * Nb) + j];
         }
     }
 }
-
 // The SubBytes Function Substitutes the values in the
 // state matrix with values in an S-box.
-static void SubBytes(state_t* st)
+static void SubBytes(state_t& st)
 {
     for (U8 i = 0; i < 4; ++i) {
         for (U8 j = 0; j < 4; ++j) {
-            (*st)[j][i] = sbox[(*st)[j][i]];
+            st[j][i] = sbox[st[j][i]];
         }
     }
 }
-
-// The ShiftRows() function shifts the rows in the state to the left.
-// Each row is shifted with different offset.
-// Offset = Row number. So the first row is not shifted.
-static void ShiftRows(state_t* st)
+///
+/// The ShiftRows() function shifts the rows in the state to the left.
+/// Each row is shifted with different offset.
+/// Offset = Row number. So the first row is not shifted.
+static void ShiftRows(state_t& st)
 {
     U8 tmp;
 
     // Rotate first row 1 columns to left  
-    tmp         = (*st)[0][1];
-    (*st)[0][1] = (*st)[1][1];
-    (*st)[1][1] = (*st)[2][1];
-    (*st)[2][1] = (*st)[3][1];
-    (*st)[3][1] = tmp;
+    tmp      = st[0][1];
+    st[0][1] = st[1][1];
+    st[1][1] = st[2][1];
+    st[2][1] = st[3][1];
+    st[3][1] = tmp;
 
     // Rotate second row 2 columns to left
-    tmp         = (*st)[0][2];
-    (*st)[0][2] = (*st)[2][2];
-    (*st)[2][2] = tmp;
+    tmp      = st[0][2];
+    st[0][2] = st[2][2];
+    st[2][2] = tmp;
 
-    tmp         = (*st)[1][2];
-    (*st)[1][2] = (*st)[3][2];
-    (*st)[3][2] = tmp;
+    tmp      = st[1][2];
+    st[1][2] = st[3][2];
+    st[3][2] = tmp;
 
     // Rotate third row 3 columns to left
-    tmp         = (*st)[0][3];
-    (*st)[0][3] = (*st)[3][3];
-    (*st)[3][3] = (*st)[2][3];
-    (*st)[2][3] = (*st)[1][3];
-    (*st)[1][3] = tmp;
+    tmp      = st[0][3];
+    st[0][3] = st[3][3];
+    st[3][3] = st[2][3];
+    st[2][3] = st[1][3];
+    st[1][3] = tmp;
 }
 
 static U8 xtime(U8 x)
 {
     return ((x<<1) ^ (((x>>7) & 1) * 0x1b));
 }
+#define XTIME(x) ((x<<1) ^ (((x>>7) & 1) * 0x1b))
 
 // MixColumns function mixes the columns of the state matrix
-static void MixColumns(state_t* st)
+static void MixColumns(state_t& st)
 {
     for (U8 i = 0; i < 4; ++i) {
-        U8 t   = (*st)[i][0];
-        U8 tmp = (*st)[i][0] ^ (*st)[i][1] ^ (*st)[i][2] ^ (*st)[i][3] ;
-        U8 tm  = (*st)[i][0] ^ (*st)[i][1] ; tm = xtime(tm);  (*st)[i][0] ^= tm ^ tmp ;
-           tm  = (*st)[i][1] ^ (*st)[i][2] ; tm = xtime(tm);  (*st)[i][1] ^= tm ^ tmp ;
-           tm  = (*st)[i][2] ^ (*st)[i][3] ; tm = xtime(tm);  (*st)[i][2] ^= tm ^ tmp ;
-           tm  = (*st)[i][3] ^ t ;           tm = xtime(tm);  (*st)[i][3] ^= tm ^ tmp ;
+        U8 x  = st[i][0] ^ st[i][1] ^ st[i][2] ^ st[i][3];
+        U8 t0 = st[i][0];
+        st[i][0] ^= xtime(st[i][0] ^ st[i][1]) ^ x;
+        st[i][1] ^= xtime(st[i][1] ^ st[i][2]) ^ x;
+        st[i][2] ^= xtime(st[i][2] ^ st[i][3]) ^ x;
+        st[i][3] ^= xtime(st[i][3] ^ t0)       ^ x;
     }
 }
 
-// Multiply is used to multiply numbers in the field GF(2^8)
-// Note: The last call to xtime() is unneeded, but often ends up generating a smaller binary
-//       The compiler seems to be able to vectorize the operation better this way.
-//       See https://github.com/kokke/tiny-AES-c/pull/34
-#if MULTIPLY_AS_FN
-static U8 Multiply(U8 x, U8 y)
-{
-    return (((y & 1) * x) ^
-            ((y>>1 & 1) * xtime(x)) ^
-            ((y>>2 & 1) * xtime(xtime(x))) ^
-            ((y>>3 & 1) * xtime(xtime(xtime(x)))) ^
-            ((y>>4 & 1) * xtime(xtime(xtime(xtime(x)))))); /* this last call to xtime() can be omitted */
-}
-#else
-#define Multiply(x, y)                                  \
-    (  ((y & 1) * x) ^                                  \
-       ((y>>1 & 1) * xtime(x)) ^                        \
-       ((y>>2 & 1) * xtime(xtime(x))) ^                 \
-       ((y>>3 & 1) * xtime(xtime(xtime(x)))) ^          \
-       ((y>>4 & 1) * xtime(xtime(xtime(xtime(x))))))    \
-
-#endif
 // Cipher is the main function that encrypts the PlainText.
-static void Cipher(state_t* st, const U8* rk)
+static void Cipher(state_t& st, const U8* rk)
 {
     // Add the First round key to the state before starting
     AddRoundKey(0, st, rk);
@@ -229,7 +206,7 @@ void xcrypt_buffer(struct AES_ctx* ctx, U8* buf, size_t length)
     for (size_t i = 0; i < length; ++i, ++bi) {
         if (bi == AES_NBLOCK) { /* we need to regen xor compliment in buffer */
             memcpy(st, ctx->IV, AES_NBLOCK);
-            Cipher((state_t*)st, ctx->RK);
+            Cipher((state_t&)st, ctx->RK);
 
             /* increment IV and handle overflow */
             for (bi = (AES_NBLOCK - 1); bi >= 0; --bi) {
