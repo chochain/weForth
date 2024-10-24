@@ -31,18 +31,17 @@
 typedef uint8_t  U8;
 typedef uint32_t U32;
 
-struct AES_ctx 
-{
-    U8 RK[AES_keyExpSize];         // RoundKey
-    U8 IV[AES_NBLOCK];             // for CTR only
-};
+#define SBOX(v)      (AES::sbox[v])
+#define SUB(t)       ({ t[0]=SBOX(t[0]); t[1]=SBOX(t[1]); t[2]=SBOX(t[2]); t[3]=SBOX(t[3]); })
+#define ROR(t)       ({ U8 t0=t[0]; t[0]=t[1]; t[1]=t[2]; t[2]=t[3]; t[3]=t0; })
+#define SET(b, a)    (*(U32*)(b) = *(U32*)(a))
+#define XOR(c, b, a) (*(U32*)(c) = *(U32*)(b) ^ *(U32*)(a))
+#define XTIME(x)     (((x)<<1) ^ ((((x)>>7) & 1) * 0x1b))
 
-// state - array holding the intermediate results during decryption.
 typedef U8 state_t[4][4];
-// The lookup-tables are marked const so they can be placed in read-only storage instead of RAM
-// The numbers below can be computed dynamically trading ROM for RAM - 
-// This can be useful in (embedded) bootloader applications, where ROM is often limited.
-static const U8 sbox[256] = {
+struct AES
+{
+    static constexpr U8 sbox[256] = {
 //    0     1     2     3     4    5     6     7      8    9     A      B    C     D     E     F
     0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
     0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
@@ -60,7 +59,35 @@ static const U8 sbox[256] = {
     0x70, 0x3e, 0xb5, 0x66, 0x48, 0x03, 0xf6, 0x0e, 0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e,
     0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf,
     0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
+    };
+
+    U8 RK[AES_keyExpSize];         // RoundKey
+    U8 IV[AES_NBLOCK];             // for CTR only
+
+    AES(U8* key, U8* iv);
+    
+    void key_expansion(const U8* key);
+    void add_round_key(U8 n, state_t& st);
+    
+    void sub_bytes(state_t& st);
+    void shift_rows(state_t& st);
+    void mix_columns(state_t& st);
+    
+    void cipher(state_t& st);
+    void xcrypt_buffer(U8* buf, size_t length);
 };
+
+constexpr U8 AES::sbox[256];
+
+AES::AES(U8 *key, U8 *iv) {
+    key_expansion(key);           // init ctx
+    memcpy(IV, iv, AES_NBLOCK);   // init iv
+}
+
+// state - array holding the intermediate results during decryption.
+// The lookup-tables are marked const so they can be placed in read-only storage instead of RAM
+// The numbers below can be computed dynamically trading ROM for RAM - 
+// This can be useful in (embedded) bootloader applications, where ROM is often limited.
 // The round constant word array, Rcon[i], contains the values given by 
 // x to the power (i-1) being powers of x (x is denoted as {02}) in the field GF(2^8)
 static const U8 Rcon[11] = {
@@ -78,22 +105,17 @@ static const U8 Rcon[11] = {
 ///
 ///> produces Nb(Nr+1) round keys. The round keys are used in each round to decrypt the states.
 ///
-#define SUB(t)       ({ t[0]=sbox[t[0]]; t[1]=sbox[t[1]]; t[2]=sbox[t[2]]; t[3]=sbox[t[3]]; })
-#define ROR(t)       ({ U8 t0=t[0]; t[0]=t[1]; t[1]=t[2]; t[2]=t[3]; t[3]=t0; })
-#define SET(b, a)    (*(U32*)(b) = *(U32*)(a))
-#define XOR(c, b, a) (*(U32*)(c) = *(U32*)(b) ^ *(U32*)(a))
-
-static void KeyExpansion(U8* rk, const U8* key)
+void AES::key_expansion(const U8* key)
 {
     U8 tmp[4]; // Used for the column/row operations
   
     // The first round key is the key itself.
     for (int i = 0; i < Nk; ++i) {
-        SET(&rk[i*4], &key[i*4]);
+        SET(&RK[i*4], &key[i*4]);
     }
     // All other round keys are found from the previous round keys.
     for (int i = Nk; i < Nb * (Nr + 1); ++i) {
-        SET(tmp, &rk[(i - 1)*4]);
+        SET(tmp, &RK[(i - 1)*4]);
         
         if (i % Nk == 0) {
             // This function shifts the 4 bytes in a word to the left once.
@@ -105,25 +127,26 @@ static void KeyExpansion(U8* rk, const U8* key)
 #if AES_BITS==256
         if (i % Nk == 4) SUB(tmp);
 #endif
-        XOR(&rk[i * 4], &rk[(i - Nk) * 4], tmp);
+        XOR(&RK[i * 4], &RK[(i - Nk) * 4], tmp);
     }
 }
 // This function adds the round key to state.
 // The round key is added to the state by an XOR function.
-static void AddRoundKey(U8 n, state_t& st, const U8* rk) {
+void AES::add_round_key(U8 n, state_t& st)
+{
     for (U8 i = 0; i < 4; ++i) {
         for (U8 j = 0; j < 4; ++j) {
-            st[i][j] ^= rk[(n * Nb * 4) + (i * Nb) + j];
+            st[i][j] ^= RK[(n * Nb * 4) + (i * Nb) + j];
         }
     }
 }
 // The SubBytes Function Substitutes the values in the
 // state matrix with values in an S-box.
-static void SubBytes(state_t& st)
+void AES::sub_bytes(state_t& st)
 {
     for (U8 i = 0; i < 4; ++i) {
         for (U8 j = 0; j < 4; ++j) {
-            st[j][i] = sbox[st[j][i]];
+            st[j][i] = SBOX(st[j][i]);
         }
     }
 }
@@ -131,7 +154,7 @@ static void SubBytes(state_t& st)
 /// The ShiftRows() function shifts the rows in the state to the left.
 /// Each row is shifted with different offset.
 /// Offset = Row number. So the first row is not shifted.
-static void ShiftRows(state_t& st)
+void AES::shift_rows(state_t& st)
 {
     U8 tmp;
 
@@ -159,63 +182,58 @@ static void ShiftRows(state_t& st)
     st[1][3] = tmp;
 }
 
-static U8 xtime(U8 x)
-{
-    return ((x<<1) ^ (((x>>7) & 1) * 0x1b));
-}
-#define XTIME(x) ((x<<1) ^ (((x>>7) & 1) * 0x1b))
 
 // MixColumns function mixes the columns of the state matrix
-static void MixColumns(state_t& st)
+void AES::mix_columns(state_t& st)
 {
     for (U8 i = 0; i < 4; ++i) {
         U8 x  = st[i][0] ^ st[i][1] ^ st[i][2] ^ st[i][3];
         U8 t0 = st[i][0];
-        st[i][0] ^= xtime(st[i][0] ^ st[i][1]) ^ x;
-        st[i][1] ^= xtime(st[i][1] ^ st[i][2]) ^ x;
-        st[i][2] ^= xtime(st[i][2] ^ st[i][3]) ^ x;
-        st[i][3] ^= xtime(st[i][3] ^ t0)       ^ x;
+        st[i][0] ^= XTIME(st[i][0] ^ st[i][1]) ^ x;
+        st[i][1] ^= XTIME(st[i][1] ^ st[i][2]) ^ x;
+        st[i][2] ^= XTIME(st[i][2] ^ st[i][3]) ^ x;
+        st[i][3] ^= XTIME(st[i][3] ^ t0)       ^ x;
     }
 }
 
 // Cipher is the main function that encrypts the PlainText.
-static void Cipher(state_t& st, const U8* rk)
+void AES::cipher(state_t& st)
 {
     // Add the First round key to the state before starting
-    AddRoundKey(0, st, rk);
+    add_round_key(0, st);
     // There will be Nr rounds.
     // The first Nr-1 rounds are identical.
     // These Nr rounds are executed in the loop below.
     // Last one without MixColumns()
     for (U8 n = 1; ; ++n) {
-        SubBytes(st);
-        ShiftRows(st);
+        sub_bytes(st);
+        shift_rows(st);
         if (n == Nr) break;
         
-        MixColumns(st);
-        AddRoundKey(n, st, rk);
+        mix_columns(st);
+        add_round_key(n, st);
     }
     // Add round key to last round
-    AddRoundKey(Nr, st, rk);
+    add_round_key(Nr, st);
 }
 /* Symmetrical operation: same function for encrypting as for decrypting. Note any IV/nonce should never be reused with the same key */
-void xcrypt_buffer(struct AES_ctx* ctx, U8* buf, size_t length)
+void AES::xcrypt_buffer(U8* buf, size_t length)
 {
     U8  st[AES_NBLOCK];
     int bi = AES_NBLOCK;
     for (size_t i = 0; i < length; ++i, ++bi) {
         if (bi == AES_NBLOCK) { /* we need to regen xor compliment in buffer */
-            memcpy(st, ctx->IV, AES_NBLOCK);
-            Cipher((state_t&)st, ctx->RK);
+            memcpy(st, IV, AES_NBLOCK);
+            cipher((state_t&)st);
 
             /* increment IV and handle overflow */
             for (bi = (AES_NBLOCK - 1); bi >= 0; --bi) {
-                if (ctx->IV[bi] != 255) {
-                    ctx->IV[bi]++;
+                if (IV[bi] != 255) {
+                    IV[bi]++;
                     break;
                 }
                 /* overflow */
-                ctx->IV[bi] = 0;
+                IV[bi] = 0;
             }
             bi = 0;
         }
@@ -252,12 +270,10 @@ static int test_ctr()
                    0xae, 0x2d, 0x8a, 0x57, 0x1e, 0x03, 0xac, 0x9c, 0x9e, 0xb7, 0x6f, 0xac, 0x45, 0xaf, 0x8e, 0x51,
                    0x30, 0xc8, 0x1c, 0x46, 0xa3, 0x5c, 0xe4, 0x11, 0xe5, 0xfb, 0xc1, 0x19, 0x1a, 0x0a, 0x52, 0xef,
                    0xf6, 0x9f, 0x24, 0x45, 0xdf, 0x4f, 0x9b, 0x17, 0xad, 0x2b, 0x41, 0x7b, 0xe6, 0x6c, 0x37, 0x10 };
-    struct AES_ctx ctx;
     
-    KeyExpansion(ctx.RK, key);        // init ctx
-    memcpy(ctx.IV, iv, AES_NBLOCK);   // init iv
+    struct AES ctx(key, iv);
     
-    xcrypt_buffer(&ctx, in, 64);      // both encrypt/decrypt use the same function
+    ctx.xcrypt_buffer(in, 64);        // both encrypt/decrypt use the same function
   
     return memcmp((char*)out, (char*)in, 64);
 }
