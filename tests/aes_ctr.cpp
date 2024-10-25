@@ -10,22 +10,21 @@
 #include <stddef.h>
 #include <cstring>
 
-#define AES_BITS       256       /* 128, 192, 256 */
-#define AES_NBLOCK     16        /* Block length in bytes - AES is 128b block only */
-#define Nb             4         /* number of columns comprising a state in AES    */
+#define AES_BITS       256  /* 128, 192, 256 */
+#define AES_NBLOCK     16   /* block length in bytes - AES is 128b block only */
 
 #if AES_BITS==256
-#define AES_keyExpSize 240
-#define Nk             8         /* number of 32-bit words in key  */
-#define Nr             14        /* number of rounds in AES Cipher */
+#define AES_KEY_SZ     240
+#define WORD_PER_KEY   8    /* number of 32-bit words in key  */
+#define NROUND         14   /* number of rounds in AES Cipher */
 #elif AES_BITS==192
-#define AES_keyExpSize 208
-#define Nk             6
-#define Nr             12
+#define AES_KEY_SZ     208
+#define WORD_PER_KEY   6
+#define NROUND         12
 #else
-#define AES_keyExpSize 176
-#define Nk             4
-#define Nr             10
+#define AES_KEY_SZ     176
+#define WORD_PER_KEY   4
+#define NROUND         10
 #endif
 
 typedef uint8_t  U8;
@@ -42,8 +41,8 @@ typedef uint8_t  state_t[4][4];
 class AES
 {
 public:
-    AES(U8* key, U8* iv);
-    void xcrypt(U8* buf, size_t length);
+    AES(U8* key0, U8* iv0);
+    void xcrypt(U8* buf, size_t len);
 
 private:
     static constexpr U8 sbox[256] = { ///< lookup table, ROMable
@@ -69,11 +68,11 @@ private:
         0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
     };
 
-    U8      rk[AES_keyExpSize];  ///< RoundKey
+    U8      rk[AES_KEY_SZ];      ///< RoundKey
     U8      iv[AES_NBLOCK];      ///< for CTR only
     state_t st;                  ///< state during decryption
 
-    void init_key(const U8* key);
+    void expand_key(const U8* key0);
     void add_round_key(U8 n);
     
     void sub_bytes();
@@ -85,37 +84,37 @@ private:
 constexpr U8 AES::sbox[256];
 constexpr U8 AES::rcon[11];
 
-AES::AES(U8 *key, U8 *iv) {
-    init_key(key);
-    memcpy(this->iv, iv, AES_NBLOCK);
+AES::AES(U8 *key0, U8 *iv0) {
+    expand_key(key0);
+    memcpy(iv, iv0, AES_NBLOCK);
 }
 ///
-///> roduces Nb(Nr+1) round keys.
+///> roduces 4 * (NROUND+1) round keys.
 ///  The round keys are used in each round to decrypt the states.
 ///
-void AES::init_key(const U8* key)
+void AES::expand_key(const U8* key)
 {
     U8 tmp[4]; // Used for the column/row operations
   
     // The first round key is the key itself.
-    for (int i = 0; i < Nk; ++i) {
+    for (int i = 0; i < WORD_PER_KEY; ++i) {
         SET(&rk[i*4], &key[i*4]);
     }
     // All other round keys are found from the previous round keys.
-    for (int i = Nk; i < Nb * (Nr + 1); ++i) {
+    for (int i = WORD_PER_KEY; i < 4 * (NROUND + 1); ++i) {
         SET(tmp, &rk[(i - 1)*4]);
         
-        if (i % Nk == 0) {
+        if (i % WORD_PER_KEY == 0) {
             // This function shifts the 4 bytes in a word to the left once.
             // [a0,a1,a2,a3] becomes [a1,a2,a3,a0]
             ROR(tmp);
             SUB(tmp);
-            tmp[0] = tmp[0] ^ rcon[i/Nk];
+            tmp[0] = tmp[0] ^ rcon[i/WORD_PER_KEY];
         }
 #if AES_BITS==256
-        if (i % Nk == 4) SUB(tmp);
+        if (i % WORD_PER_KEY == 4) SUB(tmp);
 #endif
-        XOR(&rk[i * 4], &rk[(i - Nk) * 4], tmp);
+        XOR(&rk[i * 4], &rk[(i - WORD_PER_KEY) * 4], tmp);
     }
 }
 ///
@@ -123,10 +122,9 @@ void AES::init_key(const U8* key)
 ///
 void AES::add_round_key(U8 n)
 {
-    for (U8 i = 0; i < 4; ++i) {
-        for (U8 j = 0; j < 4; ++j) {
-            st[i][j] ^= rk[(n * Nb * 4) + (i * Nb) + j];
-        }
+    U8 *k = &rk[n * 16];
+    for (U8 i = 0, *p=(U8*)st; i < 16; ++i) {
+        *p++ ^= *k++;
     }
 }
 ///
@@ -190,27 +188,27 @@ void AES::cipher()
 {
     // add the 1st round key to the state before starting
     add_round_key(0);
-    // total Nr rounds
-    // first Nr-1 rounds are identical
-    // These Nr rounds are executed in the loop below.
+    // total NROUND rounds
+    // first NROUND-1 rounds are identical
+    // These NROUND rounds are executed in the loop below.
     // last one without MixColumns()
     for (U8 n = 1; ; ++n) {
         sub_bytes();
         shift_rows();
-        if (n == Nr) break;
+        if (n == NROUND) break;
         
         mix_columns();
         add_round_key(n);
     }
     // add round key to last round
-    add_round_key(Nr);
+    add_round_key(NROUND);
 }
 
 /* Symmetrical operation: same function for encrypting as for decrypting. Note any IV/nonce should never be reused with the same key */
-void AES::xcrypt(U8* buf, size_t length)
+void AES::xcrypt(U8* buf, size_t len)
 {
     int bi = AES_NBLOCK;
-    for (size_t i = 0; i < length; ++i, ++bi) {
+    for (size_t i = 0; i < len; ++i, ++bi) {
         if (bi == AES_NBLOCK) { /* we need to regen xor compliment in buffer */
             memcpy((U8*)st, iv, AES_NBLOCK);
             cipher();
