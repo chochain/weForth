@@ -10,22 +10,13 @@
 #include <stddef.h>
 #include <cstring>
 
-#define AES_BITS       256  /* 128, 192, 256 */
+constexpr int AES_BITS = 256;    ///< 128, 192, 256
+constexpr int NROUND   =         ///< number of rounds in AES Cipher
+    (AES_BITS==256)  ? 14 : ((AES_BITS==192) ? 12 : 10);
 
-#if AES_BITS==256
-#define AES_KEY_SZ     240  /* number of bytes of round key   */
-#define WORD_PER_KEY   8    /* number of 32-bit words in key  */
-#define NROUND         14   /* number of rounds in AES Cipher */
-#elif AES_BITS==192
-#define AES_KEY_SZ     208
-#define WORD_PER_KEY   6
-#define NROUND         12
-#else
-#define AES_KEY_SZ     176
-#define WORD_PER_KEY   4
-#define NROUND         10
-#endif
-#define AES_NBLOCK     16   /* block length in bytes - AES is 128b block */
+constexpr int AES_NBLOCK   = 16;                        ///< block length in bytes - AES is 128b block
+constexpr int AES_KEY_SZ   = (AES_NBLOCK * (NROUND+1)); ///< number of bytes of round key
+constexpr int WORD_PER_KEY = (AES_BITS >> 5);           ///< number of 32-bit words in key
 
 typedef uint8_t  U8;
 typedef uint32_t U32;
@@ -64,10 +55,10 @@ private:
     static constexpr U8 rcon[11] = {
         0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
     };
-
-    U8 rk[AES_KEY_SZ];                 ///< RoundKey
-    U8 iv[AES_NBLOCK];                 ///< for CTR only
-    U8 st[4][4];                       ///< state during decryption
+    ///                        AES_BITS      256, 192, 128
+    U8 rk[AES_KEY_SZ];    ///< RoundKey     [240, 208, 176]
+    U8 iv[AES_NBLOCK];    ///< for CTR only [16]
+    U8 st[4][4];          ///< morphing states during cipher
 
     void _expand_key(const U8* key0);
     
@@ -275,6 +266,8 @@ static int test_ctr()
 
 int main(void)
 {
+    printf("AES_BITS=%d, AES_KEY_SZ=%d, WORD_PER_KEY=%d\n",
+           AES_BITS, AES_KEY_SZ, WORD_PER_KEY);
     printf("encrypt=%s\n", test_ctr() ? "Failed" : "OK");
     printf("decrypt=%s\n", test_ctr() ? "Failed" : "OK");
 }
