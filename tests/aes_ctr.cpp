@@ -89,16 +89,16 @@ AES::AES(U8 *key0, U8 *iv0) {
     memcpy(iv, iv0, AES_NBLOCK);
 }
 ///
-///> roduces 4 * (NROUND+1) round keys.
+///> produces 4 * (NROUND+1) round keys.
 ///  The round keys are used in each round to decrypt the states.
 ///
-void AES::expand_key(const U8* key)
+void AES::expand_key(const U8* key0)
 {
     U8 tmp[4]; // Used for the column/row operations
   
     // The first round key is the key itself.
     for (int i = 0; i < WORD_PER_KEY; ++i) {
-        SET(&rk[i*4], &key[i*4]);
+        SET(&rk[i*4], &key0[i*4]);
     }
     // All other round keys are found from the previous round keys.
     for (int i = WORD_PER_KEY; i < 4 * (NROUND + 1); ++i) {
@@ -122,8 +122,8 @@ void AES::expand_key(const U8* key)
 ///
 void AES::add_round_key(U8 n)
 {
-    U8 *k = &rk[n * 16];
-    for (U8 i = 0, *p=(U8*)st; i < 16; ++i) {
+    U8 *k = &rk[n * 16];         ///< round keys in moving window
+    for (U8 i=0, *p=(U8*)st; i < 16; ++i) {
         *p++ ^= *k++;
     }
 }
@@ -132,7 +132,7 @@ void AES::add_round_key(U8 n)
 ///
 void AES::sub_bytes()
 {
-    for (U8 k = 0, *p = (U8*)st; k < 16; p++, k++) {
+    for (U8 k=0, *p=(U8*)st; k < 16; p++, k++) {
         *p = SBOX(*p);
     }
 }
@@ -203,24 +203,23 @@ void AES::cipher()
     // add round key to last round
     add_round_key(NROUND);
 }
-
-/* Symmetrical operation: same function for encrypting as for decrypting. Note any IV/nonce should never be reused with the same key */
+///
+///> symmetrical encrypt/decrpt CTR core
+///
 void AES::xcrypt(U8* buf, size_t len)
 {
     int bi = AES_NBLOCK;
     for (size_t i = 0; i < len; ++i, ++bi) {
-        if (bi == AES_NBLOCK) { /* we need to regen xor compliment in buffer */
+        if (bi == AES_NBLOCK) {      /// regen xor compliment in buffer
             memcpy((U8*)st, iv, AES_NBLOCK);
-            cipher();
+            cipher();                ///< process the block
 
-            /* increment IV and handle overflow */
             for (bi = (AES_NBLOCK - 1); bi >= 0; --bi) {
                 if (iv[bi] != 255) {
-                    iv[bi]++;
+                    iv[bi]++;        ///< increase counter (in IV)
                     break;
                 }
-                /* overflow */
-                iv[bi] = 0;
+                iv[bi] = 0;          ///< handle overflow
             }
             bi = 0;
         }
