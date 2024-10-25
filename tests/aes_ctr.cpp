@@ -11,10 +11,9 @@
 #include <cstring>
 
 #define AES_BITS       256  /* 128, 192, 256 */
-#define AES_NBLOCK     16   /* block length in bytes - AES is 128b block only */
 
 #if AES_BITS==256
-#define AES_KEY_SZ     240
+#define AES_KEY_SZ     240  /* number of bytes of round key   */
 #define WORD_PER_KEY   8    /* number of 32-bit words in key  */
 #define NROUND         14   /* number of rounds in AES Cipher */
 #elif AES_BITS==192
@@ -26,6 +25,7 @@
 #define WORD_PER_KEY   4
 #define NROUND         10
 #endif
+#define AES_NBLOCK     16   /* block length in bytes - AES is 128b block */
 
 typedef uint8_t  U8;
 typedef uint32_t U32;
@@ -34,6 +34,7 @@ typedef uint8_t  state_t[4][4];
 #define SET(b, a)    (*(U32*)(b) = *(U32*)(a))
 #define ROR(t)       ({ U8 t0=t[0]; t[0]=t[1]; t[1]=t[2]; t[2]=t[3]; t[3]=t0; })
 #define XOR(c, b, a) (*(U32*)(c) = *(U32*)(b) ^ *(U32*)(a))
+#define SUB(t)       ({ for (U8 i=0, *p=(t); i<4; i++, p++) *p=sbox[*p]; })
 
 class AES
 {
@@ -91,9 +92,6 @@ AES::AES(U8 *key0, U8 *iv0) {
 ///
 void AES::_expand_key(const U8* key0)
 {
-    auto SUB = [](U8 t[]) {
-        t[0]=sbox[t[0]]; t[1]=sbox[t[1]]; t[2]=sbox[t[2]]; t[3]=sbox[t[3]];
-    };
     U8 tmp[4]; // Used for the column/row operations
   
     // The first round key is the key itself.
@@ -205,22 +203,22 @@ void AES::_cipher()
 ///
 void AES::xcrypt(U8* buf, size_t len)
 {
-    int bi = AES_NBLOCK;
-    for (size_t i = 0; i < len; ++i, ++bi) {
-        if (bi == AES_NBLOCK) {      /// regen xor compliment in buffer
-            memcpy((U8*)st, iv, AES_NBLOCK);
-            _cipher();               ///< process the block
+    int bi = AES_NBLOCK;                      ///< block index
+    for (size_t i = 0; i < len; ++i, ++bi) {  /// * loop through PlainText
+        if (bi == AES_NBLOCK) {      
+            memcpy((U8*)st, iv, AES_NBLOCK);  /// * regen xor compliment in buffer
+            _cipher();                        /// * process the block
 
             for (bi = (AES_NBLOCK - 1); bi >= 0; --bi) {
-                if (iv[bi] != 255) {
-                    iv[bi]++;        ///< increase counter (in IV)
+                if (iv[bi] != 255) {          /// * overflow?
+                    iv[bi]++;                 /// * increase counter (in IV)
                     break;
                 }
-                iv[bi] = 0;          ///< handle overflow
+                iv[bi] = 0;                   /// * zero padding
             }
-            bi = 0;
+            bi = 0;                           /// * reset block index
         }
-        buf[i] ^= ((U8*)st)[bi];
+        buf[i] ^= ((U8*)st)[bi];              /// XOR buffer context
     }
 }
 
