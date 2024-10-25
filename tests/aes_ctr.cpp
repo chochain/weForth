@@ -29,7 +29,6 @@
 
 typedef uint8_t  U8;
 typedef uint32_t U32;
-typedef uint8_t  state_t[4][4];
 
 #define SET(b, a)    (*(U32*)(b) = *(U32*)(a))
 #define ROR(t)       ({ U8 t0=t[0]; t[0]=t[1]; t[1]=t[2]; t[2]=t[3]; t[3]=t0; })
@@ -66,9 +65,9 @@ private:
         0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
     };
 
-    U8      rk[AES_KEY_SZ];      ///< RoundKey
-    U8      iv[AES_NBLOCK];      ///< for CTR only
-    state_t st;                  ///< state during decryption
+    U8 rk[AES_KEY_SZ];                 ///< RoundKey
+    U8 iv[AES_NBLOCK];                 ///< for CTR only
+    U8 st[4][4];                       ///< state during decryption
 
     void _expand_key(const U8* key0);
     
