@@ -31,12 +31,9 @@ typedef uint8_t  U8;
 typedef uint32_t U32;
 typedef uint8_t  state_t[4][4];
 
-#define SBOX(v)      (AES::sbox[v])
-#define SUB(t)       ({ t[0]=SBOX(t[0]); t[1]=SBOX(t[1]); t[2]=SBOX(t[2]); t[3]=SBOX(t[3]); })
-#define ROR(t)       ({ U8 t0=t[0]; t[0]=t[1]; t[1]=t[2]; t[2]=t[3]; t[3]=t0; })
 #define SET(b, a)    (*(U32*)(b) = *(U32*)(a))
+#define ROR(t)       ({ U8 t0=t[0]; t[0]=t[1]; t[1]=t[2]; t[2]=t[3]; t[3]=t0; })
 #define XOR(c, b, a) (*(U32*)(c) = *(U32*)(b) ^ *(U32*)(a))
-#define XTIME(x)     (((x)<<1) ^ ((((x)>>7) & 1) * 0x1b))
 
 class AES
 {
@@ -94,6 +91,9 @@ AES::AES(U8 *key0, U8 *iv0) {
 ///
 void AES::expand_key(const U8* key0)
 {
+    auto SUB = [](U8 t[]) {
+        t[0]=sbox[t[0]]; t[1]=sbox[t[1]]; t[2]=sbox[t[2]]; t[3]=sbox[t[3]];
+    };
     U8 tmp[4]; // Used for the column/row operations
   
     // The first round key is the key itself.
@@ -109,7 +109,7 @@ void AES::expand_key(const U8* key0)
             // [a0,a1,a2,a3] becomes [a1,a2,a3,a0]
             ROR(tmp);
             SUB(tmp);
-            tmp[0] = tmp[0] ^ rcon[i/WORD_PER_KEY];
+            tmp[0] = tmp[0] ^ rcon[i / WORD_PER_KEY];
         }
 #if AES_BITS==256
         if (i % WORD_PER_KEY == 4) SUB(tmp);
@@ -123,18 +123,14 @@ void AES::expand_key(const U8* key0)
 void AES::add_round_key(U8 n)
 {
     U8 *k = &rk[n * 16];         ///< round keys in moving window
-    for (U8 i=0, *p=(U8*)st; i < 16; ++i) {
-        *p++ ^= *k++;
-    }
+    for (U8 i=0, *p=(U8*)st; i < 16; ++i) *p++ ^= *k++;
 }
 ///
 ///> substitutes state matrix with values from lookup table
 ///
 void AES::sub_bytes()
 {
-    for (U8 k=0, *p=(U8*)st; k < 16; p++, k++) {
-        *p = SBOX(*p);
-    }
+    for (U8 k=0, *p=(U8*)st; k < 16; p++, k++) *p = sbox[*p];
 }
 ///
 ///> shifts states rows to the left, each row with different offset.
@@ -171,14 +167,16 @@ void AES::shift_rows()
 ///
 void AES::mix_columns()
 {
-    for (U8 i = 0; i < 4; ++i) {
-        U8 *p = &st[i][0];
-        U8  x = *(p+0) ^ *(p+1) ^ *(p+2) ^ *(p+3);
+    auto xtime = [](U8 v){
+        return (v<<1) ^ ((v & 0x80) ? 0x1b : 0);
+    };
+    for (U8 i = 0, *p=(U8*)st; i < 4; ++i, p+=4) {
+        U8 x  = *(p+0) ^ *(p+1) ^ *(p+2) ^ *(p+3);
         U8 t0 = *(p+0);
-        *(p+0) ^= XTIME(*(p+0) ^ *(p+1)) ^ x;
-        *(p+1) ^= XTIME(*(p+1) ^ *(p+2)) ^ x;
-        *(p+2) ^= XTIME(*(p+2) ^ *(p+3)) ^ x;
-        *(p+3) ^= XTIME(*(p+3) ^ t0)     ^ x;
+        *(p+0) ^= xtime(*(p+0) ^ *(p+1)) ^ x;
+        *(p+1) ^= xtime(*(p+1) ^ *(p+2)) ^ x;
+        *(p+2) ^= xtime(*(p+2) ^ *(p+3)) ^ x;
+        *(p+3) ^= xtime(*(p+3) ^ t0)     ^ x;
     }
 }
 ///
