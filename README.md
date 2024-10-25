@@ -144,7 +144,8 @@ Note:
   + CSG i.e. compound shape, [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
   + review Jolt::RefTarget class (for ref counter, can apply to tensorForth)
 * inter-VM communication
-  + A 16-node SHA-256 demo, [Medium SHA-2 step-by-step](https://medium.com/bootdotdev/how-sha-2-works-step-by-step-sha-256-90ecd4f09e4d)
+  + A 16-node AES cipher [AES - 5 different modes comparison](https://www.highgo.ca/2019/08/08/the-difference-in-five-modes-in-the-aes-encryption-algorithm/)
+  + ChaCha20 cipher. See JS cryptography libs [libsodium.js](https://github.com/jedisct1/libsodium.js/)
 * add network system (SD_net)
 * review WebSerial
 * review wasmtime (CLI), perf+hotspot (profiling)
