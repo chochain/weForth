@@ -1,28 +1,30 @@
 #include <stdint.h>
 #include <string.h>
 
-typedef U8  U8;
-typedef U32 U32;
+typedef uint8_t  U8;
+typedef uint32_t U32;
+
+constexpr int NBLOCK = 64;  ///< ChaCha20 is a 512-bit cipher
+constexpr int NROUND = 20;  ///< spec. 20 rounds, 8 was said sufficent
 
 static inline void u32t8le(U32 v, U8 p[4]) {
-    p[0] = v & 0xff;
-    p[1] = (v >> 8) & 0xff;
+    p[0] = v         & 0xff;
+    p[1] = (v >> 8)  & 0xff;
     p[2] = (v >> 16) & 0xff;
     p[3] = (v >> 24) & 0xff;
 }
 
 static inline U32 u8t32le(U8 p[4]) {
-    U32 value = p[3];
+    U32 v = p[3];
 
-    value = (value << 8) | p[2];
-    value = (value << 8) | p[1];
-    value = (value << 8) | p[0];
+    v = (v << 8) | p[2];
+    v = (v << 8) | p[1];
+    v = (v << 8) | p[0];
 
-    return value;
+    return v;
 }
 
 static inline U32 rotl32(U32 x, int n) {
-    // http://blog.regehr.org/archives/1063
     return x << n | (x >> (-n & 31));
 }
 
@@ -34,20 +36,18 @@ static void chacha20_quarterround(U32 *x, int a, int b, int c, int d) {
     x[c] += x[d]; x[b] = rotl32(x[b] ^ x[c],  7);
 }
 
-static void chacha20_serialize(U32 in[16], U8 output[64]) {
-    int i;
-    for (i = 0; i < 16; i++) {
+static void chacha20_serialize(U32 in[16], U8 output[NBLOCK]) {
+    for (int i = 0; i < 16; i++) {
         u32t8le(in[i], output + (i << 2));
     }
 }
 
-static void chacha20_block(U32 in[16], U8 out[64], int num_rounds) {
-    int i;
+static void chacha20_block(U32 in[16], U8 out[NBLOCK], int nrounds) {
     U32 x[16];
 
     memcpy(x, in, sizeof(U32) * 16);
 
-    for (i = num_rounds; i > 0; i -= 2) {
+    for (int i = nrounds; i > 0; i -= 2) {
         chacha20_quarterround(x, 0, 4,  8, 12);
         chacha20_quarterround(x, 1, 5,  9, 13);
         chacha20_quarterround(x, 2, 6, 10, 14);
@@ -57,18 +57,14 @@ static void chacha20_block(U32 in[16], U8 out[64], int num_rounds) {
         chacha20_quarterround(x, 2, 7,  8, 13);
         chacha20_quarterround(x, 3, 4,  9, 14);
     }
-
-    for (i = 0; i < 16; i++) {
+    for (int i = 0; i < 16; i++) {
         x[i] += in[i];
     }
-
     chacha20_serialize(x, out);
 }
 
 // https://tools.ietf.org/html/rfc7539#section-2.3
 static void chacha20_init_state(U32 s[16], U8 key[32], U32 counter, U8 nonce[12]) {
-    int i;
-
     // refer: https://dxr.mozilla.org/mozilla-beta/source/security/nss/lib/freebl/chacha20.c
     // convert magic number to string: "expand 32-byte k"
     s[0] = 0x61707865;
@@ -76,30 +72,28 @@ static void chacha20_init_state(U32 s[16], U8 key[32], U32 counter, U8 nonce[12]
     s[2] = 0x79622d32;
     s[3] = 0x6b206574;
 
-    for (i = 0; i < 8; i++) {
+    for (int i = 0; i < 8; i++) {
         s[4 + i] = u8t32le(key + i * 4);
     }
 
     s[12] = counter;
 
-    for (i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++) {
         s[13 + i] = u8t32le(nonce + i * 4);
     }
 }
 
 void ChaCha20XOR(U8 key[32], U32 counter, U8 nonce[12], U8 *in, U8 *out, int inlen) {
-    int i, j;
-
     U32 s[16];
-    U8 block[64];
+    U8  block[NBLOCK];
 
     chacha20_init_state(s, key, counter, nonce);
 
-    for (i = 0; i < inlen; i += 64) {
-        chacha20_block(s, block, 20);
+    for (int i = 0; i < inlen; i += NBLOCK) {
+        chacha20_block(s, block, NROUND);
         s[12]++;
 
-        for (j = i; j < i + 64; j++) {
+        for (int j = i; j < i + NBLOCK; j++) {
             if (j >= inlen) {
                 break;
             }
@@ -548,9 +542,9 @@ MU_TEST(chacha20_block_test) {
         0xb5, 0x12, 0x9c, 0xd1, 0xde, 0x16, 0x4e, 0xb9, 0xcb, 0xd0, 0x83, 0xe8, 0xa2, 0x50, 0x3c, 0x4e
     };
 
-    U8 block[64];
+    U8 block[NBLOCK];
 
-    chacha20_block(s, block, 20);
+    chacha20_block(s, block, NROUND);
 
     for (i = 0; i < 16; i++) {
         mu_check(block[i] == expect[i]);
@@ -566,17 +560,17 @@ MU_TEST(chacha20_serialize_test) {
         0xd19c12b5, 0xb94e16de, 0xe883d0cb, 0x4e3c50a2
     };
 
-    U8 expect[64] = {
+    U8 expect[NBLOCK] = {
         0x10, 0xf1, 0xe7, 0xe4, 0xd1, 0x3b, 0x59, 0x15, 0x50, 0x0f, 0xdd, 0x1f, 0xa3, 0x20, 0x71, 0xc4,
         0xc7, 0xd1, 0xf4, 0xc7, 0x33, 0xc0, 0x68, 0x03, 0x04, 0x22, 0xaa, 0x9a, 0xc3, 0xd4, 0x6c, 0x4e,
         0xd2, 0x82, 0x64, 0x46, 0x07, 0x9f, 0xaa, 0x09, 0x14, 0xc2, 0xd7, 0x05, 0xd9, 0x8b, 0x02, 0xa2,
         0xb5, 0x12, 0x9c, 0xd1, 0xde, 0x16, 0x4e, 0xb9, 0xcb, 0xd0, 0x83, 0xe8, 0xa2, 0x50, 0x3c, 0x4e,
     };
-    U8 output[64];
+    U8 output[NBLOCK];
 
     chacha20_serialize(input, output);
 
-    for (i = 0; i < 64; i++) {
+    for (i = 0; i < NBLOCK; i++) {
         mu_check(output[i] == expect[i]);
     }
 }
