@@ -49,11 +49,12 @@ Serving as the core of demos, the templates under ~/template directory are used 
        </pre>
 
 #### Build yourself or try them online here
-    |Build|HowTo|Try Online|Note|
-    |---|---|---|---|
-    |Bare-bone eForth on Web|make zero|[eforth.html](https://chochain.github.io/weForth/ref/eforth.html)|-O2 works OK,<br/>-O3 Emscripten spits wrong code|
-    |Single WASM file|make one|[ceforth.html](https://chochain.github.io/weForth/ref/ceforth.html)||
-    |Extra Web Worker thread|make two|[weforth.html](https://chochain.github.io/weForth/ref/weforth.html)||
+
+|Build|HowTo|Try Online|Note|
+|---|---|---|---|
+|Bare-bone eForth on Web|make zero|[eforth.html](https://chochain.github.io/weForth/ref/eforth.html)|-O2 works OK,<br/>-O3 Emscripten spits wrong code|
+|Single WASM file|make one|[ceforth.html](https://chochain.github.io/weForth/ref/ceforth.html)||
+|Extra Web Worker thread|make two|[weforth.html](https://chochain.github.io/weForth/ref/weforth.html)||
 
 ### Run on your own box
 Server-side
