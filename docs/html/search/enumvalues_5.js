@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['lit_274',['LIT',['../ceforth_8cpp.html#aaa0aba801a492f1b85e6e0f23e3c8553a3b759690471ed29ecd243a8f36b93f60',1,'ceforth.cpp']]],
-  ['loop_275',['LOOP',['../ceforth_8cpp.html#aaa0aba801a492f1b85e6e0f23e3c8553a61f7f1587bd5fe978d9ff3ece8d0624c',1,'ceforth.cpp']]]
+  ['hold_287',['HOLD',['../ceforth_8cpp.html#a0f69c35de808703dbcaf85edc29cd4bfa9cfa27b414cab750fb14ec07cdf5cf6a',1,'ceforth.cpp']]]
 ];

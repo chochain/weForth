@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['max_240',['max',['../structList.html#a40ca45ede64112e5a85ed33b2cf3e875',1,'List']]],
-  ['mem0_241',['MEM0',['../ceforth_8cpp.html#aba2779b6f01bb7f61e36d7bc577bb2aa',1,'ceforth.cpp']]]
+  ['load_5fdp_247',['load_dp',['../ceforth_8cpp.html#a5d8850fc43ae60a32d6a9b48d9265fcf',1,'ceforth.cpp']]]
 ];

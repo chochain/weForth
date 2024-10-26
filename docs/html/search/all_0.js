@@ -3,7 +3,7 @@ var searchData=
   ['abs_0',['ABS',['../config_8h.html#a33ca651e9b955dcf57c2a2a7e3365170',1,'config.h']]],
   ['add_5fcode_1',['ADD_CODE',['../ceforth_8h.html#a63360857d379d2ff485bb343e52184ac',1,'ceforth.h']]],
   ['add_5fstr_2',['add_str',['../ceforth_8cpp.html#aed1e848eb616f3919d0a9bb06453695e',1,'ceforth.cpp']]],
-  ['add_5fvar_3',['add_var',['../ceforth_8cpp.html#ad79c1841ad241763a43e400d0884d426',1,'ceforth.cpp']]],
+  ['add_5fvar_3',['add_var',['../ceforth_8cpp.html#a7775cab16db630b8457bdb457a8644f4',1,'ceforth.cpp']]],
   ['add_5fw_4',['add_w',['../ceforth_8cpp.html#a6501518596206111ab40166b28ac6ae1',1,'ceforth.cpp']]],
   ['align_5',['ALIGN',['../config_8h.html#a53ee12f4dd53b3aa1de7e6aa2e3d61fe',1,'config.h']]],
   ['align16_6',['ALIGN16',['../config_8h.html#af1c36bda5eb7e9eb12cc52d52c491db5',1,'config.h']]],

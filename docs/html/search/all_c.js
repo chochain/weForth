@@ -1,15 +1,8 @@
 var searchData=
 [
-  ['ops_113',['ops',['../group__ALU.html',1,'']]],
-  ['ops_114',['ops',['../group__Branching.html',1,'']]],
-  ['ops_115',['ops',['../group__Debug.html',1,'']]],
-  ['ops_116',['ops',['../group__IO.html',1,'']]],
-  ['ops_117',['ops',['../group__Literal.html',1,'']]],
-  ['ops_118',['ops',['../group__Logic.html',1,'']]],
-  ['op_5fprim_119',['op_prim',['../ceforth_8cpp.html#acbee34bbc6a23a8f83947c51a0ec7c9c',1,'ceforth.cpp']]],
-  ['operator_3d_120',['operator=',['../structList.html#a2ea4a216746ee7d80205e207cb4cd77b',1,'List']]],
-  ['operator_5b_5d_121',['operator[]',['../structList.html#abd5038592bb12cc55678697cf7b852ec',1,'List']]],
-  ['ops_122',['ops',['../group__OS.html',1,'']]],
-  ['other_123',['OTHER',['../ceforth_8cpp.html#a323b79d06bef13e322d167f6bcd1551a',1,'ceforth.cpp']]],
-  ['ops_124',['ops',['../group__Stack.html',1,'']]]
+  ['name_112',['name',['../structCode.html#a07d7947d980fb65c8297aac767549dfe',1,'Code']]],
+  ['native_5fapi_113',['native_api',['../ceforth_8h.html#a196846c44175e33d1066e14af58ec6b3',1,'ceforth.h']]],
+  ['nest_114',['nest',['../ceforth_8cpp.html#ad846502b6abc77557b95ffb1d08699cc',1,'nest():&#160;ceforth.cpp'],['../ceforth_8cpp.html#a0f69c35de808703dbcaf85edc29cd4bfa5f0b5e8a99b9441721ea34f14ccc60fe',1,'NEST():&#160;ceforth.cpp']]],
+  ['next_115',['NEXT',['../ceforth_8h.html#af99290ebc7dc90e2d53b08b8445f90cfab13b96bf99a409e019f70dc1602532fd',1,'ceforth.h']]],
+  ['nop_116',['NOP',['../ceforth_8h.html#af99290ebc7dc90e2d53b08b8445f90cfaf811bef354b292ff0713c50d7652c026',1,'ceforth.h']]]
 ];

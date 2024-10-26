@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['ucase_250',['ucase',['../ceforth_8cpp.html#a537a52244510eb47aeb9478bea0b3d4e',1,'ceforth.cpp']]]
+  ['upper_258',['upper',['../ceforth_8cpp.html#a088210e30aca67b4f3d3808157ce57d7',1,'ceforth.cpp']]]
 ];
