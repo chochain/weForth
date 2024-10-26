@@ -178,7 +178,7 @@ zz⏎
 <li>uEforth v7 uses Asm.js, build Forth up with JS "assembly".</li>
 <li>weForth v1 uses token indirected threaded</li>
 <li>weForth+switch(op), is 2x slower than just function pointers.</li>
-<li>weForth v1.2 without yield in <a class="el" href="ceforth_8cpp.html#aa6e8df9fa2337499c3b66a5446ec4f77">nest()</a>, speeds up 3x.</li>
+<li>weForth v1.2 without yield in <a class="el" href="ceforth_8cpp.html#ad846502b6abc77557b95ffb1d08699cc">nest()</a>, speeds up 3x.</li>
 <li>WASM -O3 =&gt; err functions (wa.*) not found</li>
 <li>FireFox v122, is 2x faster than v120</li>
 <li>Chrome is about 10% slower than FireFox</li>
@@ -189,26 +189,31 @@ zz⏎
 <h2>TODO</h2>
 <ul>
 <li>Physics Engine<ul>
-<li>keyboard control</li>
 <li>vehicle sim</li>
+<li>CSG i.e. compound shape, <a href="https://opencsg.org/">OpenCSG</a>, <a href="https://gts.sourceforge.net/">GTS</a></li>
+<li>review Jolt::RefTarget class (for ref counter, can apply to tensorForth)</li>
 </ul>
 </li>
-<li>inter-VM communication</li>
+<li>inter-VM communication<ul>
+<li>A 16-node AES cipher <a href="https://www.highgo.ca/2019/08/08/the-difference-in-five-modes-in-the-aes-encryption-algorithm/">AES - 5 different modes comparison</a></li>
+<li>ChaCha20 cipher. See JS cryptography libs <a href="https://github.com/jedisct1/libsodium.js/">libsodium.js</a></li>
+</ul>
+</li>
 <li>add network system (SD_net)</li>
 <li>review WebSerial</li>
 <li>review wasmtime (CLI), perf+hotspot (profiling)</li>
-<li>review DragonRuby/mRuby (SDL)</li>
-<li>review R3, Forth CPU visualizer (SDL)</li>
+<li>review DragonRuby/mRuby (SDL) =&gt; 3D preferred</li>
+<li>review R3, Forth CPU visualizer (SDL) =&gt; 3D preferred</li>
 <li>review GraFORTH spec.<ul>
 <li>File system (FS/IndexedDB)</li>
-<li>Editor</li>
+<li>Editor =&gt; CodeMirrow chosen</li>
 <li>2D graphic (SDL_gfx, SDL_image)</li>
 <li>Character graphic (SDL_ttf or HTML5)</li>
-<li>3D graphic (GL)</li>
-<li>Music (SDL_media)</li>
+<li>3D graphic (GL) =&gt; Three.js WebGL</li>
+<li>Audio (SDL_media)</li>
 </ul>
 </li>
-<li>use WASM stack as ss</li>
+<li>use WASM stack as ss (brk, sbrk)</li>
 <li>macro-assembler</li>
 </ul>
 <h2>References</h2>
@@ -219,11 +224,12 @@ zz⏎
 <li><a href="https://gist.github.com/raysan5/17392498d40e2cb281f5d09c0a4bf798">raylib vs SDL2</a></li>
 </ul>
 </li>
-<li>Physics Engine<ul>
-<li><a href="https://jrouwe.github.io/JoltPhysics/">Jolt Physics</a><ul>
-<li>CSG Object (with optional motion trail) <a href="https://opencsg.org/">OpenCSG</a>, <a href="https://gts.sourceforge.net/">GTS</a> </li>
+<li>WebGL<ul>
+<li><a href="https://threejs.org/manual/#en/fundamentals">Three.js</a></li>
 </ul>
 </li>
+<li>Physics Engine<ul>
+<li><a href="https://jrouwe.github.io/JoltPhysics/">Jolt Physics</a> </li>
 </ul>
 </li>
 </ul>

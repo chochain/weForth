@@ -153,7 +153,7 @@ Note\+:
 \item u\+Eforth v7 uses Asm.\+js, build Forth up with JS \char`\"{}assembly\char`\"{}.
 \item we\+Forth v1 uses token indirected threaded
 \item we\+Forth+switch(op), is 2x slower than just function pointers.
-\item we\+Forth v1.\+2 without yield in \mbox{\hyperlink{ceforth_8cpp_aa6e8df9fa2337499c3b66a5446ec4f77}{nest()}}, speeds up 3x.
+\item we\+Forth v1.\+2 without yield in \mbox{\hyperlink{ceforth_8cpp_ad846502b6abc77557b95ffb1d08699cc}{nest()}}, speeds up 3x.
 \item W\+A\+SM -\/O3 =$>$ err functions (wa.$\ast$) not found
 \item Fire\+Fox v122, is 2x faster than v120
 \item Chrome is about 10\% slower than Fire\+Fox
@@ -168,25 +168,30 @@ Note\+:
 \begin{DoxyItemize}
 \item Physics Engine
 \begin{DoxyItemize}
-\item keyboard control
 \item vehicle sim
+\item C\+SG i.\+e. compound shape, \href{https://opencsg.org/}{\texttt{ Open\+C\+SG}}, \href{https://gts.sourceforge.net/}{\texttt{ G\+TS}}
+\item review Jolt\+::\+Ref\+Target class (for ref counter, can apply to tensor\+Forth)
 \end{DoxyItemize}
 \item inter-\/\+VM communication
+\begin{DoxyItemize}
+\item A 16-\/node A\+ES cipher \href{https://www.highgo.ca/2019/08/08/the-difference-in-five-modes-in-the-aes-encryption-algorithm/}{\texttt{ A\+ES -\/ 5 different modes comparison}}
+\item Cha\+Cha20 cipher. See JS cryptography libs \href{https://github.com/jedisct1/libsodium.js/}{\texttt{ libsodium.\+js}}
+\end{DoxyItemize}
 \item add network system (S\+D\+\_\+net)
 \item review Web\+Serial
 \item review wasmtime (C\+LI), perf+hotspot (profiling)
-\item review Dragon\+Ruby/m\+Ruby (S\+DL)
-\item review R3, Forth C\+PU visualizer (S\+DL)
+\item review Dragon\+Ruby/m\+Ruby (S\+DL) =$>$ 3D preferred
+\item review R3, Forth C\+PU visualizer (S\+DL) =$>$ 3D preferred
 \item review Gra\+F\+O\+R\+TH spec.
 \begin{DoxyItemize}
 \item File system (F\+S/\+Indexed\+DB)
-\item Editor
+\item Editor =$>$ Code\+Mirrow chosen
 \item 2D graphic (S\+D\+L\+\_\+gfx, S\+D\+L\+\_\+image)
 \item Character graphic (S\+D\+L\+\_\+ttf or H\+T\+M\+L5)
-\item 3D graphic (GL)
-\item Music (S\+D\+L\+\_\+media)
+\item 3D graphic (GL) =$>$ Three.\+js Web\+GL
+\item Audio (S\+D\+L\+\_\+media)
 \end{DoxyItemize}
-\item use W\+A\+SM stack as ss
+\item use W\+A\+SM stack as ss (brk, sbrk)
 \item macro-\/assembler
 \end{DoxyItemize}
 
@@ -200,11 +205,12 @@ Note\+:
 \item \href{https://lazyfoo.net/tutorials/SDL/}{\texttt{ Lazy\+Foo for S\+D\+L2}}
 \item \href{https://gist.github.com/raysan5/17392498d40e2cb281f5d09c0a4bf798}{\texttt{ raylib vs S\+D\+L2}}
 \end{DoxyItemize}
+\item Web\+GL
+\begin{DoxyItemize}
+\item \href{https://threejs.org/manual/\#en/fundamentals}{\texttt{ Three.\+js}}
+\end{DoxyItemize}
 \item Physics Engine
 \begin{DoxyItemize}
-\item \href{https://jrouwe.github.io/JoltPhysics/}{\texttt{ Jolt Physics}}
-\begin{DoxyItemize}
-\item C\+SG Object (with optional motion trail) \href{https://opencsg.org/}{\texttt{ Open\+C\+SG}}, \href{https://gts.sourceforge.net/}{\texttt{ G\+TS}} 
-\end{DoxyItemize}
+\item \href{https://jrouwe.github.io/JoltPhysics/}{\texttt{ Jolt Physics}} 
 \end{DoxyItemize}
 \end{DoxyItemize}

@@ -1,13 +1,15 @@
 \hypertarget{ceforth_8h}{}\doxysection{src/ceforth.h File Reference}
 \label{ceforth_8h}\index{src/ceforth.h@{src/ceforth.h}}
-{\ttfamily \#include $<$stdio.\+h$>$}\newline
-{\ttfamily \#include $<$stdint.\+h$>$}\newline
+{\ttfamily \#include $<$cstdio$>$}\newline
+{\ttfamily \#include $<$cstdint$>$}\newline
+{\ttfamily \#include $<$string$>$}\newline
 {\ttfamily \#include \char`\"{}config.\+h\char`\"{}}\newline
-Include dependency graph for ceforth.\+h\+:\nopagebreak
+Include dependency graph for ceforth.\+h\+:
+\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=315pt]{ceforth_8h__incl}
+\includegraphics[width=350pt]{ceforth_8h__incl}
 \end{center}
 \end{figure}
 This graph shows which files directly or indirectly include this file\+:\nopagebreak
@@ -40,7 +42,7 @@ struct \mbox{\hyperlink{structCode}{Code}}
 \item 
 \#define \mbox{\hyperlink{ceforth_8h_a8495127a64408f521294349c5526476e}{I\+M\+M\+\_\+\+A\+T\+TR}}~0x0002   /$\ast$$\ast$ immediate \mbox{\hyperlink{ceforth_8cpp_af629538f3b0c84bcc653fb92698c4f05}{word}}       $\ast$/
 \item 
-\#define \mbox{\hyperlink{ceforth_8h_aec92280c39d2b899a51e92addf82ea7e}{E\+X\+T\+\_\+\+F\+L\+AG}}~0x8000   /$\ast$$\ast$ prim/xt/pfa selector $\ast$/
+\#define \mbox{\hyperlink{ceforth_8h_aec92280c39d2b899a51e92addf82ea7e}{E\+X\+T\+\_\+\+F\+L\+AG}}~0x8000   /$\ast$$\ast$ \mbox{\hyperlink{ceforth_8cpp_a55a769ec05dd5b5b7b6295534541f6bc}{prim}}/xt/pfa selector $\ast$/
 \item 
 \#define \mbox{\hyperlink{ceforth_8h_a14bbb4ecc3200a3c711b21e08cce8fa9}{M\+S\+K\+\_\+\+A\+T\+TR}}~$\sim$0x3     /$\ast$$\ast$ mask udf,imm bits    $\ast$/
 \item 
@@ -54,6 +56,20 @@ struct \mbox{\hyperlink{structCode}{Code}}
 \item 
 typedef void($\ast$ \mbox{\hyperlink{ceforth_8h_ad49a4a3795be934579ff11f1296c1050}{F\+P\+TR}}) ()
 \begin{DoxyCompactList}\small\item\em function pointer \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27d}{io\+\_\+op}} \{ \newline
+\mbox{\hyperlink{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27daa7d623548e49a1514076f5bee3b314a4}{B\+A\+SE}} =0, 
+\mbox{\hyperlink{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27daf603e0d046225e81459ffe6d8ee5ba6b}{BL}}, 
+\mbox{\hyperlink{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27daaaa8401b50cb34e3a0d58729f70494f0}{CR}}, 
+\mbox{\hyperlink{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27da87fdcd2ffa8f71b49da9e0cfd4fb893f}{D\+OT}}, 
+\newline
+\mbox{\hyperlink{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27da0a8f232297a31be4c92f909cabd08247}{D\+O\+TR}}, 
+\mbox{\hyperlink{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27da80f3c18bd2904bf47b4f625b41d6adc6}{E\+M\+IT}}, 
+\mbox{\hyperlink{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27da667cfdd2232ba3f0cac3fd7328ea1f7d}{S\+P\+CS}}
+ \}
+\end{DoxyCompactItemize}
 \doxysubsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
@@ -62,6 +78,67 @@ void \mbox{\hyperlink{ceforth_8h_a7f66d1cf6a56ed50c9abd5331ed2073e}{forth\+\_\+i
 int \mbox{\hyperlink{ceforth_8h_ad8ef8e40c4fbb1b5e1f766486ff0e22d}{forth\+\_\+vm}} (const char $\ast$cmd, void($\ast$hook)(int, const char $\ast$)=N\+U\+LL)
 \item 
 int \mbox{\hyperlink{ceforth_8h_ac0fd47776c33f55abe0077eb4d77ce0c}{forth\+\_\+include}} (const char $\ast$fn)
+\item 
+void \mbox{\hyperlink{ceforth_8h_a05e51dee76eecef6d8eb2a7b7f99466b}{outer}} (istream \&in)
+\begin{DoxyCompactList}\small\item\em load external Forth script \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{ceforth_8h_a45e40a82da2f8df531da34a0061775a1}{key}} ()
+\begin{DoxyCompactList}\small\item\em read key from console \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{ceforth_8h_a1edeac2b9a9f3903fcf20538b18e9ee4}{fin\+\_\+setup}} (const char $\ast$line)
+\item 
+void \mbox{\hyperlink{ceforth_8h_acb6a137a3f9507dab4ec5bb3e277d460}{fout\+\_\+setup}} (void($\ast$hook)(int, const char $\ast$)=N\+U\+LL)
+\item 
+char $\ast$ \mbox{\hyperlink{ceforth_8h_a6f241997f1fbe0bb5ddde7d646f96a4c}{scan}} (char c)
+\begin{DoxyCompactList}\small\item\em scan input stream for a given char \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{ceforth_8h_a7b6f338854360679dc3bb527a89e43fb}{fetch}} (string \&idiom)
+\begin{DoxyCompactList}\small\item\em read input stream into string \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{ceforth_8h_a59a029cd22163e0e580d06b4bc9b93e3}{spaces}} (int n)
+\begin{DoxyCompactList}\small\item\em show spaces \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{ceforth_8h_aa963fe73224216b8fa88dd66869c0b52}{put}} (\mbox{\hyperlink{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27d}{io\+\_\+op}} op, \mbox{\hyperlink{config_8h_a57c78d17a8f015df496afc50c9ab973d}{DU}} v=\mbox{\hyperlink{config_8h_ab09a231138adc0fb73bfb9ba7144b797}{D\+U0}}, \mbox{\hyperlink{config_8h_a57c78d17a8f015df496afc50c9ab973d}{DU}} v2=\mbox{\hyperlink{config_8h_ab09a231138adc0fb73bfb9ba7144b797}{D\+U0}})
+\begin{DoxyCompactList}\small\item\em print literals \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{ceforth_8h_a24bf78951ec13ef2fcfb6ca869085b0b}{pstr}} (const char $\ast$str, \mbox{\hyperlink{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27d}{io\+\_\+op}} op=\mbox{\hyperlink{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27daf603e0d046225e81459ffe6d8ee5ba6b}{BL}})
+\item 
+void \mbox{\hyperlink{ceforth_8h_ac7375936d290f4dd3ded50a68694551e}{see}} (\mbox{\hyperlink{config_8h_aff5e3e5f0579f9bce7aeaeac9d89d33a}{IU}} pfa)
+\begin{DoxyCompactList}\small\item\em disassemble user defined word \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{ceforth_8h_a8c226ea3e83d7102f33d1575b060f511}{words}} ()
+\begin{DoxyCompactList}\small\item\em list dictionary words \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{ceforth_8h_a10a644be0ee623a74c51de778e88af8e}{ss\+\_\+dump}} (bool forced=false)
+\begin{DoxyCompactList}\small\item\em show data stack content \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{ceforth_8h_a6f0ec75e06e4fcdfff6adbba3c8f283b}{dict\+\_\+dump}} ()
+\begin{DoxyCompactList}\small\item\em dump dictionary \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{ceforth_8h_a429eeda0d80e93b188d330b3b05ac0ac}{mem\+\_\+dump}} (\mbox{\hyperlink{config_8h_a696390429f2f3b644bde8d0322a24124}{U32}} addr, \mbox{\hyperlink{config_8h_aff5e3e5f0579f9bce7aeaeac9d89d33a}{IU}} sz)
+\begin{DoxyCompactList}\small\item\em dump memory frm addr...addr+sz \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{ceforth_8h_abbce13f8751c5d6d194da4e408317bad}{mem\+\_\+stat}} ()
+\item 
+void \mbox{\hyperlink{ceforth_8h_a196846c44175e33d1066e14af58ec6b3}{native\+\_\+api}} ()
+\end{DoxyCompactItemize}
+\doxysubsection*{primitive opcode}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{ceforth_8h_acb00de845f9f6bcc9284a43200e9d6c2}{U\+S\+E\+R\+\_\+\+A\+R\+EA}}~(\mbox{\hyperlink{config_8h_af1c36bda5eb7e9eb12cc52d52c491db5}{A\+L\+I\+G\+N16}}(\mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa1df89e8bc6bb595361e067303a6a938f}{M\+A\+X\+\_\+\+OP}} \& $\sim$\mbox{\hyperlink{ceforth_8h_aec92280c39d2b899a51e92addf82ea7e}{E\+X\+T\+\_\+\+F\+L\+AG}}))
+\item 
+\#define \mbox{\hyperlink{ceforth_8h_a24fba804f04a45a65e1de9174fc1d839}{I\+S\+\_\+\+P\+R\+IM}}(w)~((w \& \mbox{\hyperlink{ceforth_8h_aec92280c39d2b899a51e92addf82ea7e}{E\+X\+T\+\_\+\+F\+L\+AG}}) \&\& (w $<$ \mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa1df89e8bc6bb595361e067303a6a938f}{M\+A\+X\+\_\+\+OP}}))
+\item 
+enum \mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cf}{prim\+\_\+op}} \{ \newline
+\mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa7a10b5d68d31711288e1fe0fa17dbf4f}{E\+X\+IT}} =0$\vert$\+E\+X\+T\+\_\+\+F\+L\+AG, 
+\mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfaf811bef354b292ff0713c50d7652c026}{N\+OP}}, 
+\mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfab13b96bf99a409e019f70dc1602532fd}{N\+E\+XT}}, 
+\mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa61f7f1587bd5fe978d9ff3ece8d0624c}{L\+O\+OP}}, 
+\newline
+\mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa3b759690471ed29ecd243a8f36b93f60}{L\+IT}}, 
+\mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfaf68346ce0bfce7ab2ca0a240f5132863}{V\+AR}}, 
+\mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfaec41e801b43cfbec49d343c900360bf9}{S\+TR}}, 
+\mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa095d6c606e30118fcd45095816ebb017}{D\+O\+TQ}}, 
+\newline
+\mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa0d3163a24760c4c2b59a2ac47b233d43}{B\+R\+AN}}, 
+\mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa85aab50c7e8b897e918adf1592b14a2f}{Z\+B\+R\+AN}}, 
+\mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa4aa86be4d9164781812ae616df411e1a}{V\+B\+R\+AN}}, 
+\mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfabb20064cb680106e5c1c45d02000df9a}{D\+O\+ES}}, 
+\newline
+\mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfaa809654855caa62449850d9122fd77a8}{F\+OR}}, 
+\mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfabfea6036e64d9c7c773d277a57d2f959}{DO}}, 
+\mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa147e71049e3285d642d0d5268dba260f}{K\+EY}}, 
+\mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa1df89e8bc6bb595361e067303a6a938f}{M\+A\+X\+\_\+\+OP}}
+ \}
 \end{DoxyCompactItemize}
 
 
@@ -82,7 +159,7 @@ int \mbox{\hyperlink{ceforth_8h_ac0fd47776c33f55abe0077eb4d77ce0c}{forth\+\_\+in
 \index{ceforth.h@{ceforth.h}!EXT\_FLAG@{EXT\_FLAG}}
 \index{EXT\_FLAG@{EXT\_FLAG}!ceforth.h@{ceforth.h}}
 \doxysubsubsection{\texorpdfstring{EXT\_FLAG}{EXT\_FLAG}}
-{\footnotesize\ttfamily \#define E\+X\+T\+\_\+\+F\+L\+AG~0x8000   /$\ast$$\ast$ prim/xt/pfa selector $\ast$/}
+{\footnotesize\ttfamily \#define E\+X\+T\+\_\+\+F\+L\+AG~0x8000   /$\ast$$\ast$ \mbox{\hyperlink{ceforth_8cpp_a55a769ec05dd5b5b7b6295534541f6bc}{prim}}/xt/pfa selector $\ast$/}
 
 \mbox{\Hypertarget{ceforth_8h_a14bbb4ecc3200a3c711b21e08cce8fa9}\label{ceforth_8h_a14bbb4ecc3200a3c711b21e08cce8fa9}} 
 \index{ceforth.h@{ceforth.h}!MSK\_ATTR@{MSK\_ATTR}}
@@ -101,6 +178,18 @@ int \mbox{\hyperlink{ceforth_8h_ac0fd47776c33f55abe0077eb4d77ce0c}{forth\+\_\+in
 \index{IS\_IMM@{IS\_IMM}!ceforth.h@{ceforth.h}}
 \doxysubsubsection{\texorpdfstring{IS\_IMM}{IS\_IMM}}
 {\footnotesize\ttfamily \#define I\+S\+\_\+\+I\+MM(\begin{DoxyParamCaption}\item[{}]{w }\end{DoxyParamCaption})~(\mbox{\hyperlink{ceforth_8cpp_aa086a2419b6fa4292fe7a96ade49cfd4}{dict}}\mbox{[}w\mbox{]}.attr \& \mbox{\hyperlink{ceforth_8h_a8495127a64408f521294349c5526476e}{I\+M\+M\+\_\+\+A\+T\+TR}})}
+
+\mbox{\Hypertarget{ceforth_8h_acb00de845f9f6bcc9284a43200e9d6c2}\label{ceforth_8h_acb00de845f9f6bcc9284a43200e9d6c2}} 
+\index{ceforth.h@{ceforth.h}!USER\_AREA@{USER\_AREA}}
+\index{USER\_AREA@{USER\_AREA}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{USER\_AREA}{USER\_AREA}}
+{\footnotesize\ttfamily \#define U\+S\+E\+R\+\_\+\+A\+R\+EA~(\mbox{\hyperlink{config_8h_af1c36bda5eb7e9eb12cc52d52c491db5}{A\+L\+I\+G\+N16}}(\mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa1df89e8bc6bb595361e067303a6a938f}{M\+A\+X\+\_\+\+OP}} \& $\sim$\mbox{\hyperlink{ceforth_8h_aec92280c39d2b899a51e92addf82ea7e}{E\+X\+T\+\_\+\+F\+L\+AG}}))}
+
+\mbox{\Hypertarget{ceforth_8h_a24fba804f04a45a65e1de9174fc1d839}\label{ceforth_8h_a24fba804f04a45a65e1de9174fc1d839}} 
+\index{ceforth.h@{ceforth.h}!IS\_PRIM@{IS\_PRIM}}
+\index{IS\_PRIM@{IS\_PRIM}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{IS\_PRIM}{IS\_PRIM}}
+{\footnotesize\ttfamily \#define I\+S\+\_\+\+P\+R\+IM(\begin{DoxyParamCaption}\item[{}]{w }\end{DoxyParamCaption})~((w \& \mbox{\hyperlink{ceforth_8h_aec92280c39d2b899a51e92addf82ea7e}{E\+X\+T\+\_\+\+F\+L\+AG}}) \&\& (w $<$ \mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa1df89e8bc6bb595361e067303a6a938f}{M\+A\+X\+\_\+\+OP}}))}
 
 \mbox{\Hypertarget{ceforth_8h_a63360857d379d2ff485bb343e52184ac}\label{ceforth_8h_a63360857d379d2ff485bb343e52184ac}} 
 \index{ceforth.h@{ceforth.h}!ADD\_CODE@{ADD\_CODE}}
@@ -145,11 +234,124 @@ function pointer
 
 \begin{quote}
 Universal functor (no S\+TL) and \mbox{\hyperlink{structCode}{Code}} class \end{quote}
-\mbox{\hyperlink{structCode}{Code}} class on 64-\/bit systems (expand pfa possible) +-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/---+-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/---+ $\vert$ $\ast$name $\vert$ xt $\vert$ +-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/---+-\/---+-\/---+-\/-\/-\/-\/-\/-\/---+ $\vert$attr$\vert$pfa $\vert$xxxxxxxxx$\vert$ +-\/---+-\/---+-\/-\/-\/-\/-\/-\/---+
+\mbox{\hyperlink{structCode}{Code}} class on 64-\/bit systems (expand pfa to 32-\/bit possible) +-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/---+-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/---+ $\vert$ $\ast$name $\vert$ xt $\vert$ +-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/---+-\/---+-\/---+-\/-\/-\/-\/-\/-\/---+ $\vert$attr$\vert$pfa $\vert$xxxxxxxxx$\vert$ +-\/---+-\/---+-\/-\/-\/-\/-\/-\/---+
 
 \mbox{\hyperlink{structCode}{Code}} class on 32-\/bit systems (memory best utilized) +-\/-\/-\/-\/-\/-\/---+-\/-\/-\/-\/-\/-\/---+ $\vert$ $\ast$name $\vert$ xt $\vert$ +-\/-\/-\/-\/-\/-\/---+-\/---+-\/---+ $\vert$attr$\vert$pfa $\vert$ +-\/---+-\/---+
 
-\mbox{\hyperlink{structCode}{Code}} class on W\+A\+S\+M/32-\/bit (a bit wasteful) +-\/-\/-\/-\/-\/-\/---+-\/-\/-\/-\/-\/-\/---+-\/---+-\/---+ $\vert$ $\ast$name $\vert$ xt $\vert$attr$\vert$pfa $\vert$ +-\/-\/-\/-\/-\/-\/---+-\/-\/-\/-\/-\/-\/---+-\/---+-\/---+ 
+\mbox{\hyperlink{structCode}{Code}} class on W\+A\+SM systems (a bit wasteful) +-\/-\/-\/-\/-\/-\/---+-\/-\/-\/-\/-\/-\/---+-\/---+ $\vert$ $\ast$name $\vert$ xt $\vert$attr$\vert$ +-\/-\/-\/-\/-\/-\/---+-\/---+-\/---+-\/---+ $\vert$pfa $\vert$xxxx$\vert$ +-\/---+-\/---+ 
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cf}\label{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cf}} 
+\index{ceforth.h@{ceforth.h}!prim\_op@{prim\_op}}
+\index{prim\_op@{prim\_op}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{prim\_op}{prim\_op}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cf}{prim\+\_\+op}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXIT@{EXIT}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!EXIT@{EXIT}}}\mbox{\Hypertarget{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa7a10b5d68d31711288e1fe0fa17dbf4f}\label{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa7a10b5d68d31711288e1fe0fa17dbf4f}} 
+E\+X\+IT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NOP@{NOP}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!NOP@{NOP}}}\mbox{\Hypertarget{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfaf811bef354b292ff0713c50d7652c026}\label{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfaf811bef354b292ff0713c50d7652c026}} 
+N\+OP&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NEXT@{NEXT}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!NEXT@{NEXT}}}\mbox{\Hypertarget{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfab13b96bf99a409e019f70dc1602532fd}\label{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfab13b96bf99a409e019f70dc1602532fd}} 
+N\+E\+XT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LOOP@{LOOP}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!LOOP@{LOOP}}}\mbox{\Hypertarget{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa61f7f1587bd5fe978d9ff3ece8d0624c}\label{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa61f7f1587bd5fe978d9ff3ece8d0624c}} 
+L\+O\+OP&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LIT@{LIT}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!LIT@{LIT}}}\mbox{\Hypertarget{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa3b759690471ed29ecd243a8f36b93f60}\label{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa3b759690471ed29ecd243a8f36b93f60}} 
+L\+IT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{VAR@{VAR}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!VAR@{VAR}}}\mbox{\Hypertarget{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfaf68346ce0bfce7ab2ca0a240f5132863}\label{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfaf68346ce0bfce7ab2ca0a240f5132863}} 
+V\+AR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{STR@{STR}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!STR@{STR}}}\mbox{\Hypertarget{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfaec41e801b43cfbec49d343c900360bf9}\label{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfaec41e801b43cfbec49d343c900360bf9}} 
+S\+TR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DOTQ@{DOTQ}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!DOTQ@{DOTQ}}}\mbox{\Hypertarget{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa095d6c606e30118fcd45095816ebb017}\label{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa095d6c606e30118fcd45095816ebb017}} 
+D\+O\+TQ&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BRAN@{BRAN}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!BRAN@{BRAN}}}\mbox{\Hypertarget{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa0d3163a24760c4c2b59a2ac47b233d43}\label{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa0d3163a24760c4c2b59a2ac47b233d43}} 
+B\+R\+AN&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ZBRAN@{ZBRAN}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!ZBRAN@{ZBRAN}}}\mbox{\Hypertarget{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa85aab50c7e8b897e918adf1592b14a2f}\label{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa85aab50c7e8b897e918adf1592b14a2f}} 
+Z\+B\+R\+AN&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{VBRAN@{VBRAN}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!VBRAN@{VBRAN}}}\mbox{\Hypertarget{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa4aa86be4d9164781812ae616df411e1a}\label{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa4aa86be4d9164781812ae616df411e1a}} 
+V\+B\+R\+AN&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DOES@{DOES}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!DOES@{DOES}}}\mbox{\Hypertarget{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfabb20064cb680106e5c1c45d02000df9a}\label{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfabb20064cb680106e5c1c45d02000df9a}} 
+D\+O\+ES&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FOR@{FOR}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!FOR@{FOR}}}\mbox{\Hypertarget{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfaa809654855caa62449850d9122fd77a8}\label{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfaa809654855caa62449850d9122fd77a8}} 
+F\+OR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DO@{DO}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!DO@{DO}}}\mbox{\Hypertarget{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfabfea6036e64d9c7c773d277a57d2f959}\label{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfabfea6036e64d9c7c773d277a57d2f959}} 
+DO&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{KEY@{KEY}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!KEY@{KEY}}}\mbox{\Hypertarget{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa147e71049e3285d642d0d5268dba260f}\label{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa147e71049e3285d642d0d5268dba260f}} 
+K\+EY&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MAX\_OP@{MAX\_OP}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!MAX\_OP@{MAX\_OP}}}\mbox{\Hypertarget{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa1df89e8bc6bb595361e067303a6a938f}\label{ceforth_8h_af99290ebc7dc90e2d53b08b8445f90cfa1df89e8bc6bb595361e067303a6a938f}} 
+M\+A\+X\+\_\+\+OP&\\
+\hline
+
+\end{DoxyEnumFields}
+\mbox{\Hypertarget{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27d}\label{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27d}} 
+\index{ceforth.h@{ceforth.h}!io\_op@{io\_op}}
+\index{io\_op@{io\_op}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{io\_op}{io\_op}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27d}{io\+\_\+op}}}
+
+\begin{quote}
+IO functions \end{quote}
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BASE@{BASE}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!BASE@{BASE}}}\mbox{\Hypertarget{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27daa7d623548e49a1514076f5bee3b314a4}\label{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27daa7d623548e49a1514076f5bee3b314a4}} 
+B\+A\+SE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BL@{BL}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!BL@{BL}}}\mbox{\Hypertarget{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27daf603e0d046225e81459ffe6d8ee5ba6b}\label{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27daf603e0d046225e81459ffe6d8ee5ba6b}} 
+BL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CR@{CR}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!CR@{CR}}}\mbox{\Hypertarget{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27daaaa8401b50cb34e3a0d58729f70494f0}\label{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27daaaa8401b50cb34e3a0d58729f70494f0}} 
+CR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DOT@{DOT}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!DOT@{DOT}}}\mbox{\Hypertarget{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27da87fdcd2ffa8f71b49da9e0cfd4fb893f}\label{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27da87fdcd2ffa8f71b49da9e0cfd4fb893f}} 
+D\+OT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DOTR@{DOTR}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!DOTR@{DOTR}}}\mbox{\Hypertarget{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27da0a8f232297a31be4c92f909cabd08247}\label{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27da0a8f232297a31be4c92f909cabd08247}} 
+D\+O\+TR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EMIT@{EMIT}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!EMIT@{EMIT}}}\mbox{\Hypertarget{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27da80f3c18bd2904bf47b4f625b41d6adc6}\label{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27da80f3c18bd2904bf47b4f625b41d6adc6}} 
+E\+M\+IT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SPCS@{SPCS}!ceforth.h@{ceforth.h}}\index{ceforth.h@{ceforth.h}!SPCS@{SPCS}}}\mbox{\Hypertarget{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27da667cfdd2232ba3f0cac3fd7328ea1f7d}\label{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27da667cfdd2232ba3f0cac3fd7328ea1f7d}} 
+S\+P\+CS&\\
+\hline
+
+\end{DoxyEnumFields}
+
 
 \doxysubsection{Function Documentation}
 \mbox{\Hypertarget{ceforth_8h_a7f66d1cf6a56ed50c9abd5331ed2073e}\label{ceforth_8h_a7f66d1cf6a56ed50c9abd5331ed2073e}} 
@@ -158,17 +360,15 @@ Universal functor (no S\+TL) and \mbox{\hyperlink{structCode}{Code}} class \end{
 \doxysubsubsection{\texorpdfstring{forth\_init()}{forth\_init()}}
 {\footnotesize\ttfamily void forth\+\_\+init (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
 
+\begin{quote}
+System interface \end{quote}
+
+
 ====================================================================
 
 Forth VM external command processor \begin{quote}
 check dictionary initilized \end{quote}
 
-
-
-\begin{DoxyItemize}
-\item C\+O\+LD
-\item 4-\/byte aligned
-\end{DoxyItemize}
 
 $<$ set pointer to base
 
@@ -181,17 +381,32 @@ $<$ set pointer to dfmt
 \item padding user area
 \end{DoxyItemize}
 
-\begin{quote}
-compile dictionary \end{quote}
-\mbox{\Hypertarget{ceforth_8h_ad8ef8e40c4fbb1b5e1f766486ff0e22d}\label{ceforth_8h_ad8ef8e40c4fbb1b5e1f766486ff0e22d}} 
+$<$ compile dictionary
+
+$<$ collect X\+T0, and check xtoff range\mbox{\Hypertarget{ceforth_8h_ad8ef8e40c4fbb1b5e1f766486ff0e22d}\label{ceforth_8h_ad8ef8e40c4fbb1b5e1f766486ff0e22d}} 
 \index{ceforth.h@{ceforth.h}!forth\_vm@{forth\_vm}}
 \index{forth\_vm@{forth\_vm}!ceforth.h@{ceforth.h}}
 \doxysubsubsection{\texorpdfstring{forth\_vm()}{forth\_vm()}}
 {\footnotesize\ttfamily int forth\+\_\+vm (\begin{DoxyParamCaption}\item[{const char $\ast$}]{cmd,  }\item[{void($\ast$)(int, const char $\ast$)}]{hook = {\ttfamily NULL} }\end{DoxyParamCaption})}
 
+
+\begin{DoxyItemize}
+\item time slice up
+\item real-\/time support, 10ms = 100Hz
+\end{DoxyItemize}
+
+\begin{quote}
+check timing \end{quote}
+
+
 $<$ serial output hook up
 
 $<$ check VM resume status
+
+
+\begin{DoxyItemize}
+\item restore context
+\end{DoxyItemize}
 
 \begin{quote}
 refresh buffer if not resuming \end{quote}
@@ -199,41 +414,217 @@ refresh buffer if not resuming \end{quote}
 
 
 \begin{DoxyItemize}
-\item clean output buffer
-\item clear input stream error bit if any
-\item reload user command into input stream
+\item parse a word
+\item resume task
+\item send to Forth core
 \end{DoxyItemize}
-
-\begin{quote}
-fetch a word \end{quote}
-
-
-
-\begin{DoxyItemize}
-\item continue without parsing
-\end{DoxyItemize}
-
-\begin{quote}
-send to Forth core \end{quote}
-
 
 \begin{quote}
 multi-\/threading support \end{quote}
 
 
-\begin{quote}
-check timing \end{quote}
-
-
 
 \begin{DoxyItemize}
-\item time slice up
-\item real-\/time support, 10ms = 100Hz
-\item pause, yield to front-\/end task
-\item dump stack and display ok prompt
+\item yield to other tasks
+\item save context
+\item optionally display stack contents
 \end{DoxyItemize}\mbox{\Hypertarget{ceforth_8h_ac0fd47776c33f55abe0077eb4d77ce0c}\label{ceforth_8h_ac0fd47776c33f55abe0077eb4d77ce0c}} 
 \index{ceforth.h@{ceforth.h}!forth\_include@{forth\_include}}
 \index{forth\_include@{forth\_include}!ceforth.h@{ceforth.h}}
 \doxysubsubsection{\texorpdfstring{forth\_include()}{forth\_include()}}
 {\footnotesize\ttfamily int forth\+\_\+include (\begin{DoxyParamCaption}\item[{const char $\ast$}]{fn }\end{DoxyParamCaption})}
 
+\mbox{\Hypertarget{ceforth_8h_a05e51dee76eecef6d8eb2a7b7f99466b}\label{ceforth_8h_a05e51dee76eecef6d8eb2a7b7f99466b}} 
+\index{ceforth.h@{ceforth.h}!outer@{outer}}
+\index{outer@{outer}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{outer()}{outer()}}
+{\footnotesize\ttfamily void outer (\begin{DoxyParamCaption}\item[{istream \&}]{in }\end{DoxyParamCaption})}
+
+
+
+load external Forth script 
+
+Forth outer loop 
+\begin{DoxyItemize}
+\item read line-\/by-\/line
+\end{DoxyItemize}\mbox{\Hypertarget{ceforth_8h_a45e40a82da2f8df531da34a0061775a1}\label{ceforth_8h_a45e40a82da2f8df531da34a0061775a1}} 
+\index{ceforth.h@{ceforth.h}!key@{key}}
+\index{key@{key}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{key()}{key()}}
+{\footnotesize\ttfamily void key (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+read key from console 
+
+\mbox{\Hypertarget{ceforth_8h_a1edeac2b9a9f3903fcf20538b18e9ee4}\label{ceforth_8h_a1edeac2b9a9f3903fcf20538b18e9ee4}} 
+\index{ceforth.h@{ceforth.h}!fin\_setup@{fin\_setup}}
+\index{fin\_setup@{fin\_setup}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{fin\_setup()}{fin\_setup()}}
+{\footnotesize\ttfamily void fin\+\_\+setup (\begin{DoxyParamCaption}\item[{const char $\ast$}]{line }\end{DoxyParamCaption})}
+
+
+\begin{DoxyItemize}
+\item clean output buffer
+\item clear input stream error bit if any
+\item reload user command into input stream
+\end{DoxyItemize}\mbox{\Hypertarget{ceforth_8h_acb6a137a3f9507dab4ec5bb3e277d460}\label{ceforth_8h_acb6a137a3f9507dab4ec5bb3e277d460}} 
+\index{ceforth.h@{ceforth.h}!fout\_setup@{fout\_setup}}
+\index{fout\_setup@{fout\_setup}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{fout\_setup()}{fout\_setup()}}
+{\footnotesize\ttfamily void fout\+\_\+setup (\begin{DoxyParamCaption}\item[{void($\ast$)(int, const char $\ast$)}]{hook = {\ttfamily NULL} }\end{DoxyParamCaption})}
+
+$<$ serial output hook up\mbox{\Hypertarget{ceforth_8h_a6f241997f1fbe0bb5ddde7d646f96a4c}\label{ceforth_8h_a6f241997f1fbe0bb5ddde7d646f96a4c}} 
+\index{ceforth.h@{ceforth.h}!scan@{scan}}
+\index{scan@{scan}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{scan()}{scan()}}
+{\footnotesize\ttfamily char$\ast$ scan (\begin{DoxyParamCaption}\item[{char}]{c }\end{DoxyParamCaption})}
+
+
+
+scan input stream for a given char 
+
+\mbox{\Hypertarget{ceforth_8h_a7b6f338854360679dc3bb527a89e43fb}\label{ceforth_8h_a7b6f338854360679dc3bb527a89e43fb}} 
+\index{ceforth.h@{ceforth.h}!fetch@{fetch}}
+\index{fetch@{fetch}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{fetch()}{fetch()}}
+{\footnotesize\ttfamily int fetch (\begin{DoxyParamCaption}\item[{string \&}]{idiom }\end{DoxyParamCaption})}
+
+
+
+read input stream into string 
+
+\mbox{\Hypertarget{ceforth_8h_a59a029cd22163e0e580d06b4bc9b93e3}\label{ceforth_8h_a59a029cd22163e0e580d06b4bc9b93e3}} 
+\index{ceforth.h@{ceforth.h}!spaces@{spaces}}
+\index{spaces@{spaces}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{spaces()}{spaces()}}
+{\footnotesize\ttfamily void spaces (\begin{DoxyParamCaption}\item[{int}]{n }\end{DoxyParamCaption})}
+
+
+
+show spaces 
+
+\mbox{\Hypertarget{ceforth_8h_aa963fe73224216b8fa88dd66869c0b52}\label{ceforth_8h_aa963fe73224216b8fa88dd66869c0b52}} 
+\index{ceforth.h@{ceforth.h}!put@{put}}
+\index{put@{put}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{put()}{put()}}
+{\footnotesize\ttfamily void put (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27d}{io\+\_\+op}}}]{op,  }\item[{\mbox{\hyperlink{config_8h_a57c78d17a8f015df496afc50c9ab973d}{DU}}}]{v = {\ttfamily \mbox{\hyperlink{config_8h_ab09a231138adc0fb73bfb9ba7144b797}{D\+U0}}},  }\item[{\mbox{\hyperlink{config_8h_a57c78d17a8f015df496afc50c9ab973d}{DU}}}]{v2 = {\ttfamily \mbox{\hyperlink{config_8h_ab09a231138adc0fb73bfb9ba7144b797}{D\+U0}}} }\end{DoxyParamCaption})}
+
+
+
+print literals 
+
+\mbox{\Hypertarget{ceforth_8h_a24bf78951ec13ef2fcfb6ca869085b0b}\label{ceforth_8h_a24bf78951ec13ef2fcfb6ca869085b0b}} 
+\index{ceforth.h@{ceforth.h}!pstr@{pstr}}
+\index{pstr@{pstr}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{pstr()}{pstr()}}
+{\footnotesize\ttfamily void pstr (\begin{DoxyParamCaption}\item[{const char $\ast$}]{str,  }\item[{\mbox{\hyperlink{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27d}{io\+\_\+op}}}]{op = {\ttfamily \mbox{\hyperlink{ceforth_8h_a30d7a36b04fcbc60a9c39e64ac64b27daf603e0d046225e81459ffe6d8ee5ba6b}{BL}}} }\end{DoxyParamCaption})}
+
+print string \mbox{\Hypertarget{ceforth_8h_ac7375936d290f4dd3ded50a68694551e}\label{ceforth_8h_ac7375936d290f4dd3ded50a68694551e}} 
+\index{ceforth.h@{ceforth.h}!see@{see}}
+\index{see@{see}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{see()}{see()}}
+{\footnotesize\ttfamily void see (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{config_8h_aff5e3e5f0579f9bce7aeaeac9d89d33a}{IU}}}]{pfa }\end{DoxyParamCaption})}
+
+
+
+disassemble user defined word 
+
+\begin{quote}
+Debug functions \end{quote}
+
+
+\begin{quote}
+Forth disassembler \end{quote}
+\begin{quote}
+fetch word index by pfa \end{quote}
+
+
+\begin{quote}
+loop guard \end{quote}
+
+
+
+\begin{DoxyItemize}
+\item indent
+\item display opcode
+\item end of word
+\end{DoxyItemize}
+
+\begin{quote}
+advance ip (next opcode) \end{quote}
+
+
+\begin{quote}
+extra bytes to skip \end{quote}
+
+
+\begin{quote}
+skip if no jmp target \end{quote}
+\mbox{\Hypertarget{ceforth_8h_a8c226ea3e83d7102f33d1575b060f511}\label{ceforth_8h_a8c226ea3e83d7102f33d1575b060f511}} 
+\index{ceforth.h@{ceforth.h}!words@{words}}
+\index{words@{words}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{words()}{words()}}
+{\footnotesize\ttfamily void words (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+list dictionary words 
+
+\begin{quote}
+display built-\/in and user defined words in dictionary \end{quote}
+\mbox{\Hypertarget{ceforth_8h_a10a644be0ee623a74c51de778e88af8e}\label{ceforth_8h_a10a644be0ee623a74c51de778e88af8e}} 
+\index{ceforth.h@{ceforth.h}!ss\_dump@{ss\_dump}}
+\index{ss\_dump@{ss\_dump}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{ss\_dump()}{ss\_dump()}}
+{\footnotesize\ttfamily void ss\+\_\+dump (\begin{DoxyParamCaption}\item[{bool}]{forced }\end{DoxyParamCaption})}
+
+
+
+show data stack content 
+
+\begin{quote}
+show data stack content \end{quote}
+
+\begin{DoxyItemize}
+\item skip when including file
+\end{DoxyItemize}
+
+$<$ static buffer
+
+$<$ display v by radix\mbox{\Hypertarget{ceforth_8h_a6f0ec75e06e4fcdfff6adbba3c8f283b}\label{ceforth_8h_a6f0ec75e06e4fcdfff6adbba3c8f283b}} 
+\index{ceforth.h@{ceforth.h}!dict\_dump@{dict\_dump}}
+\index{dict\_dump@{dict\_dump}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{dict\_dump()}{dict\_dump()}}
+{\footnotesize\ttfamily void dict\+\_\+dump (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+dump dictionary 
+
+\mbox{\Hypertarget{ceforth_8h_a429eeda0d80e93b188d330b3b05ac0ac}\label{ceforth_8h_a429eeda0d80e93b188d330b3b05ac0ac}} 
+\index{ceforth.h@{ceforth.h}!mem\_dump@{mem\_dump}}
+\index{mem\_dump@{mem\_dump}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{mem\_dump()}{mem\_dump()}}
+{\footnotesize\ttfamily void mem\+\_\+dump (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{config_8h_a696390429f2f3b644bde8d0322a24124}{U32}}}]{p0,  }\item[{\mbox{\hyperlink{config_8h_aff5e3e5f0579f9bce7aeaeac9d89d33a}{IU}}}]{sz }\end{DoxyParamCaption})}
+
+
+
+dump memory frm addr...addr+sz 
+
+\begin{quote}
+dump memory content range from \mbox{[}p0, p0+sz) \end{quote}
+\mbox{\Hypertarget{ceforth_8h_abbce13f8751c5d6d194da4e408317bad}\label{ceforth_8h_abbce13f8751c5d6d194da4e408317bad}} 
+\index{ceforth.h@{ceforth.h}!mem\_stat@{mem\_stat}}
+\index{mem\_stat@{mem\_stat}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{mem\_stat()}{mem\_stat()}}
+{\footnotesize\ttfamily void mem\+\_\+stat (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+display memory statistics \mbox{\Hypertarget{ceforth_8h_a196846c44175e33d1066e14af58ec6b3}\label{ceforth_8h_a196846c44175e33d1066e14af58ec6b3}} 
+\index{ceforth.h@{ceforth.h}!native\_api@{native\_api}}
+\index{native\_api@{native\_api}!ceforth.h@{ceforth.h}}
+\doxysubsubsection{\texorpdfstring{native\_api()}{native\_api()}}
+{\footnotesize\ttfamily void native\+\_\+api (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\begin{quote}
+Javascript interface \end{quote}
