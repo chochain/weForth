@@ -9,8 +9,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#define BENCHMARK
-
 typedef uint8_t  U8;
 typedef uint32_t U32;
 
@@ -195,11 +193,13 @@ int main(int argc, char **argv) {
     int counter = 1;
 
     ChaCha20 ctx0(key, counter, nonce);
-#if defined(BENCHMARK)
-    ctx0.bench(input, cipher, 1000000);  // 1M cycles
-#else    
+    
+    if (argc > 1) {
+        ctx0.bench(input, cipher, 1000000);  // 1M cycles
+        return 0;
+    }
     ChaCha20 ctx1(key, counter, nonce);
-
+    
     dump("key",    key,    sizeof(key));
     dump("nonce",  nonce,  sizeof(nonce));
     
@@ -209,6 +209,6 @@ int main(int argc, char **argv) {
     dump("input",  input,  LEN);
     dump("cipher", cipher, LEN);
     dump("output", output, LEN);
-#endif
+
     return 0;
 }
