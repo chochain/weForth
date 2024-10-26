@@ -31,47 +31,46 @@ public:
     
 private:
     U32 st[ST_SZ];    ///< states
-    U8  xt[BLK_SZ];   ///< pre-alloc temp storage for processing
+    U8  xt[BLK_SZ];   ///< cipher block
 
     inline U32 ROL(U32 v, int n) { return v << n | (v >> (-n & 31)); }
-    void _quarter(U32 *x, int a, int b, int c, int d);
-    void _one_block(U8 out[BLK_SZ], int nrounds);
+    void _quarter(U32 *u, int a, int b, int c, int d);
+    void _one_block(int nrounds);
     int  _self_diag();
 };
 ///
 ///> quarterround
 ///
-void ChaCha20::_quarter(U32 *x, int a, int b, int c, int d)
+void ChaCha20::_quarter(U32 *u, int a, int b, int c, int d)
 {
-    x[a] += x[b]; x[d] = ROL(x[d] ^ x[a], 16);  /// 
-    x[c] += x[d]; x[b] = ROL(x[b] ^ x[c], 12);
-    x[a] += x[b]; x[d] = ROL(x[d] ^ x[a],  8);
-    x[c] += x[d]; x[b] = ROL(x[b] ^ x[c],  7);
+    u[a] += u[b]; u[d] = ROL(u[d] ^ u[a], 16);  /// 
+    u[c] += u[d]; u[b] = ROL(u[b] ^ u[c], 12);
+    u[a] += u[b]; u[d] = ROL(u[d] ^ u[a],  8);
+    u[c] += u[d]; u[b] = ROL(u[b] ^ u[c],  7);
 }
 ///
 ///> process one block (64-byte)
 ///
-void ChaCha20::_one_block(U8 out[BLK_SZ], int nrounds)
+void ChaCha20::_one_block(int nrounds)
 {
-    U32 *x = (U32*)xt;
-    memcpy((void*)x, (void*)st, BLK_SZ);   /// fill x with st
+    U32 *u = (U32*)xt;                     ///< ref xt as an array of 32-bit cells
+    memcpy((void*)u, (void*)st, BLK_SZ);   /// * fill x with st
     // 0 |  1 |  2 |  3
     // 4 |  5 |  6 |  7
     // 8 |  9 | 10 | 11
     // 12| 13 | 14 | 15
     for (int i = nrounds; i > 0; i -= 2) { /// 20 rounds, 2 rounds per loop
-        _quarter(x, 0, 4,  8, 12);         /// column 0
-        _quarter(x, 1, 5,  9, 13);         /// column 1
-        _quarter(x, 2, 6, 10, 14);         /// column 2
-        _quarter(x, 3, 7, 11, 15);         /// column 3
-        _quarter(x, 0, 5, 10, 15);         /// diag 1
-        _quarter(x, 1, 6, 11, 12);         /// diag 2
-        _quarter(x, 2, 7,  8, 13);         /// diag 3
-        _quarter(x, 3, 4,  9, 14);         /// diag 4
+        _quarter(u, 0, 4,  8, 12);         /// column 0
+        _quarter(u, 1, 5,  9, 13);         /// column 1
+        _quarter(u, 2, 6, 10, 14);         /// column 2
+        _quarter(u, 3, 7, 11, 15);         /// column 3
+        _quarter(u, 0, 5, 10, 15);         /// diag 1
+        _quarter(u, 1, 6, 11, 12);         /// diag 2
+        _quarter(u, 2, 7,  8, 13);         /// diag 3
+        _quarter(u, 3, 4,  9, 14);         /// diag 4
     }
-    ///> serialize output
     for (int i = 0; i < ST_SZ; i++) {
-        *(U32*)&out[i * 4] = x[i] + st[i];
+        u[i] += st[i];                     ///> add origial states
     }
 }
 
@@ -93,7 +92,7 @@ int ChaCha20::_self_diag()
     if (passed) return 0;
 
     memcpy((void*)st, (void*)s0, BLK_SZ);
-    _one_block(xt, NROUND);
+    _one_block(NROUND);
 
     printf("ChaCha20_self_check: ==========\n");
     dump("gold",  gold, BLK_SZ);
@@ -126,16 +125,15 @@ ChaCha20::ChaCha20(U8 key[32], U32 counter, U8 nonce[12])
     }
 }
 
-void ChaCha20::xcrypt(U8 *in, U8 *out, int inlen)
+void ChaCha20::xcrypt(U8 *in, U8 *out, int len)
 {
-    for (int i = 0; i < inlen; i += BLK_SZ) {
-        _one_block(xt, NROUND);
-        st[12]++;                          /// * increase counter
+    for (int i = 0; i < len; i += BLK_SZ) {
+        _one_block(NROUND);                /// * update cipher block
+        st[12]++;                          /// * increase counter (can be parallelized)
         dump("xt", xt, BLK_SZ);
 
-        for (int j = i; j < i + BLK_SZ; j++) {
-            if (j >= inlen) break;
-            out[j] = in[j] ^ xt[j - i];   /// * cipher input stream
+        for (int j = 0; j < BLK_SZ && (i+j) < len; j++) {
+            out[i+j] = in[i+j] ^ xt[j];    /// * cipher input stream
         }
     }
 }
