@@ -54,14 +54,14 @@ Serving as the core of demos, the templates under ~/template directory are used 
 |---|---|---|---|
 |Bare-bone eForth on Web|make zero|[eforth.html](https://chochain.github.io/weForth/ref/eforth.html)|-O2 works OK,<br/>-O3 Emscripten spits wrong code|
 |Single WASM file|make one|[ceforth.html](https://chochain.github.io/weForth/ref/ceforth.html)||
-|Extra Web Worker thread|make two|[weforth.html](https://chochain.github.io/weForth/ref/weforth.html)||
+|Extra Web Worker thread|make two|[weforth.html](https://chochain.github.io/weForth/ref/weforth.html)|for demo, enter><br/>s" forth/whisker.fs" included 40 bots|
 
 ### Run on your own box
-Server-side
+#### Server-side
 
     python3 -m http.server
     
-Client-side Browser
+#### Client-side Browser
 
     http://localhost:8000/tests/eforth.html, ceforth.html or weforth.html
 
