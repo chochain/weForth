@@ -43,7 +43,7 @@ private:
 ///
 void ChaCha20::_quarter(U32 *x, int a, int b, int c, int d)
 {
-    x[a] += x[b]; x[d] = ROL(x[d] ^ x[a], 16);
+    x[a] += x[b]; x[d] = ROL(x[d] ^ x[a], 16);  /// 
     x[c] += x[d]; x[b] = ROL(x[b] ^ x[c], 12);
     x[a] += x[b]; x[d] = ROL(x[d] ^ x[a],  8);
     x[c] += x[d]; x[b] = ROL(x[b] ^ x[c],  7);
@@ -54,8 +54,11 @@ void ChaCha20::_quarter(U32 *x, int a, int b, int c, int d)
 void ChaCha20::_one_block(U8 out[BLK_SZ], int nrounds)
 {
     U32 *x = (U32*)xt;
-    memcpy((void*)x, (void*)st, BLK_SZ);
-
+    memcpy((void*)x, (void*)st, BLK_SZ);   /// fill x with st
+    // 0 |  1 |  2 |  3
+    // 4 |  5 |  6 |  7
+    // 8 |  9 | 10 | 11
+    // 12| 13 | 14 | 15
     for (int i = nrounds; i > 0; i -= 2) { /// 20 rounds, 2 rounds per loop
         _quarter(x, 0, 4,  8, 12);         /// column 0
         _quarter(x, 1, 5,  9, 13);         /// column 1
