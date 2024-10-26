@@ -87,6 +87,9 @@
     /// Sidebar handler functions
     ///
     function show_ss() {
+        const FX = v=>Number.isInteger(v)          ///> precision control macro
+              ? v.toString(base)
+              : Math.round(v*100000)/100000        /// * better than toFixed()
         const wa  = wasmExports
         const base= wa.vm_base()
         const toa = (p, n)=>wa.vm_dflt()
@@ -96,13 +99,11 @@
                : new Uint32Array(wa.memory.buffer, p, n))
         const len = wa.vm_ss_idx()>0 ? wa.vm_ss_idx() : 0
         const ss  = toa(wa.vm_ss(), len)
-        const top = toa(wa.top, 1)
-        const tos = v => Number.isInteger(v) ? v.toString(base) : Math.round(v*100000)/100000
-        
+        const tos = toa(wa.tos, 1)
         let   div = document.getElementById('ss')
-        div.innerHTML = tos(top[0]) + '<br/>'
+        div.innerHTML = FX(tos[0]) + '<br/>'
         for (let i = len - 1; i >= 0; --i) {
-            div.innerHTML += tos(ss[i]) + '<br/>'
+            div.innerHTML += FX(ss[i]) + '<br/>'
         }
     }
     function show_dict() {

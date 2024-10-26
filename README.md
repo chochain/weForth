@@ -33,41 +33,35 @@ Serving as the core of demos, the templates under ~/template directory are used 
        + weforth_worker.js - worker thread proxy object
        + weforth_sleep.js  - sleep/delay support for async environment
        + weforth_logo.js   - Turtle Graphic implementation
-       + weforth_jolt.js   - Jolt Physics Engine integration
+       + weforth_jolt.js   - Jolt Physics Engine proxy object
        + file_io.js        - file IO support
+       + jolt_core.js      - Jolt + THREE.js implementation
+       + jolt_vehicle.js   - Wheeled Vehicle class for simulator
        </pre>
 
        The following Forth scripts under ~/tests/forth are also included for GUI integration demo
        <pre>
-       + forth/logo.fs - Turtle Graphics
-       + forth/jolt.fs - Jolt Physics Engine
+       + forth/logo.fs    - Turtle Graphics
+       + forth/jolt.fs    - Jolt Physics Engine
+       + forth/shapes.fs  - random Jolt shape generator
+       + forth/whisker.fs - Whisker Robots generator
+       + forth/vehicle.fs - 2-wheel bikes, and 4-wheel cars generator
        </pre>
 
-#### Bare-bone eForth on Web
+#### Build yourself or try them online here
 
-    make zero
-    Note: -O2 works OK, -O3 emscripten spits wrong code
-
-try eforth.html [here](https://chochain.github.io/weForth/ref/eforth.html)
-
-#### Single WASM file
-
-    make one
-    
-try ceforth.html [here](https://chochain.github.io/weForth/ref/ceforth.html)
-
-#### Extra Web Worker thread
-
-    make two
-    
-try weforth.html [here](https://chochain.github.io/weForth/ref/weforth.html)
+|Build|HowTo|Try Online|Note|
+|---|---|---|---|
+|Bare-bone eForth on Web|make zero|[eforth.html](https://chochain.github.io/weForth/ref/eforth.html)|-O2 works OK,<br/>-O3 Emscripten spits wrong code|
+|Single WASM file|make one|[ceforth.html](https://chochain.github.io/weForth/ref/ceforth.html)||
+|Extra Web Worker thread|make two|[weforth.html](https://chochain.github.io/weForth/ref/weforth.html)|for demo, enter><br/>s" forth/whisker.fs" included 40 bots|
 
 ### Run on your own box
-Server-side
+#### Server-side
 
     python3 -m http.server
     
-Client-side Browser
+#### Client-side Browser
 
     http://localhost:8000/tests/eforth.html, ceforth.html or weforth.html
 
