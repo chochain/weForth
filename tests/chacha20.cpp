@@ -30,15 +30,17 @@ public:
     void xcrypt(U8 *in, U8 *out, int len);
     
 private:
-    U32 s[ST_SZ];     ///< states
-    U8  tmp[BLK_SZ];  ///< pre-alloc temp storage for processing
+    U32 st[ST_SZ];    ///< states
+    U8  xt[BLK_SZ];   ///< pre-alloc temp storage for processing
 
-    inline U32 ROL(U32 x, int n) { return x << n | (x >> (-n & 31)); }
+    inline U32 ROL(U32 v, int n) { return v << n | (v >> (-n & 31)); }
     void _quarter(U32 *x, int a, int b, int c, int d);
-    void _one_round(U8 out[BLK_SZ], int nrounds);
+    void _one_block(U8 out[BLK_SZ], int nrounds);
     int  _self_diag();
 };
-
+///
+///> quarterround
+///
 void ChaCha20::_quarter(U32 *x, int a, int b, int c, int d)
 {
     x[a] += x[b]; x[d] = ROL(x[d] ^ x[a], 16);
@@ -46,25 +48,27 @@ void ChaCha20::_quarter(U32 *x, int a, int b, int c, int d)
     x[a] += x[b]; x[d] = ROL(x[d] ^ x[a],  8);
     x[c] += x[d]; x[b] = ROL(x[b] ^ x[c],  7);
 }
-
-void ChaCha20::_one_round(U8 out[BLK_SZ], int nrounds)
+///
+///> process one block (64-byte)
+///
+void ChaCha20::_one_block(U8 out[BLK_SZ], int nrounds)
 {
-    U32 *x = (U32*)tmp;
-    memcpy((void*)x, (void*)s, BLK_SZ);
+    U32 *x = (U32*)xt;
+    memcpy((void*)x, (void*)st, BLK_SZ);
 
-    for (int i = nrounds; i > 0; i -= 2) {
-        _quarter(x, 0, 4,  8, 12);
-        _quarter(x, 1, 5,  9, 13);
-        _quarter(x, 2, 6, 10, 14);
-        _quarter(x, 3, 7, 11, 15);
-        _quarter(x, 0, 5, 10, 15);
-        _quarter(x, 1, 6, 11, 12);
-        _quarter(x, 2, 7,  8, 13);
-        _quarter(x, 3, 4,  9, 14);
+    for (int i = nrounds; i > 0; i -= 2) { /// 20 rounds, 2 rounds per loop
+        _quarter(x, 0, 4,  8, 12);         /// column 0
+        _quarter(x, 1, 5,  9, 13);         /// column 1
+        _quarter(x, 2, 6, 10, 14);         /// column 2
+        _quarter(x, 3, 7, 11, 15);         /// column 3
+        _quarter(x, 0, 5, 10, 15);         /// diag 1
+        _quarter(x, 1, 6, 11, 12);         /// diag 2
+        _quarter(x, 2, 7,  8, 13);         /// diag 3
+        _quarter(x, 3, 4,  9, 14);         /// diag 4
     }
     ///> serialize output
     for (int i = 0; i < ST_SZ; i++) {
-        *(U32*)&out[i * 4] = x[i] + s[i];
+        *(U32*)&out[i * 4] = x[i] + st[i];
     }
 }
 
@@ -85,16 +89,16 @@ int ChaCha20::_self_diag()
     static bool passed = false;
     if (passed) return 0;
 
-    memcpy((void*)s, (void*)s0, BLK_SZ);
-    _one_round(tmp, NROUND);
+    memcpy((void*)st, (void*)s0, BLK_SZ);
+    _one_block(xt, NROUND);
 
     printf("ChaCha20_self_check: ==========\n");
     dump("gold",  gold, BLK_SZ);
-    dump("block", tmp,  BLK_SZ);
+    dump("block", xt,  BLK_SZ);
     
     int sum = 0;
     for (int i=0; i < BLK_SZ; i++) {
-        sum += (gold[i]!=tmp[i]);
+        sum += (gold[i]!=xt[i]);
     }
     passed = (sum == 0);
     printf("===========>: %s\n\n", sum ? "failed" : "passed");
@@ -106,29 +110,29 @@ ChaCha20::ChaCha20(U8 key[32], U32 counter, U8 nonce[12])
 {
     if (_self_diag()) return;
     
-    s[0] = 0x61707865;                     ///> "expand 32-byte k"
-    s[1] = 0x3320646e;                     ///> 128-bit constant 
-    s[2] = 0x79622d32;
-    s[3] = 0x6b206574;
+    st[0] = 0x61707865;                    ///> "expand 32-byte k"
+    st[1] = 0x3320646e;                    ///> 128-bit constant 
+    st[2] = 0x79622d32;
+    st[3] = 0x6b206574;
     for (int i = 0; i < 8; i++) {          ///> 256-bit key
-        s[4 + i] = *(U32*)&key[i * 4];
+        st[4 + i] = *(U32*)&key[i * 4];
     }
-    s[12] = counter;                       ///> 32-bit counter
+    st[12] = counter;                      ///> 32-bit counter
     for (int i = 0; i < 3; i++) {          ///> 96-bit nonce
-        s[13 + i] = *(U32*)&nonce[i * 4];
+        st[13 + i] = *(U32*)&nonce[i * 4];
     }
 }
 
 void ChaCha20::xcrypt(U8 *in, U8 *out, int inlen)
 {
     for (int i = 0; i < inlen; i += BLK_SZ) {
-        _one_round(tmp, NROUND);
-        s[12]++;                            /// * increase counter
-        dump("tmp", tmp, BLK_SZ);
+        _one_block(xt, NROUND);
+        st[12]++;                          /// * increase counter
+        dump("xt", xt, BLK_SZ);
 
         for (int j = i; j < i + BLK_SZ; j++) {
             if (j >= inlen) break;
-            out[j] = in[j] ^ tmp[j - i];    /// * cipher input stream
+            out[j] = in[j] ^ xt[j - i];   /// * cipher input stream
         }
     }
 }
