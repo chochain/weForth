@@ -1,5 +1,15 @@
+/*
+ @file
+ @brief - ChaCha20 cipher implementation
+ @benchmark
+      g++ -O0 elapsed time = 62500.00 KB / 2753.00 ms = 22.70 MB/s
+      g++ -O2 elapsed time = 62500.00 KB / 472.00 ms = 132.42 MB/s
+      g++ -O3 elapsed time = 62500.00 KB / 157.00 ms = 398.09 MB/s
+*/
 #include <stdint.h>
 #include <string.h>
+
+#define BENCHMARK
 
 typedef uint8_t  U8;
 typedef uint32_t U32;
@@ -28,6 +38,7 @@ class ChaCha20 {
 public:
     ChaCha20(U8 key[32], U32 counter, U8 nonce[12]);
     void xcrypt(U8 *in, U8 *out, int len);
+    void bench(U8 *in, U8 *out, size_t n);
     
 private:
     U32 st[ST_SZ];    ///< states
@@ -125,6 +136,25 @@ ChaCha20::ChaCha20(U8 key[32], U32 counter, U8 nonce[12])
     }
 }
 
+#include <sys/time.h>
+void ChaCha20::bench(U8 *in, U8 *out, size_t n) {
+    struct timeval t0, t1;
+    gettimeofday(&t0, 0);
+    for (size_t i = 0; i < n; i++) {
+        _one_block(NROUND);                /// * update cipher block
+        st[12]++;                          /// * increase counter (can be parallelized)
+
+        for (int j = 0; j < BLK_SZ; j++) {
+            out[j] = in[j] ^ xt[j];        /// * cipher input stream
+        }
+    }
+    gettimeofday(&t1, 0);
+    dump("bench", out, BLK_SZ);
+    float sz = static_cast<float>((64 * n) >> 10);
+    float t  = static_cast<float>((t1.tv_sec - t0.tv_sec)*1000+(t1.tv_usec-t0.tv_usec)/1000);
+    printf("elapsed time = %.2f KB / %.2f ms = %.2f MB/s\n", sz, t, sz / t);
+}
+
 void ChaCha20::xcrypt(U8 *in, U8 *out, int len)
 {
     for (int i = 0; i < len; i += BLK_SZ) {
@@ -140,14 +170,8 @@ void ChaCha20::xcrypt(U8 *in, U8 *out, int len)
 
 int main(int argc, char **argv) {
     U8 key[] = {
-        0x00, 0x01, 0x02, 0x03,
-        0x04, 0x05, 0x06, 0x07,
-        0x08, 0x09, 0x0a, 0x0b,
-        0x0c, 0x0d, 0x0e, 0x0f,
-        0x10, 0x11, 0x12, 0x13,
-        0x14, 0x15, 0x16, 0x17,
-        0x18, 0x19, 0x1a, 0x1b,
-        0x1c, 0x1d, 0x1e, 0x1f
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+        0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f
     };
     U8 nonce[] = {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4a, 0x00, 0x00, 0x00, 0x00
@@ -171,10 +195,13 @@ int main(int argc, char **argv) {
     int counter = 1;
 
     ChaCha20 ctx0(key, counter, nonce);
+#if defined(BENCHMARK)
+    ctx0.bench(input, cipher, 1000000);  // 1M cycles
+#else    
     ChaCha20 ctx1(key, counter, nonce);
 
-    dump("key",    key,    32);
-    dump("nonce",  nonce,  12);
+    dump("key",    key,    sizeof(key));
+    dump("nonce",  nonce,  sizeof(nonce));
     
     ctx0.xcrypt(input,  cipher, LEN);
     ctx1.xcrypt(cipher, output, LEN);
@@ -182,6 +209,6 @@ int main(int argc, char **argv) {
     dump("input",  input,  LEN);
     dump("cipher", cipher, LEN);
     dump("output", output, LEN);
-    
+#endif
     return 0;
 }
