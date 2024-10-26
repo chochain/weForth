@@ -23,10 +23,10 @@ function get_ss() {
            : new Uint32Array(wa.memory.buffer, p, n))
     const len = wa.vm_ss_idx()>0 ? wa.vm_ss_idx() : 0
     const ss  = toa(wa.vm_ss(), len)
-    const top = toa(wa.top, 1)
+    const tos = toa(wa.tos, 1)
     let   div = []
     ss.forEach(v=>div.push(FX(v)))
-    div.push(FX(top[0]))
+    div.push(FX(tos[0]))
 
     return '[ '+div.join(' ')+' ]'
 }
@@ -110,7 +110,8 @@ self.onmessage = function(e) {                        ///> worker input message 
     let k = e.data[0], v = e.data[1]
     const post = (v)=>postMessage([k, v])             ///> macro to response to front-end
     switch (k) {
-    case 'cmd': post(forth(0, v));           break    /// * call Forth VM (output=>Module.print)
+    case 'cmd': post(forth(0, v));           break    /// * call Forth VM (output=>Module.print)she
+    case 'key': forth(1, v); post(0);        break    /// * PUSH(v), clear keypress mode
     case 'dc' : post(get_dict());            break    /// * built-in words
     case 'usr': post(get_dict(true));        break    /// * colon words
     case 'ss' : post(get_ss());              break    /// * dump stack

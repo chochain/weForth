@@ -140,22 +140,25 @@ Note:
 
 ### TODO
 * Physics Engine
-  + keyboard control
   + vehicle sim
+  + CSG i.e. compound shape, [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
+  + review Jolt::RefTarget class (for ref counter, can apply to tensorForth)
 * inter-VM communication
+  + A 16-node AES cipher [AES - 5 different modes comparison](https://www.highgo.ca/2019/08/08/the-difference-in-five-modes-in-the-aes-encryption-algorithm/)
+  + ChaCha20 cipher. See JS cryptography libs [libsodium.js](https://github.com/jedisct1/libsodium.js/)
 * add network system (SD_net)
 * review WebSerial
 * review wasmtime (CLI), perf+hotspot (profiling)
-* review DragonRuby/mRuby (SDL)
-* review R3, Forth CPU visualizer (SDL)
+- review DragonRuby/mRuby (SDL)          => 3D preferred
+- review R3, Forth CPU visualizer (SDL)  => 3D preferred
 * review GraFORTH spec.
   + File system (FS/IndexedDB)
-  + Editor
+  - Editor                               => CodeMirrow chosen
   + 2D graphic (SDL_gfx, SDL_image)
   + Character graphic (SDL_ttf or HTML5)
-  + 3D graphic (GL)
-  + Music (SDL_media)
-* use WASM stack as ss
+  - 3D graphic (GL)                      => Three.js WebGL
+  + Audio (SDL_media)
+* use WASM stack as ss (brk, sbrk)
 * macro-assembler
 
 ### References
@@ -163,6 +166,8 @@ Note:
   + [Read first](https://lyceum-allotments.github.io/2016/06/emscripten-and-sdl-2-tutorial-part-1/)
   + [LazyFoo for SDL2](https://lazyfoo.net/tutorials/SDL/)
   + [raylib vs SDL2](https://gist.github.com/raysan5/17392498d40e2cb281f5d09c0a4bf798)
+* WebGL
+  + [Three.js](https://threejs.org/manual/#en/fundamentals)
 * Physics Engine
   + [Jolt Physics](https://jrouwe.github.io/JoltPhysics/)
-    + CSG Object (with optional motion trail) [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
+

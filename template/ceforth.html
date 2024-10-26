@@ -32,7 +32,7 @@
         <div id='edt' class='txt' style='width:40%'>
           <div style='display:flex; width=100%'>
             <input id='tib' style='width:100%; font-size:1.0em' value=''
-               onkeydown='if (13===event.keyCode) forth_eval()'/>
+               onkeyup='if ("Enter"==event.key) forth_eval()'/>
           </div>
           <textarea id='cm'>
 \ 1. find tests/lesson410.txt, drag & drop it into this area

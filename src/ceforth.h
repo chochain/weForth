@@ -1,7 +1,8 @@
 #ifndef __EFORTH_SRC_CEFORTH_H
 #define __EFORTH_SRC_CEFORTH_H
-#include <stdio.h>
-#include <stdint.h>     // uintxx_t
+#include <cstdio>
+#include <cstdint>      // uintxx_t
+#include <string>       // string, strlen
 #include "config.h"     // configuation and cross-platform support
 using namespace std;
 ///
@@ -37,7 +38,7 @@ struct List {
 
 #else  // !RANGE_CHECK
     T pop()     INLINE { return v[--idx]; }
-    T push(T t) INLINE { return v[max=idx++] = t; }   ///< deep copy element
+    T push(T t) INLINE { return v[idx++] = t; }   ///< deep copy element
 
 #endif // RANGE_CHECK
     void push(T *a, int n) INLINE { for (int i=0; i<n; i++) push(*(a+i)); }
@@ -59,9 +60,19 @@ struct List {
 #define IS_UDF(w) (dict[w].attr & UDF_ATTR)
 #define IS_IMM(w) (dict[w].attr & IMM_ATTR)
 ///@}
+///@name primitive opcode
+///@{
+typedef enum {
+    EXIT=0|EXT_FLAG, NOP, NEXT, LOOP, LIT, VAR, STR, DOTQ, BRAN, ZBRAN,
+    VBRAN, DOES, FOR, DO, KEY, MAX_OP
+} prim_op;
+
+#define USER_AREA  (ALIGN16(MAX_OP & ~EXT_FLAG))
+#define IS_PRIM(w) ((w & EXT_FLAG) && (w < MAX_OP))
+///@}
 ///
 ///> Universal functor (no STL) and Code class
-///  Code class on 64-bit systems (expand pfa possible)
+///  Code class on 64-bit systems (expand pfa to 32-bit possible)
 ///  +-------------------+-------------------+
 ///  |    *name          |       xt          |
 ///  +-------------------+----+----+---------+
@@ -75,19 +86,23 @@ struct List {
 ///            |attr|pfa |
 ///            +----+----+
 ///
-///  Code class on WASM/32-bit (a bit wasteful)
-///  +---------+---------+----+----+
-///  |  *name  |   xt    |attr|pfa |
-///  +---------+---------+----+----+
+///  Code class on WASM systems (a bit wasteful)
+///  +---------+---------+----+
+///  |  *name  |   xt    |attr|
+///  +---------+----+----+----+
+///            |pfa |xxxx|
+///            +----+----+
 ///
 typedef void (*FPTR)();     ///< function pointer
 struct Code {
     static UFP XT0;         ///< function pointer base (in registers hopefully)
     const char *name = 0;   ///< name field
 #if DO_WASM
-    FPTR xt   = 0;          ///< WASM fptr is just index to vtable
-    IU   attr = 0;          ///< So, attributes need to be separated
-    IU   pfa  = 0;          ///< i.e. no LSBs available
+    union {                 ///< either a primitive or colon word
+        FPTR xt = 0;        ///< vtable index
+        IU   pfa;           ///< offset to pmem space (16-bit for 64K range)
+    };
+    IU attr;                ///< xt is vtable index so attrs need to be separated
 #else // !DO_WASM
     union {                 ///< either a primitive or colon word
         FPTR xt = 0;        ///< lambda pointer (4-byte align, 2 LSBs can be used for attr)
@@ -97,25 +112,15 @@ struct Code {
         };
     };
 #endif // DO_WASM
-    static FPTR XT(IU ix)   INLINE { return (FPTR)(XT0 + (UFP)ix); }
+    static FPTR XT(IU ix)   INLINE { return (FPTR)(XT0 + (UFP)(ix & MSK_ATTR)); }
     static void exec(IU ix) INLINE { (*XT(ix))(); }
 
-    Code(const char *n, IU w) : name(n), xt((FPTR)((UFP)w)) {   ///< primitives
-#if CC_DEBUG > 1
-		LOG_KX("prim xt=", (UFP)xt); 
-		LOG_KX(", nm=", (UFP)n); LOGS(" "); LOGS(n); LOGS("\n");
-#endif // CC_DEBUG > 1
+    Code() {}               ///< blank struct (for initilization)
+    Code(const char *n, IU w) : name(n), xt((FPTR)((UFP)w)) {} ///< primitives
+    Code(const char *n, FPTR fp, bool im) : name(n), xt(fp) {  ///< built-in and colon words
+        attr = im ? IMM_ATTR : 0;
     }
-    Code(const char *n, FPTR fp, bool im) : name(n), xt(fp) {
-        if ((UFP)xt < XT0) XT0 = (UFP)xt;                ///> collect xt base
-        if (im) attr |= IMM_ATTR;
-#if CC_DEBUG > 1
-		LOG_KX("XT0=", XT0);  LOG_KX(" xt=", (UFP)xt); 
-		LOG_KX(", nm=", (UFP)n); LOGS(" "); LOGS(n); LOGS("\n");
-#endif // CC_DEBUG > 1
-    }
-    Code() {}               ///< create a blank struct (for initilization)
-    IU   xtoff() INLINE { return (IU)((UFP)xt - XT0); }  ///< xt offset in code space
+    IU   xtoff() INLINE { return (IU)(((UFP)xt - XT0) & MSK_ATTR); }  ///< xt offset in code space
     void call()  INLINE { (*(FPTR)((UFP)xt & MSK_ATTR))(); }
 };
 ///
@@ -128,10 +133,38 @@ struct Code {
     }
 #define CODE(n, g) ADD_CODE(n, g, false)
 #define IMMD(n, g) ADD_CODE(n, g, true)
+///
+///> System interface
+///
+void forth_init();
+int  forth_vm(const char *cmd, void(*hook)(int, const char*)=NULL);
+int  forth_include(const char *fn);       /// load external Forth script
+void outer(istream &in);                  ///< Forth outer loop
+///
+///> IO functions
+///
+typedef enum { BASE=0, BL, CR, DOT, DOTR, EMIT, SPCS } io_op;
+void key();                               ///< read key from console
+void fin_setup(const char *line);
+void fout_setup(void (*hook)(int, const char*)=NULL);
 
-extern void forth_init();
-extern int  forth_vm(const char *cmd, void(*hook)(int, const char*)=NULL);
-extern int  forth_include(const char *fn);
-;
-
+char *scan(char c);                       ///< scan input stream for a given char
+int  fetch(string &idiom);                ///< read input stream into string
+void spaces(int n);                       ///< show spaces
+void put(io_op op, DU v=DU0, DU v2=DU0);  ///< print literals
+void pstr(const char *str, io_op op=BL);  ///< print string
+///
+///> Debug functions
+///
+void see(IU pfa);                         ///< disassemble user defined word
+void words();                             ///< list dictionary words
+void ss_dump(bool forced=false);          ///< show data stack content
+void dict_dump();                         ///< dump dictionary
+void mem_dump(U32 addr, IU sz);           ///< dump memory frm addr...addr+sz
+void mem_stat();                          ///< display memory statistics
+///
+///> Javascript interface
+///
+void native_api();
+///
 #endif // __EFORTH_SRC_CEFORTH_H
