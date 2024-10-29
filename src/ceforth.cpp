@@ -365,7 +365,11 @@ void dict_compile() {  ///< compile built-in words into dictionary
     CODE("1+",      tos += 1);
     CODE("1-",      tos -= 1);
 #if USE_FLOAT
+<<<<<<< HEAD
     CODE("int",     tos = tos < DU0 ? -DU1 * UINT(-tos) : UINT(tos));  // float => integer
+=======
+    CODE("int",     tos = tos < DU0 ? DU1 * UINT(-tos) : UINT(tos));    // float => integer
+>>>>>>> 0434f4924e4fe031af290afb0037e191a614e02c
 #endif // USE_FLOAT
     /// @}
     /// @defgroup Logic ops
