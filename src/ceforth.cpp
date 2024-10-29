@@ -365,7 +365,7 @@ void dict_compile() {  ///< compile built-in words into dictionary
     CODE("1+",      tos += 1);
     CODE("1-",      tos -= 1);
 #if USE_FLOAT
-    CODE("int",     tos = UINT(tos));         // float => integer
+    CODE("int",     tos = tos < DU0 ? -DU1 * UINT(-tos) : UINT(tos));  // float => integer
 #endif // USE_FLOAT
     /// @}
     /// @defgroup Logic ops
@@ -585,7 +585,7 @@ void dict_validate() {
 ///
 ///> ForthVM - Outer interpreter
 ///
-DU parse_number(const char *idiom, int *err) {
+DU2 parse_number(const char *idiom, int *err) {
     int b = static_cast<int>(*base);
     switch (*idiom) {                        ///> base override
     case '%': b = 2;  idiom++; break;
@@ -596,13 +596,16 @@ DU parse_number(const char *idiom, int *err) {
     char *p;
     *err = errno = 0;
 #if USE_FLOAT
-    DU n = (b==10)
-        ? static_cast<DU>(strtof(idiom, &p))
-        : static_cast<DU>(strtol(idiom, &p, b));
+    DU2 n = (b==10)
+        ? static_cast<DU2>(strtof(idiom, &p))
+        : static_cast<DU2>(strtoll(idiom, &p, b));
 #else  // !USE_FLOAT
-    DU n = static_cast<DU>(strtol(idiom, &p, b));
+    DU2 n = static_cast<DU2>(strtoll(idiom, &p, b));
 #endif // USE_FLOAT
-    if (errno || *p != '\0') *err = 1;
+    printf("n=%llx, (DU)n=%x\n", n, (DU)n);
+    if (errno || *p != '\0') *err = errno;
+//    if (n != (DU)n)          *err = ERANGE;
+    
     return n;
 }
 
@@ -620,7 +623,8 @@ void forth_core(const char *idiom) {     ///> aka QUERY
     int err = 0;
     DU  n   = parse_number(idiom, &err);
     if (err) {                           /// * not number
-        pstr(idiom); pstr("? ", CR);     ///> display error prompt
+        pstr(idiom); pstr(" ?");         ///> display error prompt
+        pstr(strerror(err), CR);         ///> and error description
         compile = false;                 ///> reset to interpreter mode
         VM      = STOP;                  ///> skip the entire input buffer
     }
@@ -877,18 +881,21 @@ void ss_dump(bool forced) {
     static char buf[34];                  ///< static buffer
     auto rdx = [](DU v, int b) {          ///< display v by radix
 #if USE_FLOAT
-        sprintf(buf, "%0.6g", v);
-        return buf;
-#else // !USE_FLOAT
+        DU t, f = modf(v, &t);            ///< integral, fraction
+        if (ABS(f) > DU_EPS) {
+            sprintf(buf, "%0.6g", v);
+            return buf;
+        }
+#endif // USE_FLOAT
         int i = 33;  buf[i]='\0';         /// * C++ can do only base=8,10,16
-        DU  n = ABS(v);                   ///< handle negative
+        int dec = *base==10;
+        U32 n   = dec ? UINT(ABS(v)) : UINT(v);  ///< handle negative
         do {                              ///> digit-by-digit
             U8 d = (U8)MOD(n,b);  n /= b;
             buf[--i] = d > 9 ? (d-10)+'a' : d+'0';
         } while (n && i);
-        if (v < DU0) buf[--i]='-';
+        if (dec && v < DU0) buf[--i]='-';
         return &buf[i];
-#endif // USE_FLOAT
     };
     ss.push(tos);
     for (int i=0; i<ss.idx; i++) {
