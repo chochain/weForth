@@ -2,7 +2,6 @@
 /// @file
 /// @brief eForth implemented in 100% C/C++ for portability and education
 ///
-#include <strings.h>     // strcasecmp
 #include "ceforth.h"
 ///====================================================================
 ///
@@ -116,12 +115,9 @@ inline DU   POP()      { DU n=tos; tos=ss.pop(); return n; }
 ///@name Dictionary search functions - can be adapted for ROM+RAM
 ///@{
 IU find(const char *s) {
-    auto streq = [](const char *s1, const char *s2) {
-        return upper ? strcasecmp(s1, s2)==0 : strcmp(s1, s2)==0;
-    };
     IU v = 0;
     for (IU i = dict.idx - 1; !v && i > 0; --i) {
-        if (streq(s, dict[i].name)) v = i;
+        if (STRCMP(s, dict[i].name)==0) v = i;
     }
 #if CC_DEBUG > 1
     LOG_HDR("find", s); if (v) { LOG_DIC(v); } else LOG_NA();
@@ -601,14 +597,12 @@ DU2 parse_number(const char *idiom, int *err) {
     *err = errno = 0;
 #if USE_FLOAT
     DU2 n = (b==10)
-        ? static_cast<DU2>(strtof(idiom, &p))
+        ? static_cast<DU2>(strtod(idiom, &p))
         : static_cast<DU2>(strtoll(idiom, &p, b));
 #else  // !USE_FLOAT
     DU2 n = static_cast<DU2>(strtoll(idiom, &p, b));
 #endif // USE_FLOAT
-    printf("n=%llx, (DU)n=%x\n", n, (DU)n);
     if (errno || *p != '\0') *err = errno;
-//    if (n != (DU)n)          *err = ERANGE;
     
     return n;
 }
@@ -763,7 +757,10 @@ int pfa2didx(IU ix) {                          ///> reverse lookup
     IU pfa = ix & ~EXT_FLAG;                   ///> pfa (mask colon word)
     for (int i = dict.idx - 1; i > 0; --i) {
         Code &c = dict[i];
-        if (pfa == (IS_UDF(i) ? c.pfa : c.xtoff())) return i;
+        if (IS_UDF(i)) {                       /// * user defined words
+            if ((ix & EXT_FLAG) && pfa == c.pfa) return i;
+        }
+        else if (pfa == c.xtoff()) return i;   /// * built-in words
     }
     return 0;                                  /// * not found
 }
