@@ -99,7 +99,6 @@ vm_state VM  = QUERY;   ///< VM state
 ///
 DU   tos     = -DU1;    ///< top of stack (cached)
 bool compile = false;   ///< compiler flag
-bool upper   = false;   ///< case sensitivity control
 IU   load_dp = 0;       ///< depth of recursive include
 IU   *base;             ///< numeric radix (a pointer)
 IU   *dflt;             ///< use float data unit flag
@@ -384,7 +383,6 @@ void dict_compile() {  ///< compile built-in words into dictionary
     /// @}
     /// @defgroup IO ops
     /// @{
-    CODE("case!",   upper = POP() == DU0);    // case insensitive
     CODE("base",    PUSH(((U8*)base - MEM0)));
     CODE("decimal", put(BASE, 10));
     CODE("hex",     put(BASE, 16));
