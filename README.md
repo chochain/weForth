@@ -133,13 +133,15 @@ Note:
 * weForth 4.2 w float32/real-time is even slower without WebGL, why?
 
 ### TODO
+* inter-VM communication
+  + Emscripten WASM Worker (for faster call and shared memory), [link](https://emscripten.org/docs/api_reference/wasm_workers.html)
+  + ChaCha20-Poly1305, [IETF spec.](https://datatracker.ietf.org/doc/html/draft-nir-cfrg-chacha20-poly1305)
+    * ChaCha20 cipher lib. See JS cryptography libs [libsodium.js](http  + A 16-node AES cipher [AES - 5 different modes comparison](https://www.highgo.ca/2019/08/08/the-difference-in-five-modes-in-the-aes-encryption-algorithm/)
 * Physics Engine
   + vehicle sim
   + CSG i.e. compound shape, [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
   + review Jolt::RefTarget class (for ref counter, can apply to tensorForth)
-* inter-VM communication
-  + A 16-node AES cipher [AES - 5 different modes comparison](https://www.highgo.ca/2019/08/08/the-difference-in-five-modes-in-the-aes-encryption-algorithm/)
-  + ChaCha20 cipher. See JS cryptography libs [libsodium.js](https://github.com/jedisct1/libsodium.js/)
+s://github.com/jedisct1/libsodium.js/)
 * add network system (SD_net)
 * review WebSerial
 * review wasmtime (CLI), perf+hotspot (profiling)
