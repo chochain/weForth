@@ -17,7 +17,7 @@
     4 i + pick i 4 * rshift ( ..vd arr d )
     $f and swap a! ( dcba va vb vc arr )
   next 2drop ;
-\  
+\
 \ ChaCha20 utilities  
 \ ROL = v << n | (v >> ($20 - n))
 \
@@ -79,5 +79,15 @@ create hidx                           \ quater round indices
     i xt a@ i gold a@
     <> if i . ." miss " then
   next ." done " ;
+: qbench
+  ms negate
+  $3210 t0 4@
+  99999 for qround next
+  2drop 2drop
+  ms + ;
+: bench
+  ms negate
+  999 for one_block next
+  ms + ;
 
   
