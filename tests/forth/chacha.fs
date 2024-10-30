@@ -53,7 +53,7 @@ create xt $40 allot                  \ 64-byte tmp calc array
 : st2xt ( -- )                       \ st := xt
   $F for st i th @ xt i th ! next ;    
 : xt+=st ( -- )                      \ xt += st
-  $F for xt i th @ st i th +! next ;
+  $F for st i th @ xt i th +! next ;
 : quarter ( a b c d -- )
   2over 2over
   xt 4@ qround xt 4! ;
