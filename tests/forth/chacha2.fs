@@ -1,15 +1,16 @@
 \
 \ ChaCha20 implementation - packed
 \
-: a@ ( n arr -- arr[n] ) swap th @ ;  \ fetch array[n]
-: a! ( v n arr -- ) swap th ! ;       \ array[n] = v
-: qa@ ( dcba arr -- v dcb arr )
+: a@  ( n arr -- arr[n] ) swap th @ ; \ fetch array[n]
+: a!  ( v n arr -- ) swap th ! ;      \ array[n] = v
+: a+! ( v n arr -- ) swap th +! ;     \ array[n] += v
+: a4@ ( dcba arr -- v dcb arr )
   >r ( keep arr )
   dup 4 rshift swap ( dcb dcba )
   $f and i a@ swap  ( v dcb )
   r> ;
 : 4@ ( dcba arr -- va vb vc vd )      \ dcba 4-nibble indices
-  3 for qa@ next 2drop ;
+  3 for a4@ next 2drop ;
 : 4! ( dcba va vb vc vd arr -- )
   3 for
     swap over ( ..arr vd arr )
@@ -46,12 +47,17 @@ create st                             \ st[16]
   $03020100 , $07060504 , $0b0a0908 , $0f0e0d0c ,
   $13121110 , $17161514 , $1b1a1918 , $1f1e1d1c ,
   $00000001 , $09000000 , $4a000000 , $00000000 ,
+create gold                           \ expected xt after one_block
+  $e4e7f110 , $15593bd1 , $1fdd0f50 , $c47120a3 ,
+  $c7f4d1c7 , $0368c033 , $9aaa2204 , $4e6cd4c3 ,
+  $466482d2 , $09aa9f07 , $05d7c214 , $a2028bd9 ,
+  $d19c12b5 , $b94e16de , $e883d0cb , $4e3c50a2 ,
 create xt $40 allot                   \ 64-byte tmp calc array
 
 : st2xt ( -- )                        \ st := xt 
-  $F for st i th @ xt i th ! next ;    
+  $F for i st a@ i xt a! next ;    
 : xt+=st ( -- )                       \ xt += st
-  $F for st i th @ xt i th +! next ;
+  $F for i st a@ i xt a+! next ;
 : quarter ( xxxxdcba -- )             \ one full round
   dup xt 4@ qround xt 4! ;
 create hidx                           \ quater round indices
@@ -59,7 +65,7 @@ create hidx                           \ quater round indices
   $fb73ea62 , $d951c840 ,             \ col  2, 3, 0, 1
 : odd_even ( -- )
   3 for
-    hidx i th @ ( hgfedcba )
+    i hidx a@ ( hgfedcba )
     dup        quarter                \ low  round
     $10 rshift quarter                \ high round
   next ;
@@ -67,5 +73,11 @@ create hidx                           \ quater round indices
   st2xt
   9 for odd_even next                 \ 10x2 rounds
   xt+=st ;
+: check ( -- )
+  one_block
+  $F for
+    i xt a@ i gold a@
+    <> if i . ." miss " then
+  next ." done " ;
 
   
