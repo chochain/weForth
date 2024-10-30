@@ -57,22 +57,22 @@ create gold                          \ expected xt after one_block
 create xt $40 allot                  \ 64-byte tmp calc array
   
 : st2xt ( -- )                       \ st := xt
-  $F for st i th @ xt i th ! next ;    
+  $F for i st a@ i xt a! next ;    
 : xt+=st ( -- )                      \ xt += st
-  $F for st i th @ xt i th +! next ;
-: 4x4 ( dcba -- )
-  3 for
-    dup $f and swap 4 rshift
-  next drop ;
-: quarter ( a b c d -- )
-  4x4 2over 2over
-  xt 4@ qround xt 4! ;
+  $F for i st a@ i xt a+! next ;
 create hidx                          \ quater round indices
   $e943d872 , $cb61fa50 ,            \ diag 2, 3, 0, 1
   $fb73ea62 , $d951c840 ,            \ col  2, 3, 0, 1
-: odd_even ( -- )
+: 4x4 ( dcba -- a b c d )            \ unpack (5% slower)
   3 for
-    hidx i th @
+    dup $f and swap 4 rshift
+  next drop ;
+: quarter ( bcda -- )                \ run a quarter round
+  4x4 2over 2over
+  xt 4@ qround xt 4! ;
+: odd_even ( -- )                    \ column, and diag rounds
+  3 for
+    hidx i th @                      \ fetch indices
     dup        quarter
     $10 rshift quarter
   next
