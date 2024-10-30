@@ -57,24 +57,29 @@ create gold                          \ expected xt after one_block
 create xt $40 allot                  \ 64-byte tmp calc array
   
 : st2xt ( -- )                       \ st := xt
-  $F for i st a@ i xt a! next ;    
+  $F for st i th @ xt i th ! next ;    
 : xt+=st ( -- )                      \ xt += st
-  $F for i st a@ i xt a+! next ;
+  $F for st i th @ xt i th +! next ;
+: 4x4 ( dcba -- )
+  3 for
+    dup $f and swap 4 rshift
+  next drop ;
 : quarter ( a b c d -- )
-  2over 2over
+  4x4 2over 2over
   xt 4@ qround xt 4! ;
-: odd_even ( -- )      \         c0 | c1 | c2 | c3
-  0  4  8 $C quarter   \ col  0,  0 |  1 |  2 |  3
-  1  5  9 $D quarter   \ col  1,  4 |  5 |  6 |  7
-  2  6 $A $E quarter   \ col  2,  8 |  9 | 10 | 11
-  3  7 $B $F quarter   \ col  3, 12 | 13 | 14 | 15
-  0  5 $A $F quarter   \ diag 0       
-  1  6 $B $C quarter   \ diag 1                
-  2  7  8 $D quarter   \ diag 2        
-  3  4  9 $E quarter ; \ diag 3        
+create hidx                          \ quater round indices
+  $e943d872 , $cb61fa50 ,            \ diag 2, 3, 0, 1
+  $fb73ea62 , $d951c840 ,            \ col  2, 3, 0, 1
+: odd_even ( -- )
+  3 for
+    hidx i th @
+    dup        quarter
+    $10 rshift quarter
+  next
+;
 : one_block ( -- )
   st2xt
-  9 for odd_even next               \ 10x2 rounds
+  9 for odd_even next                \ 10x2 rounds
   xt+=st ;
 : check ( -- )
   one_block
@@ -82,4 +87,14 @@ create xt $40 allot                  \ 64-byte tmp calc array
     i xt a@ i gold a@
     <> if i . ." miss " then
   next ." done " ;
+: qbench
+  ms negate
+  0 1 2 3 t0 4@
+  99999 for qround next
+  2drop 2drop
+  ms + ;
+: bench
+  ms negate
+  999 for one_block next
+  ms + ;
   
