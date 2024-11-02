@@ -1,19 +1,19 @@
 \
 \ ChaCha20 implementation
 \
-: a@  ( n arr -- arr[n] ) swap th @ ; \ fetch array[n]
-: a!  ( v n arr -- ) swap th ! ;      \ array[n] = v
-: a+! ( v n arr -- ) swap th +! ;     \ array[n] = v
-: 4@ ( a b c d arr -- va vb vc vd )   \ fetch array[a,b,c,d]
+: a@  ( n arr -- arr[n] ) swap cells + @ ; \ fetch array[n]
+: a!  ( v n arr -- ) swap cells + ! ;      \ array[n] = v
+: a+! ( v n arr -- ) swap cells + +! ;     \ array[n] = v
+: 4@ ( a b c d arr -- va vb vc vd )        \ fetch array[a,b,c,d]
   >r ( keep arr )
   2swap i a@ swap i  a@ swap
   2swap i a@ swap r> a@ swap ;
-: 4! ( a b c d va vb vc vd arr -- )   \ put array[a,b,c,d]
+: 4! ( a b c d va vb vc vd arr -- )        \ put array[a,b,c,d]
   >r ( keep arr )
   5 pick i a! 5 pick i  a!
   5 pick i a! 5 pick r> a!
   2drop 2drop ;
-: rol ( v n -- v' )                   \ rotate left n-bits
+: rol ( v n -- v' )                        \ rotate left n-bits
   >r dup r@ lshift swap
   $20 r> - rshift or ;
 \ quarter round
@@ -21,7 +21,7 @@
 \   2.  c += d; b ^= c; b <<<= 12;      c d a b
 \   3.  a += b; d ^= a; d <<<= 8;           a b c d
 \   4.  c += d; b ^= c; b <<<= 7;               c d a b
-: hx ( c d a b n -- a' b c d' )       \ hash one line
+: hx ( c d a b n -- a' b c d' )            \ hash one line
   >r ( keep u  ) swap over + dup
   >r ( keep a' ) swap
   2swap  ( a' b c d )
@@ -72,7 +72,7 @@ create hidx                          \ quater round indices
   xt 4@ qround xt 4! ;
 : odd_even ( -- )                    \ column, and diag rounds
   3 for
-    hidx i th @                      \ fetch indices
+    i hidx a@                        \ fetch indices
     dup        quarter
     $10 rshift quarter
   next
