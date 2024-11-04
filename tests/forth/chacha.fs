@@ -49,11 +49,6 @@ create st                            \ st[16]
   $03020100 , $07060504 , $0b0a0908 , $0f0e0d0c ,
   $13121110 , $17161514 , $1b1a1918 , $1f1e1d1c ,
   $00000001 , $09000000 , $4a000000 , $00000000 ,
-create gold                          \ expected xt after one_block
-  $e4e7f110 , $15593bd1 , $1fdd0f50 , $c47120a3 ,
-  $c7f4d1c7 , $0368c033 , $9aaa2204 , $4e6cd4c3 ,
-  $466482d2 , $09aa9f07 , $05d7c214 , $a2028bd9 ,
-  $d19c12b5 , $b94e16de , $e883d0cb , $4e3c50a2 ,
 create xt $40 allot                  \ 64-byte tmp calc array
   
 : st2xt ( -- )                       \ st := xt
@@ -75,12 +70,17 @@ create hidx                          \ quater round indices
     i hidx a@                        \ fetch indices
     dup        quarter
     $10 rshift quarter
-  next
-;
+  next ;
 : one_block ( -- )
   st2xt
   9 for odd_even next                \ 10x2 rounds
   xt+=st ;
+
+create gold                          \ expected xt after one_block
+  $e4e7f110 , $15593bd1 , $1fdd0f50 , $c47120a3 ,
+  $c7f4d1c7 , $0368c033 , $9aaa2204 , $4e6cd4c3 ,
+  $466482d2 , $09aa9f07 , $05d7c214 , $a2028bd9 ,
+  $d19c12b5 , $b94e16de , $e883d0cb , $4e3c50a2 ,
 : check ( -- )
   one_block
   $F for
