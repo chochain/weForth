@@ -22,7 +22,7 @@
 \   3.  a += b; d ^= a; d <<<= 8;           a b c d
 \   4.  c += d; b ^= c; b <<<= 7;               c d a b
 : hx ( c d a b n -- a' b c d' )       \ hash one line
-  >r ( keep u  ) swap over + dup
+  >r ( keep n  ) swap over + dup
   >r ( keep a' ) swap
   2swap  ( a' b c d )
   r> xor ( a' b c d^a' ) r> rol ;
@@ -32,15 +32,14 @@
   $8  hx ( a b c d ) $7 hx ( c d a b )
   2swap ;
   
-\ test cases
-create t0 $11111111 , $01020304 , $9b8d6f43 , $01234567 ,
+\ ground test case:
 \ > a = 0x11111111, b = 0x01020304, d = 0x01234567
 \ > a = a + b = 0x11111111 + 0x01020304 = 0x12131415
 \ > d = d ^ a = 0x01234567 ^ 0x12131415 = 0x13305172
 \ > d = d<<<16 = 0x51721330
-\ 0 1 2 3 t0 4@ 2swap 16 q4
-\ qround expected results
+\ expected results:
 \ > abcd = $ea2a92f4 $cb1cf8ce $4581472e $5881c4bb  
+\ create t0 $11111111 , $01020304 , $9b8d6f43 , $01234567 ,
 \ 0 1 2 3 t0 4@ qround
 
 \ ChaCha20 core
@@ -51,29 +50,29 @@ create st                            \ st[16]
   $00000001 , $09000000 , $4a000000 , $00000000 ,  \ counter, nonce
 create xt $40 allot                  \ 64-byte tmp calc array
   
-: st2xt ( -- )                       \ st := xt
-  $F for i st a@ i xt a! next ;    
+: st2xt ( -- )                       \ st := xt, or st xt $10 move
+  $f for i st a@ i xt a! next ;
 : xt+=st ( -- )                      \ xt += st
-  $F for i st a@ i xt a+! next ;
+  $f for i st a@ i xt a+! next ;
 create hidx                          \ quater round indices
   $e943d872 , $cb61fa50 ,            \ diag 2, 3, 0, 1
   $fb73ea62 , $d951c840 ,            \ col  2, 3, 0, 1
-: 4x4 ( dcba -- a b c d )            \ unpack (5% slower)
+: 4x8 ( dcba -- a b c d a b c d )    \ unpack (5% slower)
   3 for
     dup $f and swap 4 rshift
-  next drop ;
+  next drop
+  2over 2over ;
 : quarter ( bcda -- )                \ run a quarter round
-  4x4 2over 2over
-  xt 4@ qround xt 4! ;
+  4x8 xt 4@ qround xt 4! ;
 : odd_even ( -- )                    \ column, and diag rounds
   3 for
     i hidx a@                        \ fetch indices
-    dup        quarter
-    $10 rshift quarter
+    dup        quarter               \ odd  quarter round
+    $10 rshift quarter               \ even quarter round
   next ;
 : one_block ( -- )
   st2xt
-  9 for odd_even next                \ 10x2 rounds
+  $9 for odd_even next               \ 10x2 rounds
   xt+=st ;
 
 create gold                          \ expected xt after one_block
@@ -83,7 +82,7 @@ create gold                          \ expected xt after one_block
   $d19c12b5 , $b94e16de , $e883d0cb , $4e3c50a2 ,
 : check ( -- )
   one_block
-  $F for
+  $f for
     i xt a@ i gold a@
     <> if i . ." miss " then
   next ." done " ;
