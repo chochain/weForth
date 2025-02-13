@@ -73,7 +73,10 @@ function dump(mem, off) {
             }
             bt += `${hx[c>>4]}${hx[c&0xf]}`
             bt += ((i & 0x3)==3) ? '  ' : ' '
-            tx += (c < 0x20) ? '_' : String.fromCharCode(c)
+            if      (c==60) tx += '&lt;'
+            else if (c==62) tx += '&gt;'
+            else if (c <= 32 || c > 126) tx += '_'
+            else tx += String.fromCharCode(c)
         }
         if (en) { bt += '</i>'; tx += '</i>' }
         div += h4(off+j) + ': ' + bt + tx + '\n'
