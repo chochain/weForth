@@ -52,7 +52,7 @@ Serving as the core of demos, the templates under ~/template directory are used 
 
 |Build|HowTo|Try Online|Note|
 |---|---|---|---|
-|Bare-bone eForth on Web|make zero|[eforth.html](https://chochain.github.io/weForth/ref/eforth.html)|-O2 works OK,<br/>-O3 Emscripten spits wrong code|
+|Bare-bone eForth on Web|make zero|[eforth.html](https://chochain.github.io/weForth/ref/eforth.html)|-O2 works OK,<br/>-O3 Emscripten v3.x spits wrong code, v4.0+ OK|
 |Single WASM file|make one|[ceforth.html](https://chochain.github.io/weForth/ref/ceforth.html)||
 |Extra Web Worker thread|make two|[weforth.html](https://chochain.github.io/weForth/ref/weforth.html)|for demo, enter><br/>s" forth/whisker.fs" included 40 bots|
 
@@ -114,7 +114,7 @@ Simple 10M tests
   
     : xx 9999 FOR 34 DROP NEXT ;⏎
     : yy 999 FOR xx NEXT ;⏎
-    : zz MS NEGATE yy MS + ;⏎
+    : zz CLOCK NEGATE yy CLOCK + . ." ms " ;⏎
     zz⏎
 
 <img src="https://chochain.github.io/weForth/img/weforth_perf.png" width=800px></img>
@@ -125,7 +125,7 @@ Note:
 * weForth v1 uses token indirected threaded
 * weForth+switch(op), is 2x slower than just function pointers.
 * weForth v1.2 without yield in nest(), speeds up 3x.
-* WASM -O3 => err functions (wa.*) not found
+* Emscripten v3.x em++ -O3 => err functions (wa.*) not found, v4.0+ OK
 * FireFox v122, is 2x faster than v120
 * Chrome is about 10% slower than FireFox
 * weForth 4.2 w float32-enabled, runs faster than int32, but why?
