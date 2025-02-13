@@ -80,14 +80,14 @@ create hidx                           \ quater round indices
     <> if i . ." miss " then
   next ." done " ;
 : qbench
-  ms negate
+  clock negate
   $3210 t0 4@
   99999 for qround next
   2drop 2drop
-  ms + ;
+  clock + ;
 : bench
-  ms negate
+  clock negate
   999 for one_block next
-  ms + ;
+  clock + ;
 
   
