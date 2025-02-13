@@ -1,4 +1,4 @@
-EM = em++ -Wall -O3    # Emscripten v3.x -O3 failed, v4.0+ OK
+EM = em++ -Wall -O2    # Emscripten v4.0 -O3, still failed to create exported functions
 CC = g++ -Wall -O2
 
 SRC = ./src/ceforth.cpp
