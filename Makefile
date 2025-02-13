@@ -1,4 +1,4 @@
-EM = em++ -Wall -O2 # -O3 does not work???
+EM = em++ -Wall -O3    # Emscripten v3.x -O3 failed, v4.0+ OK
 CC = g++ -Wall -O2
 
 SRC = ./src/ceforth.cpp

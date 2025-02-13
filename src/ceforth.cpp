@@ -2,7 +2,6 @@
 /// @file
 /// @brief eForth implemented in 100% C/C++ for portability and education
 ///
-#include <strings.h>     // strcasecmp
 #include "ceforth.h"
 ///====================================================================
 ///
@@ -100,7 +99,6 @@ vm_state VM  = QUERY;   ///< VM state
 ///
 DU   tos     = -DU1;    ///< top of stack (cached)
 bool compile = false;   ///< compiler flag
-bool upper   = false;   ///< case sensitivity control
 IU   load_dp = 0;       ///< depth of recursive include
 IU   *base;             ///< numeric radix (a pointer)
 IU   *dflt;             ///< use float data unit flag
@@ -116,12 +114,9 @@ inline DU   POP()      { DU n=tos; tos=ss.pop(); return n; }
 ///@name Dictionary search functions - can be adapted for ROM+RAM
 ///@{
 IU find(const char *s) {
-    auto streq = [](const char *s1, const char *s2) {
-        return upper ? strcasecmp(s1, s2)==0 : strcmp(s1, s2)==0;
-    };
     IU v = 0;
     for (IU i = dict.idx - 1; !v && i > 0; --i) {
-        if (streq(s, dict[i].name)) v = i;
+        if (STRCMP(s, dict[i].name)==0) v = i;
     }
 #if CC_DEBUG > 1
     LOG_HDR("find", s); if (v) { LOG_DIC(v); } else LOG_NA();
@@ -298,12 +293,15 @@ void CALL(IU w) {
 ///> Forth script loader
 ///
 void load(const char* fn) {
+//    printf("\n%s IP=%4x, VM=%d, load_dp=%d", fn, IP, VM, load_dp);
     load_dp++;                         /// * increment depth counter
-    rs.push(IP);                       /// * save context
+    rs.push(IP); rs.push(VM);          /// * save context
     VM = NEST;                         /// * +recursive
     forth_include(fn);                 /// * include file
+    VM = static_cast<vm_state>(rs.pop());
     IP = UINT(rs.pop());               /// * restore context
     --load_dp;                         /// * decrement depth counter
+//    printf("   => IP=%4x, ss.idx=%d, rs.idx=%d, VM=%d, load_dp=%d\n", IP, ss.idx, rs.idx, VM, load_dp);
 }
 ///====================================================================
 ///
@@ -365,7 +363,7 @@ void dict_compile() {  ///< compile built-in words into dictionary
     CODE("1+",      tos += 1);
     CODE("1-",      tos -= 1);
 #if USE_FLOAT
-    CODE("int",     tos = UINT(tos));         // float => integer
+    CODE("int",     tos = tos < DU0 ? -DU1 * UINT(-tos) : UINT(tos));  // float => integer
 #endif // USE_FLOAT
     /// @}
     /// @defgroup Logic ops
@@ -384,16 +382,15 @@ void dict_compile() {  ///< compile built-in words into dictionary
     /// @}
     /// @defgroup IO ops
     /// @{
-    CODE("case!",   upper = POP() == DU0);    // case insensitive
     CODE("base",    PUSH(((U8*)base - MEM0)));
     CODE("decimal", put(BASE, 10));
     CODE("hex",     put(BASE, 16));
-    CODE("bl",      put(BL));
+    CODE("bl",      PUSH(0x20));
     CODE("cr",      put(CR));
     CODE(".",       put(DOT, POP()));
-    CODE("u.",      put(DOT, UINT(POP())));
-    CODE(".r",      IU w = UINT(POP()); put(DOTR, w, POP()));
-    CODE("u.r",     IU w = UINT(POP()); put(DOTR, w, UINT(POP())));
+    CODE("u.",      put(UDOT, POP()));
+    CODE(".r",      DU w = POP(); put(DOTR,  w, POP()));
+    CODE("u.r",     DU w = POP(); put(UDOTR, w, POP()));
     CODE("type",    POP(); pstr((const char*)MEM(POP())));    // get string pointer
     IMMD("key",     if (compile) add_w(KEY); else key());
     CODE("emit",    put(EMIT, POP()));
@@ -541,9 +538,9 @@ void dict_compile() {  ///< compile built-in words into dictionary
     /// @defgroup OS ops
     /// @{
     CODE("mstat", mem_stat());
-    CODE("ms",    PUSH(millis()));
+    CODE("clock", PUSH(millis()));          // current n milliseconds since Epoch
     CODE("rnd",   PUSH(RND()));             // generate random number
-    CODE("delay", delay(UINT(POP())));
+    CODE("ms",    delay(UINT(POP())));      // delay n milliseconds
     CODE("included",                        // include external file
          POP();                             // string length, not used
          load((const char*)MEM(POP())));    // include external file
@@ -585,7 +582,7 @@ void dict_validate() {
 ///
 ///> ForthVM - Outer interpreter
 ///
-DU parse_number(const char *idiom, int *err) {
+DU2 parse_number(const char *idiom, int *err) {
     int b = static_cast<int>(*base);
     switch (*idiom) {                        ///> base override
     case '%': b = 2;  idiom++; break;
@@ -596,13 +593,14 @@ DU parse_number(const char *idiom, int *err) {
     char *p;
     *err = errno = 0;
 #if USE_FLOAT
-    DU n = (b==10)
-        ? static_cast<DU>(strtof(idiom, &p))
-        : static_cast<DU>(strtol(idiom, &p, b));
+    DU2 n = (b==10)
+        ? static_cast<DU2>(strtod(idiom, &p))
+        : static_cast<DU2>(strtoll(idiom, &p, b));
 #else  // !USE_FLOAT
-    DU n = static_cast<DU>(strtol(idiom, &p, b));
+    DU2 n = static_cast<DU2>(strtoll(idiom, &p, b));
 #endif // USE_FLOAT
-    if (errno || *p != '\0') *err = 1;
+    if (errno || *p != '\0') *err = errno;
+    
     return n;
 }
 
@@ -620,7 +618,8 @@ void forth_core(const char *idiom) {     ///> aka QUERY
     int err = 0;
     DU  n   = parse_number(idiom, &err);
     if (err) {                           /// * not number
-        pstr(idiom); pstr("? ", CR);     ///> display error prompt
+        pstr(idiom); pstr(" ?");         ///> display error prompt
+        pstr(strerror(err), CR);         ///> and error description
         compile = false;                 ///> reset to interpreter mode
         VM      = STOP;                  ///> skip the entire input buffer
     }
@@ -727,11 +726,14 @@ void spaces(int n) { for (int i = 0; i < n; i++) fout << " "; }
 void put(io_op op, DU v, DU v2) {
     switch (op) {
     case BASE:  fout << setbase(*base = UINT(v));       break;
-    case BL:    fout << " ";                            break;
     case CR:    fout << ENDL;                           break;
     case DOT:   fout << v << " ";                       break;
+    case UDOT:  fout << static_cast<U32>(v) << " ";     break;
     case DOTR:  fout << setbase(*base)
-                     << setw(UINT(v)) << setw(v2);      break;
+                     << setw(UINT(v)) << v2;            break;
+    case UDOTR: fout << setbase(*base)
+                     << setw(UINT(v))
+                     << static_cast<U32>(v2);           break;
     case EMIT:  { char b = (char)UINT(v); fout << b; }  break;
     case SPCS:  spaces(UINT(v));                        break;
     default:    fout << "unknown io_op=" << op << ENDL; break;
@@ -755,7 +757,10 @@ int pfa2didx(IU ix) {                          ///> reverse lookup
     IU pfa = ix & ~EXT_FLAG;                   ///> pfa (mask colon word)
     for (int i = dict.idx - 1; i > 0; --i) {
         Code &c = dict[i];
-        if (pfa == (IS_UDF(i) ? c.pfa : c.xtoff())) return i;
+        if (IS_UDF(i)) {                       /// * user defined words
+            if ((ix & EXT_FLAG) && pfa == c.pfa) return i;
+        }
+        else if (pfa == c.xtoff()) return i;   /// * built-in words
     }
     return 0;                                  /// * not found
 }
@@ -877,18 +882,21 @@ void ss_dump(bool forced) {
     static char buf[34];                  ///< static buffer
     auto rdx = [](DU v, int b) {          ///< display v by radix
 #if USE_FLOAT
-        sprintf(buf, "%0.6g", v);
-        return buf;
-#else // !USE_FLOAT
+        DU t, f = modf(v, &t);            ///< integral, fraction
+        if (ABS(f) > DU_EPS) {
+            sprintf(buf, "%0.6g", v);
+            return buf;
+        }
+#endif // USE_FLOAT
         int i = 33;  buf[i]='\0';         /// * C++ can do only base=8,10,16
-        DU  n = ABS(v);                   ///< handle negative
+        int dec = *base==10;
+        U32 n   = dec ? UINT(ABS(v)) : UINT(v);  ///< handle negative
         do {                              ///> digit-by-digit
             U8 d = (U8)MOD(n,b);  n /= b;
             buf[--i] = d > 9 ? (d-10)+'a' : d+'0';
         } while (n && i);
-        if (v < DU0) buf[--i]='-';
+        if (dec && v < DU0) buf[--i]='-';
         return &buf[i];
-#endif // USE_FLOAT
     };
     ss.push(tos);
     for (int i=0; i<ss.idx; i++) {
