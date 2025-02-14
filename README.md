@@ -120,17 +120,17 @@ Simple 10M tests
 <img src="https://chochain.github.io/weForth/img/weforth_perf.png" width=800px></img>
 
 Note:
-* eForth.js uses JS straight, can do floating-points
+* WASM is now at about 2/3 speed of natively compiled.
+* Emscripten emcc -O3 does not work. It inlines all functions, including exported
+* eForth.js uses JS straight with floating-points
 * uEforth v7 uses Asm.js, build Forth up with JS "assembly".
-* weForth v1 uses token indirected threaded
-* weForth+switch(op), is 2x slower than just function pointers.
-* weForth v1.2 without yield in nest(), speeds up 3x.
-* Emscripten v3.x em++ -O3 => err functions (wa.*) not found, v4.0+ OK
-* FireFox v122, is 2x faster than v120
-* Chrome is about 10% slower than FireFox
-* weForth 4.2 w float32-enabled, runs faster than int32, but why?
-* weForth 4.2 w float32/real-time is slower due to message passing
-* weForth 4.2 w float32/real-time is even slower without WebGL, why?
+* weForth v1.2 is token indirected threaded
+* weForth v1.4 nest() without yield, speeds up 2x.
+* weForth v4.2/float32-enabled, runs faster than int32. WASM is float native, possibly.
+* weForth v4.2/real-time is slower due to message passing overhead.
+* FireFox v122, is 2x faster than v120, but v135 about the same as v120
+* FireFox v135 is still 10% faster than latest Chrome v132.
+* Emscripten v4.0 (202502) creates WASM runs about the same as v3.x (202402)
 
 ### TODO
 * inter-VM communication
