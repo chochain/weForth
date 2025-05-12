@@ -308,8 +308,8 @@ void load(const char* fn) {
 ///> eForth dictionary assembler
 ///  Note: sequenced by enum forth_opcode as following
 ///
-void dict_compile() {  ///< compile built-in words into dictionary
-    CODE("nul ",    {});                  /// dict[0], not used, simplify find()
+void dict_compile() {                  ///< compile built-in words into dictionary
+    CODE("nul ",    {});               /// dict[0], not used, simplify find()
     ///
     /// @defgroup Stack ops
     /// @brief - opcode sequence can be changed below this line
@@ -363,7 +363,7 @@ void dict_compile() {  ///< compile built-in words into dictionary
     CODE("1+",      tos += 1);
     CODE("1-",      tos -= 1);
 #if USE_FLOAT
-    CODE("int",     tos = tos < DU0 ? -DU1 * UINT(-tos) : UINT(tos));  // float => integer
+    CODE("int",     tos = tos < DU0 ? -DU1 * UINT(-tos) : UINT(tos));  /// float => integer
 #endif // USE_FLOAT
     /// @}
     /// @defgroup Logic ops
@@ -391,7 +391,7 @@ void dict_compile() {  ///< compile built-in words into dictionary
     CODE("u.",      put(UDOT, POP()));
     CODE(".r",      DU w = POP(); put(DOTR,  w, POP()));
     CODE("u.r",     DU w = POP(); put(UDOTR, w, POP()));
-    CODE("type",    POP(); pstr((const char*)MEM(POP())));    // get string pointer
+    CODE("type",    POP(); pstr((const char*)MEM(POP())));   /// get string pointer
     IMMD("key",     if (compile) add_w(KEY); else key());
     CODE("emit",    put(EMIT, POP()));
     CODE("space",   spaces(1));
@@ -410,78 +410,78 @@ void dict_compile() {  ///< compile built-in words into dictionary
     /// @defgroup Branching ops
     /// @brief - if...then, if...else...then
     /// @{
-    IMMD("if",      add_w(ZBRAN); PUSH(HERE); add_iu(0));       // if    ( -- here )
-    IMMD("else",                                                // else ( here -- there )
+    IMMD("if",      add_w(ZBRAN); PUSH(HERE); add_iu(0));    /// if    ( -- here )
+    IMMD("else",                                             /// else ( here -- there )
          add_w(BRAN);
          IU h=HERE; add_iu(0); SETJMP(POP()); PUSH(h));
-    IMMD("then",    SETJMP(POP()));                             // backfill jump address
+    IMMD("then",    SETJMP(POP()));                          /// backfill jump address
     /// @}
     /// @defgroup Loops
     /// @brief  - begin...again, begin...f until, begin...f while...repeat
     /// @{
     IMMD("begin",   PUSH(HERE));
-    IMMD("again",   add_w(BRAN);  add_iu(POP()));               // again    ( there -- )
-    IMMD("until",   add_w(ZBRAN); add_iu(POP()));               // until    ( there -- )
-    IMMD("while",   add_w(ZBRAN); PUSH(HERE); add_iu(0));       // while    ( there -- there here )
-    IMMD("repeat",  add_w(BRAN);                                // repeat    ( there1 there2 -- )
-         IU t=POP(); add_iu(POP()); SETJMP(t));                 // set forward and loop back address
+    IMMD("again",   add_w(BRAN);  add_iu(POP()));            /// again    ( there -- )
+    IMMD("until",   add_w(ZBRAN); add_iu(POP()));            /// until    ( there -- )
+    IMMD("while",   add_w(ZBRAN); PUSH(HERE); add_iu(0));    /// while    ( there -- there here )
+    IMMD("repeat",  add_w(BRAN);                             /// repeat    ( there1 there2 -- )
+         IU t=POP(); add_iu(POP()); SETJMP(t));              /// set forward and loop back address
     /// @}
     /// @defgrouop FOR...NEXT loops
     /// @brief  - for...next, for...aft...then...next
     /// @{
-    IMMD("for" ,    add_w(FOR); PUSH(HERE));                    // for ( -- here )
-    IMMD("next",    add_w(NEXT); add_iu(POP()));                // next ( here -- )
-    IMMD("aft",                                                 // aft ( here -- here there )
+    IMMD("for" ,    add_w(FOR); PUSH(HERE));                 /// for ( -- here )
+    IMMD("next",    add_w(NEXT); add_iu(POP()));             /// next ( here -- )
+    IMMD("aft",                                              /// aft ( here -- here there )
          POP(); add_w(BRAN);
          IU h=HERE; add_iu(0); PUSH(HERE); PUSH(h));
     /// @}
     /// @}
     /// @defgrouop DO..LOOP loops
     /// @{
-    IMMD("do" ,     add_w(DO); PUSH(HERE));                     // for ( -- here )
+    IMMD("do" ,     add_w(DO); PUSH(HERE));                  /// for ( -- here )
     CODE("i",       PUSH(rs[-1]));
-    CODE("leave",   rs.pop(); rs.pop(); UNNEST());              // quit DO..LOOP
-    IMMD("loop",    add_w(LOOP); add_iu(POP()));                // next ( here -- )
+    CODE("leave",   rs.pop(); rs.pop(); UNNEST());           /// quit DO..LOOP
+    IMMD("loop",    add_w(LOOP); add_iu(POP()));             /// next ( here -- )
     /// @}
     /// @defgrouop return stack ops
     /// @{
     CODE(">r",      rs.push(POP()));
     CODE("r>",      PUSH(rs.pop()));
-    CODE("r@",      PUSH(rs[-1]));                              // same as I (the loop counter)
+    CODE("r@",      PUSH(rs[-1]));                           /// same as I (the loop counter)
     /// @}
     /// @defgrouop Compiler ops
     /// @{
     CODE(":",       compile = def_word(word()));
     IMMD(";",       add_w(EXIT); compile = false);
-    CODE("exit",    UNNEST());                                  // early exit the colon word
-    CODE("variable",def_word(word()); add_var(VAR));            // create a variable (default 0)
-    CODE("constant",                                            // create a constant
-         def_word(word());                                      // create a new word on dictionary
-         add_var(LIT, POP()); add_w(EXIT));                     // add literal
+    CODE("exit",    UNNEST());                               /// early exit the colon word
+    CODE("variable",def_word(word()); add_var(VAR));         /// create a variable (default 0)
+    CODE("constant",                                         /// create a constant
+         def_word(word());                                   /// create a new word on dictionary
+         add_var(LIT, POP()); add_w(EXIT));                  /// add literal
     IMMD("immediate", dict[-1].attr |= IMM_ATTR);
     /// @}
     /// @defgroup metacompiler
     /// @brief - dict is directly used, instead of shield by macros
     /// @{
-    CODE("exec",   IU w = POP(); CALL(w));                      // execute word
-    CODE("create", def_word(word()); add_var(VBRAN));           // vbran + offset field
+    CODE("exec",   IU w = POP(); CALL(w));                   /// execute word
+    CODE("create", def_word(word()); add_var(VBRAN));        /// vbran + offset field
     IMMD("does>",  add_w(DOES));
-    IMMD("to",                                                  // alter the value of a constant, i.e. 3 to x
-         IU w = VM==QUERY ? find(word()) : POP();               // constant addr
+    IMMD("to",                                               /// alter the value of a constant, i.e. 3 to x
+         IU w = VM==QUERY ? find(word()) : POP();            /// constant addr
          if (!w) return;
          if (compile) {
-             add_var(LIT, (DU)w);                               // save addr on stack
-             add_w(find("to"));                                 // encode to opcode
+             add_var(LIT, (DU)w);                            /// save addr on stack
+             add_w(find("to"));                              /// encode to opcode
          }
          else {
-             w = dict[w].pfa + sizeof(IU);                      // get memory addr to constant
-             *(DU*)MEM(DALIGN(w)) = POP();                      // update constant
+             w = dict[w].pfa + sizeof(IU);                   /// get memory addr to constant
+             *(DU*)MEM(DALIGN(w)) = POP();                   /// update constant
          });
-    IMMD("is",              // ' y is x                         // alias a word, i.e. ' y is x
-         IU w = VM==QUERY ? find(word()) : POP();               // word addr
+    IMMD("is",              /// ' y is x                     /// alias a word, i.e. ' y is x
+         IU w = VM==QUERY ? find(word()) : POP();            /// word addr
          if (!w) return;
          if (compile) {
-             add_var(LIT, (DU)w);                               // save addr on stack
+             add_var(LIT, (DU)w);                            /// save addr on stack
              add_w(find("is"));
          }
          else {
@@ -491,23 +491,23 @@ void dict_compile() {  ///< compile built-in words into dictionary
     /// be careful with memory access, especially BYTE because
     /// it could make access misaligned which slows the access speed by 2x
     ///
-    CODE("@",                                                   // w -- n
+    CODE("@",                                                /// w -- n
          IU w = UINT(POP());
-         PUSH(w < USER_AREA ? (DU)IGET(w) : CELL(w)));          // check user area
-    CODE("!",     IU w = UINT(POP()); CELL(w) = POP(););        // n w --
-    CODE(",",     DU n = POP(); add_du(n));                     // n -- , compile a cell
-    CODE("n,",    IU i = UINT(POP()); add_iu(i));               // compile a 16-bit value
-    CODE("cells", IU i = UINT(POP()); PUSH(i * sizeof(DU)));    // n -- n'
-    CODE("allot",                                               // n --
-         IU n = UINT(POP());                                    // number of bytes
-         for (int i = 0; i < n; i+=sizeof(DU)) add_du(DU0));    // zero padding
-    CODE("th",    IU i = UINT(POP()); tos += i * sizeof(DU));   // w i -- w'
-    CODE("+!",    IU w = UINT(POP()); CELL(w) += POP());        // n w --
-    CODE("?",     IU w = UINT(POP()); put(DOT, CELL(w)));       // w --
+         PUSH(w < USER_AREA ? (DU)IGET(w) : CELL(w)));       /// check user area
+    CODE("!",     IU w = UINT(POP()); CELL(w) = POP(););     /// n w --
+    CODE(",",     DU n = POP(); add_du(n));                  /// n -- , compile a cell
+    CODE("n,",    IU i = UINT(POP()); add_iu(i));            /// compile a 16-bit value
+    CODE("cells", IU i = UINT(POP()); PUSH(i * sizeof(DU))); /// n -- n'
+    CODE("allot",                                            /// n --
+         IU n = UINT(POP());                                 /// number of bytes
+         for (int i = 0; i < n; i+=sizeof(DU)) add_du(DU0)); /// zero padding
+    CODE("th",    IU i = UINT(POP()); tos += i * sizeof(DU));/// w i -- w'
+    CODE("+!",    IU w = UINT(POP()); CELL(w) += POP());     /// n w --
+    CODE("?",     IU w = UINT(POP()); put(DOT, CELL(w)));    /// w --
     /// @}
     /// @defgroup Debug ops
     /// @{
-    CODE("abort", tos = -DU1; ss.clear(); rs.clear());          // clear ss, rs
+    CODE("abort", tos = -DU1; ss.clear(); rs.clear());       /// clear ss, rs
     CODE("here",  PUSH(HERE));
     CODE("'",     IU w = find(word()); if (w) PUSH(w));
     CODE(".s",    ss_dump(true));
@@ -523,13 +523,13 @@ void dict_compile() {  ///< compile built-in words into dictionary
     CODE("dump",  U32 n = UINT(POP()); mem_dump(UINT(POP()), n));
     CODE("dict",  dict_dump());
     CODE("forget",
-         IU w = find(word()); if (!w) return;                  // bail, if not found
+         IU w = find(word()); if (!w) return;               /// bail, if not found
          IU b = find("boot")+1;
-         if (w > b) {                                          // clear to specified word
+         if (w > b) {                                       /// clear to specified word
              pmem.clear(dict[w].pfa - STRLEN(dict[w].name));
              dict.clear(w);
          }
-         else {                                                // clear to 'boot'
+         else {                                             /// clear to 'boot'
              pmem.clear(USER_AREA);
              dict.clear(b);
          }
@@ -537,15 +537,16 @@ void dict_compile() {  ///< compile built-in words into dictionary
     /// @}
     /// @defgroup OS ops
     /// @{
-    CODE("mstat", mem_stat());
-    CODE("ms",    PUSH(millis()));
-    CODE("rnd",   PUSH(RND()));             // generate random number
-    CODE("delay", delay(UINT(POP())));
-    CODE("included",                        // include external file
-         POP();                             // string length, not used
-         load((const char*)MEM(POP())));    // include external file
+    IMMD("include", load(word()));                          /// include an OS file
+    CODE("included",                                        /// include file spec on stack
+         POP();                                             /// string length, not used
+         load((const char*)MEM(POP())));                    /// include external file
+    CODE("mstat", mem_stat());                              /// display memory statistics
+    CODE("clock", PUSH(millis()));                          /// get msec since EPOCH
+    CODE("rnd",   PUSH(RND()));                             /// generate random number
+    CODE("ms",    delay(UINT(POP())));                      /// ( n -- ) delay n msec
 #if DO_WASM
-    CODE("JS",    native_api());            // Javascript interface
+    CODE("JS",    native_api());                            /// Javascript interface
 #else  // !DO_WASM
     CODE("bye",   exit(0));
 #endif // DO_WASM    
@@ -572,7 +573,7 @@ void dict_validate() {
     }
     /// check xtoff range
     max -= Code::XT0;
-    if (max & EXT_FLAG) {                   // range check
+    if (max & EXT_FLAG) {                    /// range check
         LOG_KX("*** Init ERROR *** xtoff overflow max = 0x", max);
         LOGS("\nEnter 'dict' to verify, and please contact author!\n");
     }
@@ -614,7 +615,7 @@ void forth_core(const char *idiom) {     ///> aka QUERY
         else CALL(w);                    /// * execute forth word
         return;
     }
-    // try as a number
+    ///< try as a number
     int err = 0;
     DU  n   = parse_number(idiom, &err);
     if (err) {                           /// * not number
@@ -623,7 +624,7 @@ void forth_core(const char *idiom) {     ///> aka QUERY
         compile = false;                 ///> reset to interpreter mode
         VM      = STOP;                  ///> skip the entire input buffer
     }
-    // is a number
+    ///< is a number
     if (compile) {                       /// * a number in compile mode?
         add_var(LIT, n);                 ///> add to current word
     }
@@ -674,6 +675,7 @@ int forth_vm(const char *line, void(*hook)(int, const char*)) {
 
     return yield;
 }
+
 #include <iostream>
 void outer(istream &in) {
     string cmd;
@@ -916,7 +918,7 @@ void mem_dump(U32 p0, IU sz) {
             U8 c = pmem[i+j];
             fout << setw(2) << (int)c << (MOD(j,4)==3 ? " " : "");
         }
-        for (int j=0; j<16; j++) {   // print and advance to next byte
+        for (int j=0; j<16; j++) {   /// print and advance to next byte
             U8 c = pmem[i+j] & 0x7f;
             fout << (char)((c==0x7f||c<0x20) ? '_' : c);
         }
@@ -940,7 +942,7 @@ int  vm_base()       { return *base;    }
 int  vm_dflt()       { return *dflt;    }
 int  vm_ss_idx()     { return ss.idx;   }
 int  vm_dict_idx()   { return dict.idx; }
-int  vm_mem_idx()    { return pmem.idx; }       // HERE
+int  vm_mem_idx()    { return pmem.idx; }       /// HERE
 DU   *vm_ss()        { return &ss[0];   }
 char *vm_dict(int i) { return (char*)dict[i].name; }
 char *vm_mem()       { return (char*)&pmem[0]; }
