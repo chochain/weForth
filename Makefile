@@ -1,4 +1,4 @@
-EM = em++ -Wall -O2 # -O3 does not work???
+EM = em++ -Wall -O2    # Emscripten v4.0 -O3, still failed to create exported functions
 CC = g++ -Wall -O2
 
 SRC = ./src/ceforth.cpp

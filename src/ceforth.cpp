@@ -537,6 +537,7 @@ void dict_compile() {                  ///< compile built-in words into dictiona
     /// @}
     /// @defgroup OS ops
     /// @{
+<<<<<<< HEAD
     IMMD("include", load(word()));                          /// include an OS file
     CODE("included",                                        /// include file spec on stack
          POP();                                             /// string length, not used
@@ -545,6 +546,15 @@ void dict_compile() {                  ///< compile built-in words into dictiona
     CODE("clock", PUSH(millis()));                          /// get msec since EPOCH
     CODE("rnd",   PUSH(RND()));                             /// generate random number
     CODE("ms",    delay(UINT(POP())));                      /// ( n -- ) delay n msec
+=======
+    CODE("mstat", mem_stat());
+    CODE("clock", PUSH(millis()));          // current n milliseconds since Epoch
+    CODE("rnd",   PUSH(RND()));             // generate random number
+    CODE("ms",    delay(UINT(POP())));      // delay n milliseconds
+    CODE("included",                        // include external file
+         POP();                             // string length, not used
+         load((const char*)MEM(POP())));    // include external file
+>>>>>>> 174a234a2e47b9a46a7d410e3ffc3bd39e0eaaeb
 #if DO_WASM
     CODE("JS",    native_api());                            /// Javascript interface
 #else  // !DO_WASM
