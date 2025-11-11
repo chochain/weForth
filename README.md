@@ -133,6 +133,11 @@ Note:
 * Emscripten v4.0 (202502) creates WASM runs about the same as v3.x (202402)
 
 ### TODO
+* System Interface - review
+  + WASIX  - [link](https://github.com/wasix-org)
+  + Wasmer - [link](https://github.com/wasmerio/wasmer)
+  + review WebSerial
+  + review wasmtime (CLI), perf+hotspot (profiling)
 * inter-VM communication
   + Emscripten WASM Worker (for faster call and shared memory), [link](https://emscripten.org/docs/api_reference/wasm_workers.html)
   + ChaCha20-Poly1305, [IETF spec.](https://datatracker.ietf.org/doc/html/draft-nir-cfrg-chacha20-poly1305)
@@ -143,8 +148,6 @@ Note:
   + review Jolt::RefTarget class (for ref counter, can apply to tensorForth)
 s://github.com/jedisct1/libsodium.js/)
 * add network system (SD_net)
-* review WebSerial
-* review wasmtime (CLI), perf+hotspot (profiling)
 - review DragonRuby/mRuby (SDL)          => 3D preferred
 - review R3, Forth CPU visualizer (SDL)  => 3D preferred
 * review GraFORTH spec.
