@@ -40,7 +40,7 @@
         if (cmd=='clear') { txt.innerHTML=''; xtib(); return }
         
         try {
-            ctlr.publish(TOPIC_CMD, cmd, { qos: 1, retain: true })
+            ctlr.publish(TOPIC_CMD, cmd, { qos: 1, retain: false })
         }
         catch(e) { console.log(e.toString()+'\n') }
         finally  { xtib(); }
