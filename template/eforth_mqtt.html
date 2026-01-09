@@ -20,10 +20,15 @@
     <script>
     const tib = document.getElementById('tib')
     const txt = document.getElementById('txt')
-      
+    ///
+    /// update display
+    ///
     function to_txt(t, br=true) {
         txt.innerHTML += br ? t + '<br/>' : t
-        txt.scrollTop = txt.scrollHeight
+        window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'smooth'
+        })
     }
     ///
     /// Forth outer interpreter
@@ -72,7 +77,7 @@
         ctlr.subscribe(TOPIC_RST, { qos: 1 })
     })
     ctlr.on('message', (topic, msg, packet) => {
-        to_txt(topic+" >> "+msg.toString(), false)
+        to_txt(`${topic} >> ${msg.toString()}`, false)
     })
     window.onclose = () => {
         ctlr.unsubscribe(TOPIC_RST, () => {
