@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weboscoket MQTT</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    .cmd  { color:#48f; margin: 2px; }
+    .dsp  { display:flex; flex-direction:column; height:100%; font-family:monospace; font-size:18px; }
+    .txt  { width:100%; height:auto; margin:4px; display:flex; flex-direction:column; overflow-x:scroll; display:block }
+  </style>
+</head>
+<body>
+    <div class='dsp'>
+    <pre id='txt' class='txt'></pre>
+      <input id='tib' type='text' style='width:100%; font-size:1.0em'
+      onkeyup='if ("Enter"==event.key) forth_eval()'/>
+    </div>
+    <script>
+    const tib = document.getElementById('tib')
+    const txt = document.getElementById('txt')
+      
+    function to_txt(t, br=true) {
+        txt.innerHTML += br ? t + '<br/>' : t
+        txt.scrollTop = txt.scrollHeight
+    }
+    ///
+    /// Forth outer interpreter
+    ///
+    function forth_eval(echo=true) {
+        const xtib = ()=>{ tib.value=''; tib.focus() }
+        let cmd = tib.value
+        if (echo) to_txt('<pre class="cmd"><em>'+cmd+'</em></pre>', false)
+        if (cmd=='clear') { txt.innerHTML=''; xtib(); return }
+        
+        try {
+            ctlr.publish(TOPIC_CMD, cmd, { qos: 1, retain: true })
+        }
+        catch(e) { console.log(e.toString()+'\n') }
+        finally  { xtib(); }
+    }
+    ///
+    /// setup MQTT
+    ///
+    const CLIENT_ID = 'gnii_ctl_' + Math.random().toString(16).substring(2, 10)
+    const BROKER    = 'ws://test.mosquitto.org:8080/mqtt'
+//    const BROKER    = 'ws://broker.emqx.io:8083/mqtt'
+    const TOPIC_CMD = 'gnii/mqtt/cmd'
+    const TOPIC_RST = 'gnii/mqtt/rst'
+    const options = {
+        keepalive      : 60,
+        clientId       : CLIENT_ID,
+        protocolId     : 'MQTT',
+        protocolVersion: 5,
+        clean          : true,
+        reconnectPeriod: 1000,
+        connectTimeout : 30 * 1000,
+    }
+    to_txt('Connecting MQTT client...')
+    const ctlr = mqtt.connect(BROKER, options)
+    ctlr.on('error', (err) => {
+        to_txt('Connection error: ', err)
+        client.end()
+    })
+    ctlr.on('reconnect', () => {
+        to_txt('Reconnecting...')
+    })
+    ctlr.on('connect', () => {
+        to_txt(`Client connected: ${CLIENT_ID}`)
+        // Subscribe
+        ctlr.subscribe(TOPIC_RST, { qos: 1 })
+    })
+    ctlr.on('message', (topic, msg, packet) => {
+        to_txt(topic+" >> "+msg.toString(), false)
+    })
+    window.onclose = () => {
+        ctlr.unsubscribe(TOPIC_RST, () => {
+            console.log('Unsubscribed');
+        })
+    }
+    </script>
+</body>
+</html>    
