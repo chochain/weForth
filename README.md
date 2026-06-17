@@ -133,6 +133,11 @@ Note:
 * Emscripten v4.0 (202502) creates WASM runs about the same as v3.x (202402)
 
 ### TODO
+* Geometry
+  + OpenCascade [OpenCascade.js](https://dev.opencascade.org/project/opencascadejs)
+  + BitByBit - with Typescript/JS [BitByBit](https://bitbybit.dev/)
+  + CascadeStudio - IDE (does OpenSCAD=>JS too) [CascadeStudio](https://github.com/zalo/CascadeStudio)
+  + CSG i.e. compound shape, [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
 * System Interface - review
   + WASIX  - [link](https://github.com/wasix-org)
   + Wasmer - [link](https://github.com/wasmerio/wasmer)
@@ -144,9 +149,7 @@ Note:
     * ChaCha20 cipher lib. See JS cryptography libs [libsodium.js](http  + A 16-node AES cipher [AES - 5 different modes comparison](https://www.highgo.ca/2019/08/08/the-difference-in-five-modes-in-the-aes-encryption-algorithm/)
 * Physics Engine
   + vehicle sim
-  + CSG i.e. compound shape, [OpenCSG](https://opencsg.org/), [GTS](https://gts.sourceforge.net/)
   + review Jolt::RefTarget class (for ref counter, can apply to tensorForth)
-s://github.com/jedisct1/libsodium.js/)
 * add network system (SD_net)
 - review DragonRuby/mRuby (SDL)          => 3D preferred
 - review R3, Forth CPU visualizer (SDL)  => 3D preferred
@@ -169,4 +172,6 @@ s://github.com/jedisct1/libsodium.js/)
   + [Three.js](https://threejs.org/manual/#en/fundamentals)
 * Physics Engine
   + [Jolt Physics](https://jrouwe.github.io/JoltPhysics/)
+* Geometry Engine
+  + [OpenCascade](https://dev.opencascade.org/)
 
